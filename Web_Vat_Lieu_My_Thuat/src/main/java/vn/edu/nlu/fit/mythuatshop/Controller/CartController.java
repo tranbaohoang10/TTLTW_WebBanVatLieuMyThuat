@@ -12,36 +12,29 @@ import java.io.IOException;
 public class CartController extends HttpServlet {
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
 
-        HttpSession session = req.getSession();
-
-        // Bắt buộc login (giống cũ)
-        Users currentUser = (Users) session.getAttribute("currentUser");
-        if (currentUser == null) {
-            resp.sendRedirect("login");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Users user = (Users) session.getAttribute("currentUser");
+        if (user == null) {
+            response.sendRedirect("Login.jsp");
             return;
         }
-
-        Cart cart = (Cart) session.getAttribute("cart");
-        if (cart == null) {
-            cart = new Cart();
+        Cart  cart = (Cart) session.getAttribute("cart");
+        if(cart == null){
+             cart = new Cart();
             session.setAttribute("cart", cart);
         }
-
-        int totalQuantity = cart.getTotalQuantity();
-        long totalAmount = 0L;
-
-        for (CartItem item : cart.getCarts().values()) {
-            totalAmount += (long) item.totalPriceCartItem();
+        int totalQuantityProducts = cart.getTotalQuantity();
+        double totalPrice = 0;
+        for (CartItem item : cart.getCarts().values()){
+            // tổng tiền của 1 cartitem(số lượng và quantity)
+            totalPrice += item.totalPriceCartItem();
         }
-
-        req.setAttribute("cartItems", cart.getCarts().values());
-        req.setAttribute("totalQuantity", totalQuantity);
-        req.setAttribute("totalAmount", totalAmount);
-        req.setAttribute("cartSize", cart.cartSize());
-
-        req.getRequestDispatcher("/Cart.jsp").forward(req, resp);
+        request.setAttribute("cartItem",cart.getCarts().values());
+        request.setAttribute("totalQuantityProducts",totalQuantityProducts);
+        request.setAttribute("totalPrice",totalPrice);
+        request.setAttribute("cartSize", cart.cartSize());
+        request.getRequestDispatcher("Cart.jsp").forward(request, response);
     }
 }

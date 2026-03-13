@@ -477,7 +477,7 @@
                 <div class="tinh-tien">
                     <p>Tổng tiền:</p>
                     <span class="thanh-tien">
-                                <fmt:formatNumber value="${totalAmount}"
+                                <fmt:formatNumber value="${totalPrice}"
                                                   type="number"/>đ
                             </span>
                 </div>
@@ -578,7 +578,7 @@
                 // cập nhật tổng tiền
                 const totalSpan = document.querySelector('.thanh-tien');
                 if (totalSpan) {
-                    totalSpan.textContent = formatCurrency(data.totalAmount);
+                    totalSpan.textContent = formatCurrency(data.totalPrice);
                 }
 
                 // cập nhật số trên icon giỏ hàng
