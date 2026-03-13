@@ -26,14 +26,14 @@ public class CartController extends HttpServlet {
             session.setAttribute("cart", cart);
         }
         int totalQuantityProducts = cart.getTotalQuantity();
-        double totalPrice = 0;
+        double totalAmount = 0;
         for (CartItem item : cart.getCarts().values()){
             // tổng tiền của 1 cartitem(số lượng và quantity)
-            totalPrice += item.totalPriceCartItem();
+            totalAmount += item.totalPriceCartItem();
         }
-        request.setAttribute("cartItem",cart.getCarts().values());
+        request.setAttribute("cartItems",cart.getCarts().values());
         request.setAttribute("totalQuantityProducts",totalQuantityProducts);
-        request.setAttribute("totalPrice",totalPrice);
+        request.setAttribute("totalAmount",totalAmount);
         request.setAttribute("cartSize", cart.cartSize());
         request.getRequestDispatcher("Cart.jsp").forward(request, response);
     }
