@@ -343,7 +343,7 @@
                 <h2 class="card-title">Giỏ hàng của bạn</h2>
                 <p class="subtle">
                     Bạn đang có <span
-                        id="cart-total-quantity">${totalQuantity}</span>
+                        id="cart-total-quantity">${totalQuantityProducts}</span>
                     sản phẩm trong giỏ hàng
                 </p>
                 <div class="divider"></div>
