@@ -440,12 +440,10 @@
     </div>
   </div>
 
-  <!-- ✅ JQUERY + DATATABLES phải đặt TRƯỚC script init -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 
   <script>
-    // ===== CHART DOANH THU (12 THÁNG NĂM HIỆN TẠI) =====
     const revenueLabels = [
       'Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
       'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'

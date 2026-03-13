@@ -14,27 +14,27 @@ public class StatisticService {
     private final StatisticDAO dao = new StatisticDAO();
 
     public BigDecimal getTotalRevenueThisYear() {
-        return dao.totalRevenueThisYear();
+        return dao.getTotalRevenueOfCurrentYear();
     }
 
     public List<RevenueMonth> getRevenueByMonthThisYear() {
-        return dao.revenueByMonthThisYear();
+        return dao.getRevenueByMonthOfCurrentYear();
     }
 
 
     public List<NoSaleRow> getNoSaleProducts(int months) {
-        LocalDateTime from = StatisticDAO.startOfMonthRange(months);
-        LocalDateTime to = StatisticDAO.endOfMonthRange();
-        return dao.noSaleProducts(from, to);
+        LocalDateTime from = StatisticDAO.getStartOfMonthRange(months);
+        LocalDateTime to = StatisticDAO.getEndOfMonthRange();
+        return dao.getProductsWithNoSales(from, to);
     }
 
 
     public List<BestSellerRow> getBestSellersAllTime() {
-        return dao.bestSellersAllTime();
+        return dao.getBestSellingProductsOfAllTime();
     }
 
 
     public List<BestSellerChartPoint> getBestSellerTop5ChartAllTime() {
-        return dao.bestSellerTop5ForChartAllTime();
+        return dao.getTop5BestSellingProductsForChart();
     }
 }
