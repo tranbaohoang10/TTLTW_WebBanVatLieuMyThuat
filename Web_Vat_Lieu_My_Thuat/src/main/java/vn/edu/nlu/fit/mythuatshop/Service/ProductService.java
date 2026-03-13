@@ -54,16 +54,7 @@ public class ProductService {
         }
         return productDao.getProductSearch(productName, sort, offset, limit);
     }
-    public List<Product> suggestProducts(String keyword, int limit) {
-        if (keyword == null) keyword = "";
-        keyword = keyword.trim();
-        if (keyword.length() > 100) keyword = keyword.substring(0, 100);
 
-        if (limit < 1) limit = 1;
-        if (limit > 10) limit = 10;
-
-        return productDao.suggestProducts(keyword, limit);
-    }
 
     public int countProductSearch(String productName) {
         return productDao.countProductSearch(productName);
