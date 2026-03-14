@@ -32,6 +32,11 @@ public class PlaceOrderController extends HttpServlet {
             resp.sendRedirect("login");
             return;
         }
+        Cart cart = (Cart) session.getAttribute("cart");
+        if (cart == null || cart.cartSize() == 0) {
+            resp.sendRedirect("Cart.jsp");
+            return;
+        }
         String fullName = req.getParameter("fullName");
         String email = req.getParameter("email");
         String phone = req.getParameter("phone");

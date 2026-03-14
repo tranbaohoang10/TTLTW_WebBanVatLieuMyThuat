@@ -360,17 +360,13 @@
 </style>
 
 <body>
-<!-- Begin header-->
 <%@ include file="Header.jsp" %>
-<!-- Begin section info mithuat -->
 <div id="section-info-mithuat">
     <div class="container">
         <%@ include file="CategoryMenu.jsp" %>
     </div>
 </div>
 
-<!-- End section info mithuat -->
-<!-- Begin slider show -->
 <div class="w3-content w3-display-container">
     <c:forEach var="slider" items="${sliders}">
         <a href="${pageContext.request.contextPath}/${slider.linkTo}"> <c:set var="imgUrl" value="${slider.thumbnail}"/>
@@ -402,7 +398,6 @@
     let slideIndex = 0;
     showDivs(slideIndex);
 
-    // nút điều hướng
     function plusDivs(n) {
         showDivs(slideIndex += n);
     }
@@ -411,7 +406,6 @@
         showDivs(slideIndex = n - 1);
     }
 
-    // hiển thị slide
     function showDivs(n) {
         let i;
         const slides = document.getElementsByClassName("mySlides");
@@ -430,13 +424,10 @@
         dots[slideIndex].classList.add("w3-white");
     }
 
-    // tự động chạy
     setInterval(() => {
         plusDivs(1);
-    }, 4000); // 4 giây chuyển 1 ảnh
+    }, 4000);
 </script>
-<!-- End slider show -->
-<!-- Begin section -->
 <c:forEach var="entry" items="${productsByCategory}">
     <c:set var="cat" value="${entry.key}"/>
     <c:set var="products" value="${entry.value}"/>
