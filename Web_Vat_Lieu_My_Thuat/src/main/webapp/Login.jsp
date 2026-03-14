@@ -235,7 +235,7 @@
         <form action="${pageContext.request.contextPath}/login" method="post">
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" placeholder="Nhập email" required
+                <input type="email" id="email" name="email" value="${email}" placeholder="Nhập email" required
                        pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
                        title="Email phải đúng định dạng, ví dụ: ten@gmail.com">
                 <span id="email-error"></span>

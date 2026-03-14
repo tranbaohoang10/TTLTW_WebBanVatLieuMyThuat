@@ -38,6 +38,7 @@ public class LoginController extends HttpServlet {
         Users user = userService.getUserByEmail(email.trim());
         if(user == null) {
             req.setAttribute("error", "Sai email hoặc mật khẩu");
+            req.setAttribute("email", email);
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
@@ -57,6 +58,7 @@ public class LoginController extends HttpServlet {
         Users user1 = userService.login(email.trim(), password);
         if (user1 == null) {
             req.setAttribute("error", "Sai email hoặc mật khẩu");
+            req.setAttribute("email", email);
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
