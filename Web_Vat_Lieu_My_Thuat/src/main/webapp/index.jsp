@@ -445,14 +445,12 @@
         <div class="container">
             <c:set var="imgUrl" value="${cat.thumbnail}"/>
             <c:if test="${not empty imgUrl and not fn:startsWith(imgUrl,'http') and not fn:startsWith(imgUrl, pageContext.request.contextPath)}">
-                <c:choose>
-                    <c:when test="${fn:startsWith(imgUrl,'/')}">
-                        <c:set var="imgUrl" value="${pageContext.request.contextPath}${imgUrl}"/>
-                    </c:when>
-                    <c:otherwise>
-                        <c:set var="imgUrl" value="${pageContext.request.contextPath}/${imgUrl}"/>
-                    </c:otherwise>
-                </c:choose>
+                <c:if test="${fn:startsWith(cat.thumbnail, 'http')}">
+                    <img src="${cat.thumbnail}" alt="${cat.categoryName}">
+                </c:if>
+                <c:if test="${not fn:startsWith(cat.thumbnail, 'http')}">
+                    <img src="${pageContext.request.contextPath}/${cat.thumbnail}" alt="${cat.categoryName}">
+                </c:if>
             </c:if>
 
             <img src="${imgUrl}" alt="category"/>
