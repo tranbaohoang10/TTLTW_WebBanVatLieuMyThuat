@@ -17,12 +17,7 @@ import java.io.PrintWriter;
 
 @WebServlet(name = "AddToCartController", value = "/AddToCart")
 public class AddToCartController extends HttpServlet {
-    private ProductService productService;
-
-    @Override
-    public void init() throws ServletException {
-        productService = new ProductService();
-    }
+    private ProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -147,9 +142,7 @@ public class AddToCartController extends HttpServlet {
 
         // Kiểm tra nếu là AJAX request
         String ajaxHeader = req.getHeader("X-Requested-With");
-        boolean isAjax = "XMLHttpRequest".equals(ajaxHeader) ||
-                req.getContentType() != null && req.getContentType().contains("application/x-www-form-urlencoded");
-
+        boolean isAjax = "XMLHttpRequest".equals(ajaxHeader);
         if (isAjax) {
             // Trả về JSON response cho AJAX
             resp.setContentType("application/json; charset=UTF-8");
