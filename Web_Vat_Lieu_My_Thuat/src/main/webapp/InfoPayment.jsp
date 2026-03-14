@@ -66,7 +66,7 @@
         border: 1px solid #e5e7eb;
     }
 
-    .form-infor-checkout h4.infor-delivery-label {
+    .form-infor-checkout h4 {
         font-size: 1.25rem;
         margin: 0 0 20px 0;
         font-weight: 600;
@@ -146,7 +146,7 @@
         margin-bottom: 16px;
     }
 
-    .note label.bold {
+    .note label {
         display: block;
         font-weight: 600;
         color: #374151;
@@ -173,17 +173,7 @@
         color: #9ca3af;
     }
 
-    /* Checkbox section */
-    .export-bill {
-        margin-top: 16px;
-        margin-bottom: 24px;
-    }
 
-    .check-export {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
 
     .export-bill input[type="checkbox"] {
         width: 18px;
@@ -191,12 +181,7 @@
         cursor: pointer;
     }
 
-    .export-bill .label1 {
-        color: #374151;
-        font-size: 0.95rem;
-        cursor: pointer;
-        margin: 0;
-    }
+
 
     /* Payment Method */
     .payment-method {
@@ -376,12 +361,6 @@
         flex: 1;
     }
 
-    .item-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
     .item-name {
         font-size: 0.95rem;
         font-weight: 500;
@@ -486,16 +465,12 @@
         font-weight: 700;
     }
 
-    .price-row.total .price-value {
+    .price-row.total  {
         color: #ef4444;
         font-size: 1.25rem;
     }
 
-    .price-value {
-        font-weight: 600;
-        color: #111827;
 
-    }
 
     a {
         text-decoration: none;
@@ -537,9 +512,7 @@
         color: red;
     }
 
-    .breadcrumb-item.active {
-        color: #252222;
-    }
+
 
     .order-summary {
         border-left: 1px solid #e5e7eb;

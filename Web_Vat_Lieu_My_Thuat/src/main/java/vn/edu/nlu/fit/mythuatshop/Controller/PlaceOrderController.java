@@ -32,14 +32,13 @@ public class PlaceOrderController extends HttpServlet {
             resp.sendRedirect("login");
             return;
         }
-
         Cart cart = (Cart) session.getAttribute("cart");
         if (cart == null || cart.cartSize() == 0) {
             resp.sendRedirect("Cart.jsp");
             return;
         }
 
-        req.setCharacterEncoding("UTF-8");
+
         String fullName = req.getParameter("fullName");
         String email = req.getParameter("email");
         String phone = req.getParameter("phone");
@@ -52,12 +51,11 @@ public class PlaceOrderController extends HttpServlet {
                 address, note, paymentName, voucherId);
 
         if (order == null) {
-            req.setAttribute("errorMessage", "Đặt hàng thất bại, vui lòng thử lại.");
+            req.setAttribute("errorMessage", "Đặt hàng thất bại");
             req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
             return;
         }
 
-        //  Nếu là VNPAY -> redirect sang VNPAY, chưa xóa cart
         if ("VNPAY".equalsIgnoreCase(paymentName)) {
             String paymentUrl = vnpayService.buildPaymentUrl(req, order);
             resp.sendRedirect(paymentUrl);
@@ -68,7 +66,6 @@ public class PlaceOrderController extends HttpServlet {
         session.setAttribute("paidOrder", order);
         session.removeAttribute("appliedVoucherId");
         resp.sendRedirect(req.getContextPath() + "/payment-success");
-        return;
     }
 
 }
