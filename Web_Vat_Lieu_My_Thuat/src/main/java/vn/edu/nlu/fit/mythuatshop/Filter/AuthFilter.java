@@ -53,7 +53,6 @@ public class AuthFilter implements Filter {
         HttpSession session = req.getSession(false);
         Object authUser = (session == null) ? null : session.getAttribute("currentUser");
 
-        // Xác định session đã hết hạn hay chưa
         boolean hadSessionID = req.getRequestedSessionId() != null;
         boolean sessionIDValid = req.isRequestedSessionIdValid();
         boolean sessionExpired = hadSessionID && !sessionIDValid;
@@ -61,7 +60,6 @@ public class AuthFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        // Nếu KHÔNG phải public và CHƯA đăng nhập
         if (!isPublic && authUser == null) {
             if (sessionExpired) {
                 resp.sendRedirect(ctx + "/login?timeout=1");
