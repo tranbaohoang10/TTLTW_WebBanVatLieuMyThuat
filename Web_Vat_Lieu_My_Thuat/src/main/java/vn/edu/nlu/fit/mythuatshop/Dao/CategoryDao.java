@@ -14,7 +14,9 @@ public class CategoryDao {
 
     // Admin: lấy tất cả (kể cả đã khóa)
     public List<Category> findAll() {
-        String sql = "SELECT id, categoryName, thumbnail, isActive FROM categories ORDER BY id DESC";
+        String sql = "SELECT id, categoryName, thumbnail, isActive " +
+                "FROM categories " +
+                "ORDER BY id DESC";
         return jdbi.withHandle(h ->
                 h.createQuery(sql).mapToBean(Category.class).list()
         );
@@ -22,14 +24,19 @@ public class CategoryDao {
 
     // Client: chỉ lấy danh mục active
     public List<Category> findAllActive() {
-        String sql = "SELECT id, categoryName, thumbnail, isActive FROM categories WHERE isActive = 1 ORDER BY id DESC";
+        String sql = "SELECT id, categoryName, thumbnail, isActive " +
+                "FROM categories " +
+                "WHERE isActive = 1 " +
+                "ORDER BY id DESC";
         return jdbi.withHandle(h ->
                 h.createQuery(sql).mapToBean(Category.class).list()
         );
     }
 
     public Category findById(int id) {
-        String sql = "SELECT id, categoryName, thumbnail, isActive FROM categories WHERE id = :id";
+        String sql = "SELECT id, categoryName, thumbnail, isActive " +
+                "FROM categories " +
+                "WHERE id = :id";
         return jdbi.withHandle(h ->
                 h.createQuery(sql)
                         .bind("id", id)
@@ -41,7 +48,9 @@ public class CategoryDao {
 
     // Client: lấy category active
     public Category findByIdActive(int id) {
-        String sql = "SELECT id, categoryName, thumbnail, isActive FROM categories WHERE id = :id AND isActive = 1";
+        String sql = "SELECT id, categoryName, thumbnail, isActive " +
+                "FROM categories " +
+                "WHERE id = :id AND isActive = 1";
         return jdbi.withHandle(h ->
                 h.createQuery(sql)
                         .bind("id", id)
