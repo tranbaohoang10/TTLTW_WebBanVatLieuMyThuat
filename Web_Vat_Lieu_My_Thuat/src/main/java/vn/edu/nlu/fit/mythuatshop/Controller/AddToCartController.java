@@ -94,16 +94,14 @@ public class AddToCartController extends HttpServlet {
         session.setAttribute("cart", cart);
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
-        String ajaxHeader = req.getHeader("X-Requested-With");
+        String ajaxHeader = request.getHeader("X-Requested-With");
         boolean isAjax = "XMLHttpRequest".equals(ajaxHeader);
         if (isAjax) {
-            // Trả về JSON response cho AJAX
-            resp.setContentType("application/json; charset=UTF-8");
-            resp.getWriter().write("{\"success\":true,\"cartCount\":" + cart.getTotalQuantity() + "}");
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write("{\"success\":true,\"cartCount\":" + cart.getTotalQuantity() + "}");
         } else {
-            // Redirect thông thường
-            String referer = req.getHeader("referer");
-            resp.sendRedirect(referer != null ? referer : (req.getContextPath() + "/cart"));
+            String referer = request.getHeader("referer");
+            response.sendRedirect(referer != null ? referer : (request.getContextPath() + "/cart"));
         }
     }
 
