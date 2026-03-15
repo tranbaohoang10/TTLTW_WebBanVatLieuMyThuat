@@ -31,15 +31,13 @@
         min-height: 100vh;
         background-color: #1E76EF;
         padding-top: 50px;
+        background: linear-gradient(to left, #2659F3, #09BCE4);
     }
 
     .container {
         background-color: rgba(0, 0, 0, 0.4);
         padding: 40px 50px;
-        /* box-sizing: border-box; */
-        /* overflow: hidden; */
         transition: 0.5s ease;
-        /* border-radius: 10px; */
         width: 530px;
         box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         border-radius: 10px;
@@ -50,21 +48,6 @@
         text-align: center;
         text-transform: uppercase;
         margin-bottom: 15px;
-    }
-
-    .label {
-        color: white;
-        padding-left: 38%;
-        font-size: 18px;
-    }
-
-    .btn-doi {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 25px;
-        background-color: white;
-        border-radius: 30px;
-        padding: 5px;
     }
 
     .btn-doi button {
@@ -123,7 +106,6 @@
         border-radius: 5px;
         cursor: pointer;
         margin-bottom: 15px;
-        /* color: #343A40; */
         color: #000;
         font-weight: bold;
         transition: 0.3s;
@@ -131,13 +113,6 @@
 
     .btn-DangKy:hover {
         transform: scale(1.05);
-    }
-
-    .dang-nhap {
-        text-align: center;
-        font-size: 17px;
-        color: white;
-        margin-bottom: 20px;
     }
 
     .dang-nhap a {
@@ -179,12 +154,8 @@
         padding-left: 80px;
         padding-right: 80px;
         margin-left: 27%;
-
-        /*margin-top: 10px;*/
         cursor: pointer;
-
     }
-
 
     .btn-dang-nhap-tt i {
         font-size: 16px;
@@ -197,7 +168,7 @@
         font-size: 16px;
     }
 
-    /* Style riêng cho link Đăng nhập */
+    /* dn dki */
     .text-login a {
         color: #FFD700;
         text-decoration: none;
@@ -222,17 +193,13 @@
         <form action = "${pageContext.request.contextPath}/register" method="post" class="infor">
             <div class="tt-chitiet" style="grid-column: span 2;">
                 <label for="Ho">Họ và Tên:</label>
-                <input type="text" id="Ho" name="fullName"
-                       placeholder="Họ và Tên" required
-                       value="${param.fullName}">
+                <input type="text" id="Ho" name="fullName" placeholder="Họ và Tên" required value="${param.fullName}">
 
             </div>
 
             <div class="tt-chitiet">
                 <label for="Email">Email cá nhân:</label>
-                <input type="email" id="email" name="email"
-                       placeholder="Email cá nhân" required
-                       value="${param.email}"
+                <input type="email" id="email" name="email" placeholder="Email cá nhân" required value="${param.email}"
                        pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
                        title="Email phải đúng định dạng, ví dụ: ten@gmail.com">
                 <span id="email-error"
@@ -241,13 +208,10 @@
 
             <div class="tt-chitiet">
                 <label for="sdt">Số điện thoại:</label>
-                <input type="tel" id="sdt" name="phoneNumber"
-                       required maxlength = "10"
-                       placeholder="Số điện thoại"
-                       value="${param.phoneNumber}"
-                       pattern = "^0\d{9}$"
+                <input type="tel" id="sdt" name="phoneNumber" required maxlength = "10" placeholder="Số điện thoại"
+                       value="${param.phoneNumber}" pattern = "^0\d{9}$"
                        title = "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0">
-                       <span id="phonerror" style="color: #FFD700; font-size: 14px;"></span>
+                <span id="phonerror" style="color: #FFD700; font-size: 14px;"></span>
 
             </div>
 
@@ -256,16 +220,16 @@
                 <label for="Mk">Mật khẩu:</label>
                 <input type="password" id="Mk" name="password"
                        placeholder="Mật khẩu" required
-                        minlength="8"
+                       minlength="8"
                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$"
                        title="Mật khẩu có ít nhất 8 kí tự gồm chữ hoa, chữ thường và các kí tự đặc biệt."  >
-                       <span id="pwerror" style="color: #FFD700; font-size: 14px;"></span>
+                <span id="pwerror" style="color: #FFD700; font-size: 14px;"></span>
 
                 <i class="hide-display" id="togglePassword"
                    style="position:absolute; right:10px; top:38px; cursor:pointer;"></i>
                 <c:if test="${not empty error}">
-                <p style="color: red;padding : 10px" >${error}</p>
-            </c:if>
+                    <p style="color: red;padding : 10px" >${error}</p>
+                </c:if>
             </div>
 
             <button type="submit" class="btn-DangKy"
@@ -316,7 +280,7 @@
     const phoneError = document.getElementById("phonerror");
 
     phoneInput.addEventListener("input", () => {
-        // chỉ cho nhập số
+
         phoneInput.value = phoneInput.value.replace(/\D/g, "").slice(0, 10);
 
         const ok = /^0\d{9}$/.test(phoneInput.value);
@@ -347,20 +311,18 @@
         }
     });
 </script>
-<%--check error email--%>
+<%--check loi mail--%>
 <script>
     const emailInput = document.getElementById("email");
     const emailError = document.getElementById("email-error");
 
-    // Regex đơn giản, đủ dùng cho form đăng ký
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
     emailInput.addEventListener("input", () => {
         const email = emailInput.value.trim();
 
         if (email.length === 0) {
-            // nếu muốn bắt buộc nhập thì để thông báo,
-            // còn không thì có thể để rỗng
+
             emailError.textContent = "";
             return;
         }
