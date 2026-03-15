@@ -68,7 +68,7 @@ public class AdminCategoryController extends HttpServlet {
         Category c = new Category();
         c.setCategoryName(name);
         c.setThumbnail(thumbUrl);
-        c.setIsActive(1); // ✅ tạo mới là active
+        c.setIsActive(1);
 
         categoryService.create(c);
     }

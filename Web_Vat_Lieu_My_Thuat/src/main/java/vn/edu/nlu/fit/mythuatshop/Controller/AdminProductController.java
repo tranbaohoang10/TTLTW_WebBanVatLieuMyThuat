@@ -3,8 +3,10 @@ package vn.edu.nlu.fit.mythuatshop.Controller;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 import vn.edu.nlu.fit.mythuatshop.Dao.ProductDao;
 import vn.edu.nlu.fit.mythuatshop.Dao.SpecificationsDao;
 import vn.edu.nlu.fit.mythuatshop.Dao.SubImagesDao;
@@ -31,7 +33,6 @@ public class AdminProductController extends HttpServlet {
 
     private ProductService productService;
     private CategoryService categoryService;
-
     private ProductDao productDao;
     private SubImagesDao subImagesDao;
     private SpecificationsDao specificationsDao;
@@ -40,236 +41,267 @@ public class AdminProductController extends HttpServlet {
     public void init() {
         productService = new ProductService();
         categoryService = new CategoryService();
-
         productDao = new ProductDao();
         subImagesDao = new SubImagesDao();
         specificationsDao = new SpecificationsDao();
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-        resp.setCharacterEncoding("UTF-8");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
 
-        var products = productService.getAllProducts();
-        req.setAttribute("products", products);
-        req.setAttribute("categories", categoryService.getAllcategories());
+        List<Product> products = productService.getAllProducts();
+        request.setAttribute("products", products);
+        request.setAttribute("categories", categoryService.getAllcategories());
 
-        // ✅ MAP productId -> CSV subimages (để edit render ảnh phụ)
-        Map<Integer, String> subImagesCsvMap = new HashMap<>();
-        for (Product p : products) {
-            List<Subimages> subs = subImagesDao.findByProductId(p.getId());
-            String csv = subs.stream()
-                    .map(Subimages::getImage) // image đang lưu dạng "/uploads/..."
+        Map<Integer, String> subImagesMap = new HashMap<>();
+        Map<Integer, Specification> specificationMap = new HashMap<>();
+
+        for (Product product : products) {
+            List<Subimages> subimagesList = subImagesDao.findByProductId(product.getId());
+            String subImages = subimagesList.stream()
+                    .map(Subimages::getImage)
                     .collect(Collectors.joining(","));
-            subImagesCsvMap.put(p.getId(), csv);
-        }
-        req.setAttribute("subImagesCsvMap", subImagesCsvMap);
+            subImagesMap.put(product.getId(), subImages);
 
-        // ✅ MAP productId -> Specification (để edit fill size/madeIn/warning/standard)
-        Map<Integer, Specification> specMap = new HashMap<>();
-        for (Product p : products) {
-            List<Specification> specs = specificationsDao.findByProductId(p.getId());
-            if (specs != null && !specs.isEmpty()) {
-                specMap.put(p.getId(), specs.get(0));
+            List<Specification> specificationList = specificationsDao.findByProductId(product.getId());
+            if (specificationList != null && !specificationList.isEmpty()) {
+                specificationMap.put(product.getId(), specificationList.get(0));
             }
         }
-        req.setAttribute("specMap", specMap);
 
-        req.getRequestDispatcher("/admin/Product.jsp").forward(req, resp);
+        request.setAttribute("subImagesMap", subImagesMap);
+        request.setAttribute("specMap", specificationMap);
+
+        request.getRequestDispatcher("/admin/Product.jsp").forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-        resp.setCharacterEncoding("UTF-8");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
 
-        String action = req.getParameter("action");
-        if (action == null) action = "";
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "";
+        }
 
         try {
             switch (action) {
-                case "create" -> handleCreate(req);
-                case "update" -> handleUpdate(req);
-                case "toggleActive" -> handleToggleActive(req);
-                default -> { /* ignore */ }
+                case "create":
+                    createProduct(request);
+                    break;
+                case "update":
+                    updateProduct(request);
+                    break;
+                case "toggleActive":
+                    toggleProductActive(request);
+                    break;
+                default:
+                    break;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
 
-        resp.sendRedirect(req.getContextPath() + "/admin/products");
+        response.sendRedirect(request.getContextPath() + "/admin/products");
     }
 
-    private void handleCreate(HttpServletRequest req) throws Exception {
-        int categoryId = parseInt(req.getParameter("categoryId"), 0);
-        String name = req.getParameter("name");
-        double price = parseDouble(req.getParameter("price"), 0);
-        int discount = parseInt(req.getParameter("discountDefault"), 0);
-        int qty = parseInt(req.getParameter("quantityStock"), 0);
-        String brand = req.getParameter("brand");
+    private void createProduct(HttpServletRequest request) throws Exception {
+        int categoryId = parseInt(request.getParameter("categoryId"), 0);
+        String name = request.getParameter("name");
+        double price = parseDouble(request.getParameter("price"), 0);
+        int discountDefault = parseInt(request.getParameter("discountDefault"), 0);
+        int quantityStock = parseInt(request.getParameter("quantityStock"), 0);
+        String brand = request.getParameter("brand");
 
-        String size = req.getParameter("size");
-        String madeIn = req.getParameter("madeIn");
-        String warning = req.getParameter("warning");
+        String size = request.getParameter("size");
+        String standard = request.getParameter("standard");
+        String madeIn = request.getParameter("madeIn");
+        String warning = request.getParameter("warning");
 
-        String standard = req.getParameter("standard");
-        if (standard == null) standard = "";
+        if (standard == null) {
+            standard = "";
+        }
 
-        // ✅ MAIN THUMB: chỉ upload local
-        Part mainThumb = req.getPart("thumbnailMain");
-        String mainThumbUrl = saveUploadAndReturnUrl(req, mainThumb, "uploads/products");
+        Part thumbnailMainPart = request.getPart("thumbnailMain");
+        String thumbnailMainUrl = saveUploadAndReturnUrl(request, thumbnailMainPart, "uploads/products");
 
-        Product p = new Product();
-        p.setName(name);
-        p.setPrice(price);
-        p.setDiscountDefault(discount);
-        p.setCategoryId(categoryId);
-        p.setThumbnail(mainThumbUrl);
-        p.setQuantityStock(qty);
-        p.setSoldQuantity(0);
-        p.setStatus(qty > 0 ? "Còn hàng" : "Hết hàng");
-        p.setCreateAt(new Timestamp(System.currentTimeMillis()));
-        p.setBrand(brand);
-        p.setIsActive(1);
+        Product product = new Product();
+        product.setName(name);
+        product.setPrice(price);
+        product.setDiscountDefault(discountDefault);
+        product.setCategoryId(categoryId);
+        product.setThumbnail(thumbnailMainUrl);
+        product.setQuantityStock(quantityStock);
+        product.setSoldQuantity(0);
+        product.setStatus(quantityStock > 0 ? "Còn hàng" : "Hết hàng");
+        product.setCreateAt(new Timestamp(System.currentTimeMillis()));
+        product.setBrand(brand);
+        product.setIsActive(1);
 
-        int newId = productDao.insertReturnId(p);
+        int productId = productDao.insertReturnId(product);
 
-        // ✅ SUB IMAGES: upload local -> lưu vào uploads/subimages
-        Collection<Part> parts = req.getParts();
-        for (Part part : parts) {
+        for (Part part : request.getParts()) {
             if ("thumbnailSubs".equals(part.getName()) && part.getSize() > 0) {
-                String subUrl = saveUploadAndReturnUrl(req, part, "uploads/subimages");
-                subImagesDao.insert(newId, subUrl);
+                String subImageUrl = saveUploadAndReturnUrl(request, part, "uploads/subimages");
+                subImagesDao.insert(productId, subImageUrl);
             }
         }
 
-        specificationsDao.upsert(newId, size, standard, madeIn, warning);
+        specificationsDao.upsert(productId, size, standard, madeIn, warning);
     }
 
-    private void handleUpdate(HttpServletRequest req) throws Exception {
-        int id = parseInt(req.getParameter("id"), 0);
-        if (id <= 0) return;
-
-        int categoryId = parseInt(req.getParameter("categoryId"), 0);
-        String name = req.getParameter("name");
-        double price = parseDouble(req.getParameter("price"), 0);
-        int discount = parseInt(req.getParameter("discountDefault"), 0);
-        int qty = parseInt(req.getParameter("quantityStock"), 0);
-        String brand = req.getParameter("brand");
-
-        String size = req.getParameter("size");
-        String madeIn = req.getParameter("madeIn");
-        String warning = req.getParameter("warning");
-
-        String standard = req.getParameter("standard");
-        if (standard == null) standard = "";
-
-        Product old = productService.getProductById(id);
-        String oldThumb = (old != null) ? old.getThumbnail() : null;
-
-        // ✅ MAIN THUMB:
-        // - nếu upload mới -> dùng mới
-        // - nếu không upload -> dùng existingThumbnail hidden (hoặc oldThumb)
-        // - nếu user bấm xóa ảnh -> existingThumbnail = "" => finalThumb = null
-        String existingThumb = trimToNull(req.getParameter("existingThumbnail"));
-        Part mainThumb = req.getPart("thumbnailMain");
-        String uploadedThumb = null;
-        if (mainThumb != null && mainThumb.getSize() > 0) {
-            uploadedThumb = saveUploadAndReturnUrl(req, mainThumb, "uploads/products");
+    private void updateProduct(HttpServletRequest request) throws Exception {
+        int id = parseInt(request.getParameter("id"), 0);
+        if (id <= 0) {
+            return;
         }
 
-        String finalThumb;
-        if (uploadedThumb != null) {
-            finalThumb = uploadedThumb;
-        } else if (existingThumb != null) {
-            finalThumb = existingThumb;
+        int categoryId = parseInt(request.getParameter("categoryId"), 0);
+        String name = request.getParameter("name");
+        double price = parseDouble(request.getParameter("price"), 0);
+        int discountDefault = parseInt(request.getParameter("discountDefault"), 0);
+        int quantityStock = parseInt(request.getParameter("quantityStock"), 0);
+        String brand = request.getParameter("brand");
+
+        String size = request.getParameter("size");
+        String standard = request.getParameter("standard");
+        String madeIn = request.getParameter("madeIn");
+        String warning = request.getParameter("warning");
+
+        if (standard == null) {
+            standard = "";
+        }
+
+        Product oldProduct = productService.getProductById(id);
+        String oldThumbnail = oldProduct != null ? oldProduct.getThumbnail() : null;
+
+        String existingThumbnail = trimToNull(request.getParameter("existingThumbnail"));
+        Part thumbnailMainPart = request.getPart("thumbnailMain");
+
+        String uploadedThumbnail = null;
+        if (thumbnailMainPart != null && thumbnailMainPart.getSize() > 0) {
+            uploadedThumbnail = saveUploadAndReturnUrl(request, thumbnailMainPart, "uploads/products");
+        }
+
+        String finalThumbnail;
+        if (uploadedThumbnail != null) {
+            finalThumbnail = uploadedThumbnail;
+        } else if (existingThumbnail != null) {
+            finalThumbnail = existingThumbnail;
         } else {
-            finalThumb = oldThumb; // fallback
+            finalThumbnail = oldThumbnail;
         }
 
-        Product p = new Product();
-        p.setId(id);
-        p.setName(name);
-        p.setPrice(price);
-        p.setDiscountDefault(discount);
-        p.setCategoryId(categoryId);
-        p.setQuantityStock(qty);
-        p.setBrand(brand);
-        p.setThumbnail(finalThumb);
+        Product product = new Product();
+        product.setId(id);
+        product.setName(name);
+        product.setPrice(price);
+        product.setDiscountDefault(discountDefault);
+        product.setCategoryId(categoryId);
+        product.setQuantityStock(quantityStock);
+        product.setBrand(brand);
+        product.setThumbnail(finalThumbnail);
 
-        productDao.update(p);
+        productDao.update(product);
 
-        // ✅ SUB IMAGES:
-        // nhận existingSubImages từ hidden input (CSV sau khi user xóa trên UI)
-        String existingSubsCsv = trimToNull(req.getParameter("existingSubImages"));
-        List<String> keepSubs = new ArrayList<>();
-        if (existingSubsCsv != null) {
-            for (String s : existingSubsCsv.split(",")) {
-                String t = trimToNull(s);
-                if (t != null) keepSubs.add(t);
+        String existingSubImagesCsv = trimToNull(request.getParameter("existingSubImages"));
+        List<String> oldSubImages = new ArrayList<>();
+
+        if (existingSubImagesCsv != null) {
+            for (String image : existingSubImagesCsv.split(",")) {
+                String trimmedImage = trimToNull(image);
+                if (trimmedImage != null) {
+                    oldSubImages.add(trimmedImage);
+                }
             }
         }
 
-        List<String> newSubs = new ArrayList<>();
-        Collection<Part> parts = req.getParts();
-        for (Part part : parts) {
+        List<String> newSubImages = new ArrayList<>();
+        for (Part part : request.getParts()) {
             if ("thumbnailSubs".equals(part.getName()) && part.getSize() > 0) {
-                String saved = saveUploadAndReturnUrl(req, part, "uploads/subimages");
-                if (saved != null) newSubs.add(saved);
+                String imageUrl = saveUploadAndReturnUrl(request, part, "uploads/subimages");
+                if (imageUrl != null) {
+                    newSubImages.add(imageUrl);
+                }
             }
         }
 
-
-        // replace DB theo danh sách cuối cùng: keep + new
         subImagesDao.deleteByProductId(id);
-        for (String img : keepSubs) subImagesDao.insert(id, img);
-        for (String img : newSubs) subImagesDao.insert(id, img);
+
+        for (String image : oldSubImages) {
+            subImagesDao.insert(id, image);
+        }
+
+        for (String image : newSubImages) {
+            subImagesDao.insert(id, image);
+        }
 
         specificationsDao.upsert(id, size, standard, madeIn, warning);
     }
 
-    private void handleToggleActive(HttpServletRequest req) {
-        int id = parseInt(req.getParameter("id"), 0);
-        int isActive = parseInt(req.getParameter("isActive"), 1);
-        if (id <= 0) return;
+    private void toggleProductActive(HttpServletRequest request) {
+        int id = parseInt(request.getParameter("id"), 0);
+        int isActive = parseInt(request.getParameter("isActive"), 1);
+
+        if (id <= 0) {
+            return;
+        }
 
         productService.updateActive(id, isActive);
     }
 
-    // ================= helpers =================
+    private String saveUploadAndReturnUrl(HttpServletRequest request, Part part, String folder) throws IOException {
+        if (part == null || part.getSize() == 0) {
+            return null;
+        }
 
-    private String saveUploadAndReturnUrl(HttpServletRequest req, Part part, String folder) throws IOException {
-        if (part == null || part.getSize() == 0) return null;
+        String originalFileName = Paths.get(part.getSubmittedFileName()).getFileName().toString();
+        String extension = "";
 
-        String original = Paths.get(part.getSubmittedFileName()).getFileName().toString();
-        String ext = "";
-        int dot = original.lastIndexOf('.');
-        if (dot >= 0) ext = original.substring(dot);
+        int dotIndex = originalFileName.lastIndexOf('.');
+        if (dotIndex >= 0) {
+            extension = originalFileName.substring(dotIndex);
+        }
 
-        String savedName = UUID.randomUUID().toString().replace("-", "") + ext;
+        String savedFileName = UUID.randomUUID().toString().replace("-", "") + extension;
 
-        String realPath = req.getServletContext().getRealPath("/");
-        File uploadDir = new File(realPath, folder);
-        if (!uploadDir.exists()) uploadDir.mkdirs();
+        String realPath = request.getServletContext().getRealPath("/");
+        File uploadFolder = new File(realPath, folder);
+        if (!uploadFolder.exists()) {
+            uploadFolder.mkdirs();
+        }
 
-        File savedFile = new File(uploadDir, savedName);
+        File savedFile = new File(uploadFolder, savedFileName);
         part.write(savedFile.getAbsolutePath());
 
-        return "/" + folder + "/" + savedName; // lưu vào DB
+        return "/" + folder + "/" + savedFileName;
     }
 
-    private String trimToNull(String s) {
-        if (s == null) return null;
-        s = s.trim();
-        return s.isEmpty() ? null : s;
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        value = value.trim();
+        return value.isEmpty() ? null : value;
     }
 
-    private int parseInt(String s, int def) {
-        try { return Integer.parseInt(s); } catch (Exception e) { return def; }
+    private int parseInt(String value, int defaultValue) {
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception exception) {
+            return defaultValue;
+        }
     }
 
-    private double parseDouble(String s, double def) {
-        try { return Double.parseDouble(s); } catch (Exception e) { return def; }
+    private double parseDouble(String value, double defaultValue) {
+        try {
+            return Double.parseDouble(value);
+        } catch (Exception exception) {
+            return defaultValue;
+        }
     }
 }

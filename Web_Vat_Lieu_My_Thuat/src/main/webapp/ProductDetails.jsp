@@ -24,7 +24,6 @@
         margin: auto;
     }
 
-    /* ========== BREADCRUMB STYLES ========== */
     .breadcrumb {
         background-color: #f0f4f8;
         padding: 1rem 2.5rem;
@@ -121,7 +120,6 @@
         font-weight: 700;
     }
 
-    /* Main Image Navigation Buttons */
     .main-image-nav {
         position: absolute;
         top: 50%;
@@ -292,45 +290,11 @@
         text-decoration: line-through;
     }
 
-    /* Variant Selection */
-    .product-variants {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
 
     .variant-label {
         font-weight: 600;
         color: #374151;
         font-size: 1rem;
-    }
-
-    .variant-options {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .variant-option {
-        padding: 0.625rem 1.25rem;
-        border: 2px solid #d1d5db;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-size: 0.9375rem;
-        background: white;
-    }
-
-    .variant-option:hover {
-        border-color: #2659F3;
-        background: #eff6ff;
-    }
-
-    .variant-option.active {
-        border-color: #2659F3;
-        background: #fff;
-        color: #2659F3;
-        font-weight: 600;
     }
 
     /* Quantity Selector */
@@ -455,29 +419,6 @@
         }
     }
 
-    /* Toast Notification */
-    .toast-notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        z-index: 9999;
-        opacity: 0;
-        transform: translateX(400px);
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .toast-notification.show {
-        opacity: 1;
-        transform: translateX(0);
-    }
 
     .toast-notification i {
         font-size: 1.5rem;
@@ -528,10 +469,6 @@
         opacity: 1;
     }
 
-    /* Cart icon animation */
-    .header-giohang.cart-updated {
-        animation: cartShake 0.6s ease;
-    }
 
     @keyframes cartShake {
         0%, 100% {
@@ -1288,15 +1225,6 @@
                                     </div>
                                     <div class="list-product-list1-content-description">
                                         <p class="content">${p.name}</p>
-
-                                        <div class="star">
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                            <i class="fa-solid fa-star"></i>
-                                            <span>(0)</span>
-                                        </div>
 
                                         <h2 class="price-product-after">
                                             <fmt:formatNumber value="${p.priceAfterDiscount}" type="number"/>₫

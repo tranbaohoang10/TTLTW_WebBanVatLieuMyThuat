@@ -19,8 +19,6 @@ public class AdminStatisticsController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
-
         int noSaleMonths = clampMonths(parseInt(req.getParameter("noSaleMonths"), 1));
 
         var totalYear = service.getTotalRevenueThisYear();
@@ -44,7 +42,9 @@ public class AdminStatisticsController extends HttpServlet {
     }
 
     private int parseInt(String s, int def) {
-        try { return Integer.parseInt(s); } catch (Exception e) { return def; }
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) { return def; }
     }
 
     private int clampMonths(int m) {

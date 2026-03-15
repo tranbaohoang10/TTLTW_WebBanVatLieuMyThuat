@@ -19,126 +19,165 @@ public class StatisticDAO {
         this.jdbi = JDBIConnector.getJdbi();
     }
 
-    // ====== RANGE HELPERS: N tháng tính từ tháng này ======
-    public static LocalDateTime startOfMonthRange(int months) {
-        LocalDate firstOfThisMonth = LocalDate.now().withDayOfMonth(1);
-        return firstOfThisMonth.minusMonths(months - 1L).atStartOfDay();
+    // Lấy thời điểm bắt đầu của khoảng N tháng, tính từ tháng hiện tại
+    public static LocalDateTime getStartOfMonthRange(int numberOfMonths) {
+        LocalDate firstDayOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
+        return firstDayOfCurrentMonth.minusMonths(numberOfMonths - 1L).atStartOfDay();
     }
 
-    public static LocalDateTime endOfMonthRange() {
-        LocalDate firstOfNextMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1);
-        return firstOfNextMonth.atStartOfDay();
+    // Lấy thời điểm bắt đầu của tháng sau
+    public static LocalDateTime getEndOfMonthRange() {
+        LocalDate firstDayOfNextMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1);
+        return firstDayOfNextMonth.atStartOfDay();
     }
 
-    public BigDecimal totalRevenueThisYear() {
+    // Tổng doanh thu của năm hiện tại
+    public BigDecimal getTotalRevenueOfCurrentYear() {
         String sql = """
-            SELECT COALESCE(SUM(o.totalPrice), 0) AS total
-            FROM Orders o
-            WHERE o.orderStatusID = 3
-              AND o.createAt >= MAKEDATE(YEAR(CURDATE()), 1)
-              AND o.createAt <  MAKEDATE(YEAR(CURDATE()) + 1, 1)
+            SELECT COALESCE(SUM(totalPrice), 0)
+            FROM Orders
+            WHERE orderStatusID = 3
+              AND YEAR(createAt) = YEAR(CURDATE())
         """;
-        return jdbi.withHandle(h -> h.createQuery(sql).mapTo(BigDecimal.class).one());
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapTo(BigDecimal.class)
+                        .one()
+        );
     }
 
-    public List<RevenueMonth> revenueByMonthThisYear() {
+    // Doanh thu theo từng tháng của năm hiện tại
+    public List<RevenueMonth> getRevenueByMonthOfCurrentYear() {
         String sql = """
-            SELECT m.mon AS month,
-                   COALESCE(t.revenue, 0) AS revenue
+            SELECT
+                monthNumbers.monthValue AS month,
+                COALESCE(revenueTable.revenue, 0) AS revenue
             FROM (
-                SELECT 1 AS mon UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-                UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
-                UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12
-            ) m
+                SELECT 1 AS monthValue
+                UNION ALL SELECT 2
+                UNION ALL SELECT 3
+                UNION ALL SELECT 4
+                UNION ALL SELECT 5
+                UNION ALL SELECT 6
+                UNION ALL SELECT 7
+                UNION ALL SELECT 8
+                UNION ALL SELECT 9
+                UNION ALL SELECT 10
+                UNION ALL SELECT 11
+                UNION ALL SELECT 12
+            ) AS monthNumbers
             LEFT JOIN (
-                SELECT MONTH(o.createAt) AS mon,
-                       SUM(o.totalPrice) AS revenue
-                FROM Orders o
-                WHERE o.orderStatusID = 3
-                  AND o.createAt >= MAKEDATE(YEAR(CURDATE()), 1)
-                  AND o.createAt <  MAKEDATE(YEAR(CURDATE()) + 1, 1)
-                GROUP BY MONTH(o.createAt)
-            ) t ON t.mon = m.mon
-            ORDER BY m.mon
+                SELECT
+                    MONTH(createAt) AS monthValue,
+                    SUM(totalPrice) AS revenue
+                FROM Orders
+                WHERE orderStatusID = 3
+                  AND YEAR(createAt) = YEAR(CURDATE())
+                GROUP BY MONTH(createAt)
+            ) AS revenueTable
+            ON monthNumbers.monthValue = revenueTable.monthValue
+            ORDER BY monthNumbers.monthValue
         """;
 
-        return jdbi.withHandle(h -> h.createQuery(sql)
-                .map((rs, ctx) -> new RevenueMonth(
-                        rs.getInt("month"),
-                        rs.getBigDecimal("revenue")
-                ))
-                .list());
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .map((resultSet, context) -> new RevenueMonth(
+                                resultSet.getInt("month"),
+                                resultSet.getBigDecimal("revenue")
+                        ))
+                        .list()
+        );
     }
 
-
-    public List<NoSaleRow> noSaleProducts(LocalDateTime from, LocalDateTime to) {
+    // Danh sách sản phẩm không bán được trong khoảng thời gian truyền vào
+    public List<NoSaleRow> getProductsWithNoSales(LocalDateTime startTime, LocalDateTime endTime) {
         String sql = """
             SELECT
-              p.ID AS productId,
-              p.name AS productName,
-              c.categoryName AS categoryName,
-              p.price AS price,
-              p.createAt AS createAt,
-              COALESCE(SUM(CASE WHEN o.ID IS NOT NULL THEN od.quantity ELSE 0 END), 0) AS soldQuantity
-            FROM Products p
-            JOIN Categories c ON c.ID = p.categoryID
-            LEFT JOIN Order_Details od ON od.productID = p.ID
-            LEFT JOIN Orders o ON o.ID = od.orderID
-                             AND o.orderStatusID = 3
-                             AND o.createAt >= :from
-                             AND o.createAt <  :to
-            GROUP BY p.ID, p.name, c.categoryName, p.price, p.createAt
-            HAVING soldQuantity = 0
-            ORDER BY p.createAt DESC
+                product.ID AS productId,
+                product.name AS productName,
+                category.categoryName AS categoryName,
+                product.price AS price,
+                product.createAt AS createAt,
+                0 AS soldQuantity
+            FROM Products product
+            JOIN Categories category
+                ON category.ID = product.categoryID
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM Order_Details orderDetail
+                JOIN Orders orderTable
+                    ON orderTable.ID = orderDetail.orderID
+                WHERE orderDetail.productID = product.ID
+                  AND orderTable.orderStatusID = 3
+                  AND orderTable.createAt >= :startTime
+                  AND orderTable.createAt < :endTime
+            )
+            ORDER BY product.createAt DESC
         """;
 
-        return jdbi.withHandle(h -> h.createQuery(sql)
-                .bind("from", Timestamp.valueOf(from))
-                .bind("to", Timestamp.valueOf(to))
-                .mapToBean(NoSaleRow.class)
-                .list());
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .bind("startTime", Timestamp.valueOf(startTime))
+                        .bind("endTime", Timestamp.valueOf(endTime))
+                        .mapToBean(NoSaleRow.class)
+                        .list()
+        );
     }
 
-
-    public List<BestSellerRow> bestSellersAllTime() {
+    // Danh sách sản phẩm bán chạy nhất
+    public List<BestSellerRow> getBestSellingProductsOfAllTime() {
         String sql = """
             SELECT
-              p.ID AS productId,
-              p.name AS productName,
-              c.categoryName AS categoryName,
-              p.price AS price,
-              p.createAt AS createAt,
-              COALESCE(SUM(od.quantity), 0) AS soldQty
-            FROM Products p
-            JOIN Categories c ON c.ID = p.categoryID
-            LEFT JOIN Order_Details od ON od.productID = p.ID
-            LEFT JOIN Orders o ON o.ID = od.orderID AND o.orderStatusID = 3
-            GROUP BY p.ID, p.name, c.categoryName, p.price, p.createAt
+                product.ID AS productId,
+                product.name AS productName,
+                category.categoryName AS categoryName,
+                product.price AS price,
+                product.createAt AS createAt,
+                COALESCE((
+                    SELECT SUM(orderDetail.quantity)
+                    FROM Order_Details orderDetail
+                    JOIN Orders orderTable
+                        ON orderTable.ID = orderDetail.orderID
+                    WHERE orderDetail.productID = product.ID
+                      AND orderTable.orderStatusID = 3
+                ), 0) AS soldQty
+            FROM Products product
+            JOIN Categories category
+                ON category.ID = product.categoryID
             ORDER BY soldQty DESC
         """;
 
-        return jdbi.withHandle(h -> h.createQuery(sql)
-                .mapToBean(BestSellerRow.class)
-                .list());
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapToBean(BestSellerRow.class)
+                        .list()
+        );
     }
 
-
-    public List<BestSellerChartPoint> bestSellerTop5ForChartAllTime() {
+    // Top 5 sản phẩm bán chạy nhất để vẽ biểu đồ
+    public List<BestSellerChartPoint> getTop5BestSellingProductsForChart() {
         String sql = """
             SELECT
-              p.ID AS productId,
-              p.name AS productName,
-              COALESCE(SUM(od.quantity), 0) AS soldQty
-            FROM Products p
-            LEFT JOIN Order_Details od ON od.productID = p.ID
-            LEFT JOIN Orders o ON o.ID = od.orderID AND o.orderStatusID = 3
-            GROUP BY p.ID, p.name
+                product.ID AS productId,
+                product.name AS productName,
+                COALESCE((
+                    SELECT SUM(orderDetail.quantity)
+                    FROM Order_Details orderDetail
+                    JOIN Orders orderTable
+                        ON orderTable.ID = orderDetail.orderID
+                    WHERE orderDetail.productID = product.ID
+                      AND orderTable.orderStatusID = 3
+                ), 0) AS soldQty
+            FROM Products product
             ORDER BY soldQty DESC
             LIMIT 5
         """;
 
-        return jdbi.withHandle(h -> h.createQuery(sql)
-                .mapToBean(BestSellerChartPoint.class)
-                .list());
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapToBean(BestSellerChartPoint.class)
+                        .list()
+        );
     }
 }

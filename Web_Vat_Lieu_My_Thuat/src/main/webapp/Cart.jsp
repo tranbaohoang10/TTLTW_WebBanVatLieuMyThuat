@@ -343,7 +343,7 @@
                 <h2 class="card-title">Giỏ hàng của bạn</h2>
                 <p class="subtle">
                     Bạn đang có <span
-                        id="cart-total-quantity">${totalQuantity}</span>
+                        id="cart-total-quantity">${totalQuantityProducts}</span>
                     sản phẩm trong giỏ hàng
                 </p>
                 <div class="divider"></div>
@@ -363,12 +363,6 @@
                                     <div class="cart-item-card">
                                         <div class="item">
                                             <div class="item-grid">
-<%--                                                <div--%>
-<%--                                                        class="select-product">--%>
-<%--                                                    <input--%>
-<%--                                                            type="checkbox"--%>
-<%--                                                            checked/>--%>
-<%--                                                </div>--%>
 
                                                 <div class="thumb">
                                                     <c:set var="cartThumbUrl" value="${item.thumbnail}" />

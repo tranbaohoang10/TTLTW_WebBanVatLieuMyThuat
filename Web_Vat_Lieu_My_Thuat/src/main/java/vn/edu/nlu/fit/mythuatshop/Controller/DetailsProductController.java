@@ -10,52 +10,36 @@ import vn.edu.nlu.fit.mythuatshop.Model.Subimages;
 import vn.edu.nlu.fit.mythuatshop.Service.DetailsProductService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "DetailsProductController", value = "/DetailsProductController")
 public class DetailsProductController extends HttpServlet {
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String idStr = request.getParameter("id");
-        if (idStr == null || idStr.isBlank()) {
-            // id không hợp lệ -> cho về home hoặc 404
-            response.sendRedirect(request.getContextPath() + "/home");
-            return;
-        }
-
-        int id;
-        try {
-            id = Integer.parseInt(idStr);
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/home");
-            return;
-        }
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idUrl = request.getParameter("id");
-        if (idUrl == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing product id");
+        // kiem tra hop le
+        if(idUrl == null || idUrl.isEmpty()){
+            response.sendRedirect(request.getContextPath()+"/home");
             return;
         }
+        int id = Integer.parseInt(idUrl);
         int productId = Integer.parseInt(idUrl);
-        DetailsProductService service = new DetailsProductService();
-        Product p = service.getProductActive(productId);
-        if(p==null){
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
-            return;
-        }
-      List<Specification> specificationList = service.getSpecifications(productId);
-        List<Subimages> subimagesList = service.getSubImages(productId);
-        List<ProductCard> relatedProducts = service.getRelatedProductCards(p);
-        request.setAttribute("product", p);
-        request.setAttribute("outOfStock", p.getQuantityStock() <= 0);
-        request.setAttribute("specificationList", specificationList);
-        request.setAttribute("subimagesList", subimagesList);
+        DetailsProductService detailsProductService = new DetailsProductService();
+        Product product = detailsProductService.getProductActive(productId);
+        if(product==null){
+           response.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
+           return;
+       }
+        List<Specification> specifications = detailsProductService.getSpecifications(productId);
+        List<Subimages> subimages = detailsProductService.getSubImages(productId);
+        List<ProductCard> relatedProducts = detailsProductService.getRelatedProductCards(product);
+        request.setAttribute("product", product);
+        request.setAttribute("outOfStock", product.getQuantityStock() <= 0);
+        request.setAttribute("specificationsList", specifications);
+        request.setAttribute("subimagesList", subimages);
         request.setAttribute("relatedProducts", relatedProducts);
         request.getRequestDispatcher("ProductDetails.jsp").forward(request, response);
 
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response);
     }
 }

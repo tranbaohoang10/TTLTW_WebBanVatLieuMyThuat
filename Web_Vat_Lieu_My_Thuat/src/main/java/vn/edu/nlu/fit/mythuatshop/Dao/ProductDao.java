@@ -37,9 +37,8 @@ public class ProductDao {
         );
     }
 
-    // ===================== CLIENT: chỉ lấy sản phẩm đang active =====================
+    // Client chỉ lấy sản phẩm đang active
 
-    // Client xem chi tiết sản phẩm (bị khóa => null)
     public Product findByProductIdActive(int productId) {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
