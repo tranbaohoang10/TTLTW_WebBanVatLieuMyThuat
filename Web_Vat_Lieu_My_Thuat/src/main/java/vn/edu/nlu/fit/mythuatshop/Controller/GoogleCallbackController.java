@@ -2,9 +2,9 @@ package vn.edu.nlu.fit.mythuatshop.Controller;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import vn.edu.nlu.fit.mythuatshop.Model.Cart;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.UserService;
 import vn.edu.nlu.fit.mythuatshop.Util.Env;
@@ -22,7 +22,6 @@ public class GoogleCallbackController extends HttpServlet {
     private static final String CLIENT_SECRET = Env.require("GOOGLE_CLIENT_SECRET");
     private static final String REDIRECT_URI = Env.require("GOOGLE_REDIRECT_URI");
 
-
     private UserService userService;
 
     @Override
@@ -31,37 +30,30 @@ public class GoogleCallbackController extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String code = req.getParameter("code");
-        String state = req.getParameter("state");
+        String maTTTraVe = req.getParameter("state");
 
         HttpSession session = req.getSession();
-        String savedState = (String) session.getAttribute("OAUTH_STATE");
-        session.removeAttribute("OAUTH_STATE");
+        String savedState = (String) session.getAttribute("maTTInSession");
+        session.removeAttribute("maTTInSession");
 
-        if (code == null || savedState == null || !savedState.equals(state)) {
+        if (code == null || savedState == null || !savedState.equals(maTTTraVe)) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
-        String redirectUri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort()
-                + req.getContextPath() + "/oauth2/callback/google";
-
-        // 1) Exchange code -> access_token
-        JsonObject tokenJson = exchangeCodeForToken(code, redirectUri);
+        JsonObject tokenJson = exchangeCodeForToken(code);
         String accessToken = tokenJson.get("access_token").getAsString();
 
-        // 2) Lấy userinfo (email, name, picture...)
         JsonObject userInfo = fetchUserInfo(accessToken);
         String email = userInfo.get("email").getAsString();
         String fullName = userInfo.has("name") ? userInfo.get("name").getAsString() : "";
 
-        // 3) Map vào hệ thống của bạn: email là khóa
-        // Nếu đã có user theo email -> login luôn
-        Users user = userService.findByEmailForGG(email); // bạn cần thêm hàm này (bên dưới)
+
+        Users user = userService.findByEmailForGG(email);
         if (user == null) {
-            // tạo user mới (password random/không dùng)
-            user = userService.registerGoogleUser(fullName, email); // bạn cần thêm hàm này
+            user = userService.registerGoogleUser(fullName, email);
         }
         if (user != null && user.getIsActive() == 3) {
             session.setAttribute("FLASH_ERROR", "Tài khoản đã bị khóa!");
@@ -69,26 +61,37 @@ public class GoogleCallbackController extends HttpServlet {
             return;
         }
 
-        // 4) set session giống LoginController hiện tại
         session.setAttribute("currentUser", user);
         session.setMaxInactiveInterval(30 * 60);
+
+        Object obj = session.getAttribute("cart");
+        Cart cart;
+        if (obj instanceof Cart) {
+            cart = (Cart) obj;
+        } else {
+            cart = new Cart();
+            session.setAttribute("cart", cart);
+        }
+        session.setAttribute("cartCount", cart.getTotalQuantity());
+
+        String role = user.getRole();
+        if (role != null && role.equalsIgnoreCase("ADMIN")) {
+            resp.sendRedirect(req.getContextPath() + "/admin/overview");
+            return;
+        }
 
         resp.sendRedirect(req.getContextPath() + "/home");
     }
 
-    private JsonObject exchangeCodeForToken(String code, String redirectUri) throws IOException {
+    private JsonObject exchangeCodeForToken(String code) throws IOException {
         URL url = new URL("https://oauth2.googleapis.com/token");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setDoOutput(true);
         con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-        String body =
-                "code=" + enc(code)
-                        + "&client_id=" + enc(CLIENT_ID)
-                        + "&client_secret=" + enc(CLIENT_SECRET )
-                        + "&redirect_uri=" + enc(REDIRECT_URI)
-                        + "&grant_type=authorization_code";
+        String body = "code=" + enc(code) + "&client_id=" + enc(CLIENT_ID) + "&client_secret=" + enc(CLIENT_SECRET )
+                + "&redirect_uri=" + enc(REDIRECT_URI) + "&grant_type=authorization_code";
 
         try (OutputStream os = con.getOutputStream()) {
             os.write(body.getBytes(StandardCharsets.UTF_8));

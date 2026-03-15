@@ -124,16 +124,31 @@
 <div class="hover-block">
     <div class="info-mithuat-description">
         <div class="info-mithuat-description-first">
-            <c:forEach var="cat" items="${categories}">
-                <a href="${pageContext.request.contextPath}/category?categoryId=${cat.id}">${cat.categoryName}</a>
+            <c:forEach var="c" items="${categories}">
+                <div class="category-item" data-image="${c.thumbnail}">
+                    <a href="${pageContext.request.contextPath}/category?id=${c.id}">
+                            ${c.categoryName}
+                    </a>
+                </div>
             </c:forEach>
         </div>
         <div class="info-mithuat-description-second">
         </div>
         <div class="info-mithuat-description-img">
-            <img src="${pageContext.request.contextPath}/assets/images/logo/1920x600_c17ffe56498a4e2a9e5d27ac6eeaaad2_1024x1024.jpg" alt="">
-
+            <c:if test="${not empty categories}">
+                <img id="categoryPreview" src="${categories[0].thumbnail}" alt="Ảnh danh mục">
+            </c:if>
         </div>
     </div>
 </div>
+<script>
+    const catList = document.querySelectorAll(".category-item");
+    const catImg = document.getElementById("categoryPreview");
+
+    catList.forEach(function (item) {
+        item.addEventListener("mouseenter", function () {
+            catImg.src = item.getAttribute("data-image");
+        });
+    });
+</script>
 

@@ -47,10 +47,8 @@ public class VoucherService {
             return VoucherApplyResult.fail("Đơn hàng chưa đạt giá trị tối thiểu để áp dụng");
         }
 
-        //  không vượt quá tiền hàng
         double discount = Math.min(v.getVoucherCash(), subtotal);
         cart.setDiscount(discount);
-        // lưu voucherId để lúc đặt hàng lưu vào Orders
         cart.setVoucherId(v.getId());
         return VoucherApplyResult.ok(discount);
     }
@@ -68,7 +66,6 @@ public class VoucherService {
     }
 
     public boolean create(Voucher v) {
-        // logic validate nếu cần
         return voucherDao.insert(v) > 0;
     }
 

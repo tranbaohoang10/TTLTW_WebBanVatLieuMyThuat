@@ -5,8 +5,8 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.util.Base64;
+import java.util.UUID;
+
 import vn.edu.nlu.fit.mythuatshop.Util.Env;
 
 
@@ -16,39 +16,19 @@ public class GoogleLoginController extends HttpServlet {
 
     private static final String CLIENT_ID = Env.require("GOOGLE_CLIENT_ID");
     private static final String REDIRECT_URI = Env.require("GOOGLE_REDIRECT_URI");
-    private static final String SCOPE = "openid email profile";
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         HttpSession session = req.getSession();
 
-        // state để chống CSRF
-        String state = genState();
-        session.setAttribute("OAUTH_STATE", state);
+        String maTT = UUID.randomUUID().toString();
+        session.setAttribute("maTTInSession", maTT);
 
-        String redirectUri = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort()
-                + req.getContextPath() + "/oauth2/callback/google";
-
-        String url =
-                "https://accounts.google.com/o/oauth2/v2/auth"
-                        + "?client_id=" + enc(CLIENT_ID)
-                        + "&redirect_uri=" + enc(REDIRECT_URI)
-                        + "&response_type=code"
-                        + "&scope=" + enc(SCOPE)
-                        + "&state=" + enc(state)
-                        + "&access_type=offline"
-                        + "&prompt=consent";
-
+        String url = "https://accounts.google.com/o/oauth2/v2/auth"+ "?client_id="+ URLEncoder.encode(CLIENT_ID, StandardCharsets.UTF_8)
+                + "&redirect_uri="+ URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8)+ "&response_type=code" + "&scope="+ URLEncoder.encode("openid email profile", StandardCharsets.UTF_8)
+                + "&state="+ URLEncoder.encode(maTT,StandardCharsets.UTF_8) + "&access_type=offline" + "&prompt=consent";
         resp.sendRedirect(url);
     }
 
-    private static String enc(String s) {
-        return URLEncoder.encode(s, StandardCharsets.UTF_8);
-    }
-
-    private static String genState() {
-        byte[] b = new byte[32];
-        new SecureRandom().nextBytes(b);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
-    }
 }

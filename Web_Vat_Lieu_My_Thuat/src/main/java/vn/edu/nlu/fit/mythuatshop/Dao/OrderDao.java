@@ -18,7 +18,6 @@ public class OrderDao implements DaoInterface<Order> {
 
     public int insert(Order order, boolean updateInventory) {
         return jdbi.inTransaction(handle -> {
-            // 1. Insert vào Orders, lấy ID sinh ra
             String sql = "INSERT INTO Orders (userID, fullName, email, phoneNumber, address, " +
                     " totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note,paymentStatus ) " +
                     "VALUES (:userID, :fullName, :email, :phoneNumber, :address, " +
@@ -41,7 +40,6 @@ public class OrderDao implements DaoInterface<Order> {
                     .mapTo(Integer.class)
                     .one();
 
-            // 2. Insert Order_Details cho từng sản phẩm trong giỏ
             for (OrderDetail d : order.getItems()) {
                 handle.createUpdate(
                                 "INSERT INTO Order_Details (orderID, productID, quantity, price) " +
@@ -52,7 +50,6 @@ public class OrderDao implements DaoInterface<Order> {
                         .bind("price", d.getPrice())
                         .execute();
             }
-            //3.  Update tồn kho + số bán
             if (updateInventory) {
                 for (OrderDetail d : order.getItems()) {
                     int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
@@ -106,7 +103,6 @@ public class OrderDao implements DaoInterface<Order> {
                 throw new IllegalStateException("Sai số tiền thanh toán cho đơn hàng #DH0=" + orderId);
             }
 
-            // 3) Lấy Order_Details
             List<OrderDetail> details = handle.createQuery("""
                                 SELECT productID, quantity, price
                                 FROM Order_Details
@@ -122,7 +118,6 @@ public class OrderDao implements DaoInterface<Order> {
                     })
                     .list();
 
-            // 4) Trừ kho + tăng sold
             for (OrderDetail d : details) {
                 int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
                 if (affected == 0) {
@@ -260,7 +255,6 @@ public class OrderDao implements DaoInterface<Order> {
     public boolean cancelOrder(int userId, int orderId) {
         return jdbi.inTransaction(handle -> {
 
-            // 1) đổi trạng thái: chỉ hủy khi đang xử lý (1)
             int updated = handle.createUpdate("""
                 UPDATE Orders
                 SET orderStatusID = 4
@@ -274,7 +268,6 @@ public class OrderDao implements DaoInterface<Order> {
 
             if (updated != 1) return false;
 
-            // 2) hoàn kho (cộng lại tồn) dựa trên Order_Details
             handle.createUpdate("    UPDATE Products p\n" +
                                 "    JOIN Order_Details od ON od.productID = p.id\n" +
                                 "    SET p.quantityStock = p.quantityStock + od.quantity,\n" +

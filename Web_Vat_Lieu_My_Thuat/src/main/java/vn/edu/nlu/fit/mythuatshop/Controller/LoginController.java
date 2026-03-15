@@ -1,7 +1,6 @@
 package vn.edu.nlu.fit.mythuatshop.Controller;
 
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConfig;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -9,13 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.nlu.fit.mythuatshop.Model.Cart;
-import vn.edu.nlu.fit.mythuatshop.Model.CartItem;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.UserService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+
 
 @WebServlet(name = "LoginController", value = "/login")
 public class LoginController extends HttpServlet {
@@ -31,76 +28,72 @@ public class LoginController extends HttpServlet {
         String email = req.getParameter("email");
         String password = req.getParameter("password");
 
-        // 1. Validate rỗng (giữ của nhánh Login-register)
-        if (email == null || password == null || email.isBlank() || password.isBlank()) {
-            req.setAttribute("error", "Vui lòng nhập email và mật khẩu!");
+
+        if(email == null || password == null || email.isBlank() || password.isBlank()) {
+            req.setAttribute("error", "Vui lòng nhập email và mật khẩu.");
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
 
-        // 2) Tìm user theo email trước để phân biệt lỗi
-        Users u = userService.getUserByEmail(email.trim());
-
-        if (u == null) {
+        Users user = userService.getUserByEmail(email.trim());
+        if(user == null) {
             req.setAttribute("error", "Sai email hoặc mật khẩu");
-            req.getRequestDispatcher("Login.jsp").forward(req, resp);
-            return;
-        }
-// 3) Tài khoản bị khóa
-        if (u.getIsActive() == 3) {
-            req.setAttribute("error", "Tài khoản đã bị khóa!");
-            req.getRequestDispatcher("/Login.jsp").forward(req, resp);
-            return;
-        }
-// 4) Chưa xác thực
-        if (u.getIsActive() == 0) {
-            req.setAttribute("warning", "Vui lòng truy cập gmail để xác thực tài khoản!");
+            req.setAttribute("email", email);
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
 
-// 5) Active rồi mới check mật khẩu
-        Users users = userService.login(email.trim(), password);
+        if(user.getIsActive()==3){
+            req.setAttribute("error", "Tài khoản đã bị khóa.");
+            req.getRequestDispatcher("Login.jsp").forward(req, resp);
+            return;
+        }
 
-        if (users == null) {
+        if(user.getIsActive()==0){
+            req.setAttribute("warning", "Hãy truy cập email để xác nhận tài khoản.");
+            req.getRequestDispatcher("Login.jsp").forward(req, resp);
+            return;
+        }
+
+        Users user1 = userService.login(email.trim(), password);
+        if (user1 == null) {
             req.setAttribute("error", "Sai email hoặc mật khẩu");
+            req.setAttribute("email", email);
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
+        HttpSession session = req.getSession();
+        session.setAttribute("currentUser", user1);
+        session.setMaxInactiveInterval(30*60);
 
-
-        // 4. Đúng -> lưu vào session với tên currentUser
-        HttpSession session = req.getSession(true);
-        session.setAttribute("currentUser", users);
-        session.setMaxInactiveInterval(30 * 60); // 30 phút
-        // sau khi có session thì tạo giỏ hàng cho session
-        Object cartObj = session.getAttribute("cart");
         Cart cart;
-        if (cartObj instanceof Cart) {
-            cart = (Cart) cartObj;
-        } else {
+        Object  obj = session.getAttribute("cart");
+        if (obj instanceof Cart) {
+            cart = (Cart) obj;
+        }
+        else {
             cart = new Cart();
             session.setAttribute("cart", cart);
         }
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
-        // 5. Redirect theo role
-        String role = users.getRole(); // DB: 'user' hoặc 'ADMIN'
-
-        if (role != null && role.equalsIgnoreCase("ADMIN")) {
-            resp.sendRedirect(req.getContextPath() + "/admin/overview"); // đi qua controller admin
-        } else {
-            resp.sendRedirect(req.getContextPath() + "/home");
+        String role = user1.getRole();
+        if(role.equalsIgnoreCase("admin")){
+            resp.sendRedirect(req.getContextPath()+"/admin/overview");
+            return;
         }
+        resp.sendRedirect(req.getContextPath()+"/home");
     }
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
-        String flash = (String) session.getAttribute("FLASH_ERROR");
-        if (flash != null) {
-            req.setAttribute("error", flash);
+        String error = (String) session.getAttribute("FLASH_ERROR");
+
+        if (error != null) {
+            req.setAttribute("error", error);
             session.removeAttribute("FLASH_ERROR");
         }
+
         req.getRequestDispatcher("/Login.jsp").forward(req, resp);
     }
 

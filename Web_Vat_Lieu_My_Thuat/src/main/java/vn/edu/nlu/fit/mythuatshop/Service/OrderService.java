@@ -38,14 +38,18 @@ public class OrderService {
         order.setAddress(address);
         order.setNote(note);
 
-        // paymentID
         Payment payment = paymentDao.findByName(paymentName);
-        if (payment == null)
+        if (payment == null) {
             payment = paymentDao.findByName("COD");
+        }
         order.setPaymentId(payment.getId());
 
         OrderStatus status = orderStatusDao.findByName("Đang xử lý");
-        order.setOrderStatusId(status != null ? status.getId() : 1);
+        if (status != null) {
+            order.setOrderStatusId(status.getId());
+        } else {
+            order.setOrderStatusId(1);
+        }
 
         order.setPaymentStatus("Chưa thanh toán");
 
@@ -78,7 +82,6 @@ public class OrderService {
                     ex.printStackTrace();
                 }
             }
-            // Chỉ gửi mail ngay cho COD
             if (!isVnpay) {
                 try {
                     String subject = "Xác nhận đơn hàng #DH" + newId;
@@ -109,7 +112,6 @@ public class OrderService {
                         ex.printStackTrace();
                     }
                 }
-                // Gửi email xác nhận sau khi thanh toán VNPAY thành công
                 try {
                     String subject = "Xác nhận đơn hàng #DH" + orderId;
                     String html = buildVnpayOrderEmailHtml(order);

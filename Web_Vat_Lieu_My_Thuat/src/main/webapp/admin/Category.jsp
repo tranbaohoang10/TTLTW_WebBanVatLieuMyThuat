@@ -73,21 +73,20 @@
             margin-right:5px; border:none;
         }
         .btn-edit{ background:#FFC107; color:#000; }
-        .btn-lock{ background:#DC3545; }      /* đỏ: khóa */
-        .btn-unlock{ background:#FFC107; }    /* xanh: mở */
+
         .btn-icon:hover{ opacity:.85; }
 
         /* Badge trạng thái */
         .badge-active { color:#28a745; font-weight:600; }
         .badge-inactive { color:#dc3545; font-weight:600; }
 
-        /* DataTables style giống SanPham */
-        .dataTables_wrapper{ width:100%; margin-top:10px; }
+
+
         .dataTables_filter input,
         .dataTables_length select{
             padding:6px 10px; border-radius:6px; border:1px solid #ddd; outline:none;
         }
-        .dataTables_filter{ margin-bottom:10px; }
+
         .dataTables_paginate .paginate_button{ padding:6px 10px !important; border-radius:6px !important; }
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover{
             background:#17479D !important; color:#fff !important; border:1px solid #17479D !important;
@@ -96,7 +95,6 @@
             background:#17479D !important; color:#fff !important; border:1px solid #17479D !important;
         }
 
-        /* Modal giống SanPham */
         .modal{
             display:none; position:fixed; top:0; left:0; width:100%; height:100%;
             background:rgba(0,0,0,.5); justify-content:center; align-items:center; z-index:999;
@@ -116,14 +114,9 @@
         .modal-buttons{ display:flex; justify-content:flex-end; margin-top:20px; gap:10px; }
         #btn-save{ background:#2659F5; color:#fff; padding:8px 14px; border:none; border-radius:5px; cursor:pointer; }
         #btn-close{ background:#ccc; padding:8px 14px; border:none; border-radius:5px; cursor:pointer; }
-        /* mặc định theo trạng thái */
-        .toggle-btn.is-active { background:#DC3545; }   /* đang dùng -> nút khóa màu đỏ */
-        .toggle-btn.is-inactive { background:#FFC107; } /* đã khóa -> nút mở khóa màu vàng */
 
-        /* icon màu trắng/đen tùy bạn */
         .toggle-btn i { color: #fff; }
 
-        /* khi bấm (active) hoặc giữ chuột (focus) -> icon đen */
         .toggle-btn:active i,
         .toggle-btn:focus i {
             color: #000 !important;
@@ -199,7 +192,6 @@
                                 </c:choose>
                             </td>
 
-                            <!-- ✅ TRẠNG THÁI (đưa lên trước) -->
                             <td>
                                 <c:choose>
                                     <c:when test="${c.isActive == 1}">

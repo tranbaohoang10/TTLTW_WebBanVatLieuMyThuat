@@ -22,17 +22,50 @@
   <title>Quản lý sản phẩm</title>
 
   <style>
-    /* ===== GIỮ NGUYÊN CSS CỦA BẠN (mình không xóa, chỉ thêm vài class nhỏ) ===== */
-    #main { display:flex; }
-    #main .left{ background-color:#17479D; height:100vh; width:17%; }
-    #main .left .list-admin{ display:flex; flex-direction:column; gap:15px; }
-    #main .left .list-admin a{ display:block; text-decoration:none; color:white; padding:10px 20px; }
-    #main .left .list-admin a i{ margin-right:20px; }
-    #main .left .list-admin a:hover{ background-color:#203247; border-left:2px solid #3B7DDD; }
-    #main .left .list-admin .logo img{ width:100%; height:auto; margin:10px 0 20px 0; }
-    #main .left .list-admin a.logo{ padding:0; }
-    #main .left .list-admin a.logo:hover{ background-color:#203247; border-left:none; }
-    .list-admin a.active{ background-color:#203247; border-left:4px solid #FFD700; font-weight:bold; }
+
+    #main {
+      display:flex;
+    }
+    #main .left{
+      background-color:#17479D;
+      height:100vh;
+      width:17%;
+    }
+    #main .left .list-admin{
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+    }
+    #main .left .list-admin a{
+      display:block;
+      text-decoration:none;
+      color:white;
+      padding:10px 20px;
+    }
+    #main .left .list-admin a i{
+      margin-right:20px;
+    }
+    #main .left .list-admin a:hover{
+      background-color:#203247;
+      border-left:2px solid #3B7DDD;
+    }
+    #main .left .list-admin .logo img{
+      width:100%;
+      height:auto;
+      margin:10px 0 20px 0;
+    }
+    #main .left .list-admin a.logo{
+      padding:0;
+    }
+    #main .left .list-admin a.logo:hover{
+      background-color:#203247;
+      border-left:none;
+    }
+    .list-admin a.active{
+      background-color:#203247;
+      border-left:4px solid #FFD700;
+      font-weight:bold;
+    }
 
     #main .right{ flex:1; background-color:#F9F9F9; }
     #main .right .container{ display:flex; flex-direction:column; width:calc(100% - 100px); margin:20px auto 0; }
@@ -79,17 +112,13 @@
 
     .thumb{ width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid #ddd; }
     .col-thumb{ text-align:center; width:90px; }
-
-    .sub-img-box{ position:relative; display:inline-block; }
     .sub-img-box img{ width:100px; height:100px; object-fit:cover; border-radius:6px; border:1px solid #ddd; }
     .sub-img-box button{
       position:absolute; top:-5px; right:-5px; background:#DC3545; color:white; border:none;
       border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px;
     }
 
-    .dataTables_wrapper{ width:100%; margin-top:10px; }
     .dataTables_filter input{ padding:6px 10px; border-radius:6px; border:1px solid #ddd; outline:none; }
-    .dataTables_filter{ margin-bottom:10px; }
     .dataTables_paginate .paginate_button{ padding:6px 10px !important; border-radius:6px !important; }
     .dataTables_wrapper .dataTables_paginate .paginate_button:hover{
       background:#17479D !important; color:#fff !important; border:1px solid #17479D !important;
@@ -97,13 +126,6 @@
     .dataTables_wrapper .dataTables_paginate .paginate_button.current{
       background:#17479D !important; color:#fff !important; border:1px solid #17479D !important;
     }
-
-    /* nút chọn từ server */
-    .btn-pick-server{
-      background:#2659F5; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;
-      white-space:nowrap;
-    }
-    .btn-pick-server:hover{ background:#17479D; }
   </style>
 </head>
 
@@ -202,7 +224,7 @@
                         data-quantity="${p.quantityStock}"
                         data-brand="${p.brand}"
                         data-thumbnail="${thumbUrl}"
-                        data-subimages="${subImagesCsvMap[p.id]}"
+                        data-subimages="${subImagesMap[p.id]}"
                         data-size="${specMap[p.id].size}"
                         data-standard="${specMap[p.id].standard}"
                         data-madein="${specMap[p.id].madeIn}"
@@ -215,6 +237,7 @@
                   <input type="hidden" name="action" value="toggleActive">
                   <input type="hidden" name="id" value="${p.id}">
                   <c:choose>
+                    // nếu product đang hđ -> ko hđ
                     <c:when test="${p.isActive == 1}">
                       <input type="hidden" name="isActive" value="0">
                       <button class="xoa-sanpham" type="submit"
@@ -224,6 +247,7 @@
                       </button>
                     </c:when>
                     <c:otherwise>
+                      // nếu product đang ko hđ -> hđ
                       <input type="hidden" name="isActive" value="1">
                       <button class="chinhsua-sanpham" type="submit"
                               onclick="return confirm('Mở khóa (bán lại) sản phẩm này?')"
@@ -479,7 +503,7 @@
 
   removeImgBtn.addEventListener("click", function () {
     thumbnailInput.value = "";
-    existingThumbInput.value = ""; // => servlet hiểu là xóa thumbnail
+    existingThumbInput.value = "";
     previewImg.src = "";
     previewImg.style.display = "none";
     removeImgBtn.style.display = "none";
