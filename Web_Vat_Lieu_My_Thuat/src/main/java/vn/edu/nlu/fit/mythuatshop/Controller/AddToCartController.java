@@ -14,12 +14,7 @@ import java.io.PrintWriter;
 
 @WebServlet(name = "AddToCartController", value = "/AddToCart")
 public class AddToCartController extends HttpServlet {
-    private ProductService productService;
-
-    @Override
-    public void init() throws ServletException {
-        productService = new ProductService();
-    }
+    private ProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
@@ -99,8 +94,17 @@ public class AddToCartController extends HttpServlet {
         session.setAttribute("cart", cart);
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
-        response.setContentType("application/json; charset=UTF-8");
-        response.getWriter().write("{\"success\":true,\"cartCount\":" + cart.getTotalQuantity() + "}");
+        String ajaxHeader = req.getHeader("X-Requested-With");
+        boolean isAjax = "XMLHttpRequest".equals(ajaxHeader);
+        if (isAjax) {
+            // Trả về JSON response cho AJAX
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.getWriter().write("{\"success\":true,\"cartCount\":" + cart.getTotalQuantity() + "}");
+        } else {
+            // Redirect thông thường
+            String referer = req.getHeader("referer");
+            resp.sendRedirect(referer != null ? referer : (req.getContextPath() + "/cart"));
+        }
     }
 
     private void handleRemoveItem(HttpServletRequest request, HttpServletResponse response,

@@ -61,12 +61,15 @@
                         -${p.discountDefault}%
                     </span>
                     <div class="button">
-                        <a href="${pageContext.request.contextPath}/DetailsProductController?id=${p.id}">
-                            <button class="btn-xemchitiet">
-                                <i class="fa-solid fa-eye"></i>
-                                Xem chi tiết
+                        <form action="${pageContext.request.contextPath}/AddToCart?action=add" method="post">
+                            <input type="hidden" name="productId" value="${p.id}">
+                            <input type="hidden" name="quantity" value="1">
+
+                            <button type="submit" class="btn-xemchitiet">
+                                <i class="fa-solid fa-cart-plus"></i>
+                                Thêm vào giỏ
                             </button>
-                        </a>
+                        </form>
                     </div>
                 </div>
             </div>

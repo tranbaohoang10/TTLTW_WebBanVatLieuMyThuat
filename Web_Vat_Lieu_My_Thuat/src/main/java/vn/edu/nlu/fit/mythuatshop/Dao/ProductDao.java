@@ -13,7 +13,7 @@ public class ProductDao {
         jdbi = JDBIConnector.getJdbi();
     }
 
-    // ===================== ADMIN: xem tất cả (kể cả isActive=0) =====================
+
 
     public List<Product> findAll() {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
@@ -264,28 +264,6 @@ public class ProductDao {
         );
     }
 
-    public List<Product> suggestProducts(String keyword, int limit) {
-        String sql = """
-                    SELECT id, name, price, discountDefault, thumbnail, quantityStock, soldQuantity, isActive
-                    FROM Products
-                    WHERE isActive = 1
-                      AND name LIKE CONCAT('%', :kw, '%')
-                    ORDER BY soldQuantity DESC
-                    LIMIT :limit
-                """;
-
-        return jdbi.withHandle(h ->
-                h.createQuery(sql)
-                        .bind("kw", keyword)
-                        .bind("limit", limit)
-                        .mapToBean(Product.class)
-                        .list()
-        );
-    }
-
-    // ===================== ORDER / STOCK =====================
-
-    // Chặn luôn không cho mua nếu sản phẩm bị khóa
     public int updateStockAndSold(Handle handle, int productId, int qty) {
         String sql = """
                 UPDATE Products

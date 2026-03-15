@@ -41,7 +41,6 @@ public class VoucherDao {
         return updated > 0;
     }
 
-    // LẤY TẤT CẢ VOUCHER (cho trang quản lý)
     public List<Voucher> findAll() {
         String sql = "SELECT ID, code, name, description, voucherCash, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
@@ -55,7 +54,6 @@ public class VoucherDao {
         );
     }
 
-    // LẤY 1 VOUCHER THEO ID (để load form edit)
     public Voucher findById(int id) {
         String sql = """
                 SELECT ID, code, name, description, voucherCash, minOrderValue,
@@ -73,7 +71,6 @@ public class VoucherDao {
         );
     }
 
-    // THÊM MỚI
     public int insert(Voucher v) {
         String sql = """
                 INSERT INTO Vouchers
@@ -88,7 +85,6 @@ public class VoucherDao {
         );
     }
 
-    // CẬP NHẬT
     public int update(Voucher v) {
         String sql = """
                 UPDATE Vouchers SET
@@ -112,7 +108,6 @@ public class VoucherDao {
         );
     }
 
-    // XOÁ
     public int delete(int id) {
         String sql = "DELETE FROM Vouchers WHERE ID = :id";
         return jdbi.withHandle(h ->
@@ -121,13 +116,11 @@ public class VoucherDao {
                         .execute()
         );
     }
-    // ĐẾM TẤT CẢ VOUCHER (phục vụ phân trang)
     public int countAll() {
         String sql = "SELECT COUNT(*) FROM Vouchers";
         return jdbi.withHandle(h -> h.createQuery(sql).mapTo(Integer.class).one());
     }
 
-    // LẤY DANH SÁCH THEO TRANG (offset, limit)
     public List<Voucher> findPage(int offset, int limit) {
         String sql = """
                 SELECT ID, code, name, description, voucherCash, minOrderValue,
@@ -146,7 +139,6 @@ public class VoucherDao {
         );
     }
 
-    // ĐẾM KHI TÌM KIẾM THEO TỪ KHÓA
     public int countByKeyword(String keyword) {
         String sql = """
                 SELECT COUNT(*)
@@ -162,7 +154,6 @@ public class VoucherDao {
         );
     }
 
-    // TÌM KIẾM THEO TỪ KHÓA + PHÂN TRANG
     public List<Voucher> searchPage(String keyword, int offset, int limit) {
         String sql = """
                 SELECT ID, code, name, description, voucherCash, minOrderValue,

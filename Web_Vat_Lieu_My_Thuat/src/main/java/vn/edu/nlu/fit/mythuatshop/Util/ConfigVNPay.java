@@ -37,7 +37,6 @@ public class ConfigVNPay {
 
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
-    //Util for VNPAY
     public static String hashAllFields(Map<String, String> fields) {
         List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
@@ -91,7 +90,6 @@ public class ConfigVNPay {
         return sb.toString();
     }
 
-    // (giữ lại nếu demo cần)
     public static String Sha256(String message) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");

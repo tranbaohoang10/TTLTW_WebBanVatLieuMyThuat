@@ -19,7 +19,6 @@ public class VnpayReturnController extends HttpServlet {
         boolean ok = vnpayService.verifyReturn(req);
 
 
-        // 1) verify chữ ký
         if (!ok) {
             req.setAttribute("errorMessage", "Dữ liệu VNPAY trả về không hợp lệ .");
             req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
@@ -27,8 +26,8 @@ public class VnpayReturnController extends HttpServlet {
         }
 
         // 2) lấy dữ liệu
-        String responseCode = req.getParameter("vnp_ResponseCode"); // "00" là OK
-        String tranStatus = req.getParameter("vnp_TransactionStatus"); // "00" là OK
+        String responseCode = req.getParameter("vnp_ResponseCode");
+        String tranStatus = req.getParameter("vnp_TransactionStatus");
         String txnRef = req.getParameter("vnp_TxnRef"); // orderId
         String amountStr = req.getParameter("vnp_Amount");
 
@@ -37,13 +36,13 @@ public class VnpayReturnController extends HttpServlet {
         boolean success = "00".equals(responseCode) && "00".equals(tranStatus);
 
         if (!success) {
-            // Thanh toán fail / hủy
+
             orderService.markVnpayFailed(orderId);
             req.setAttribute("errorMessage", "Thanh toán VNPAY thất bại hoặc bị hủy.");
             req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
             return;
         }
-        // 3) Thanh toán OK -> xác nhận đơn
+
         Order paidOrder = null;
         try {
             paidOrder = orderService.confirmVnpayPaid(orderId, amountVnd);
@@ -58,7 +57,7 @@ public class VnpayReturnController extends HttpServlet {
             return;
         }
 
-        // 4) xóa cart sau khi thanh toán thành công
+
         HttpSession session = req.getSession();
         session.removeAttribute("cart");
         session.setAttribute("cartCount", 0);
