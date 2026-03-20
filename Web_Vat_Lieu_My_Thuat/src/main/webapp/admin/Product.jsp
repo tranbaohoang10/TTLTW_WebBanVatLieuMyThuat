@@ -114,7 +114,7 @@
     .col-thumb{ text-align:center; width:90px; }
     .sub-img-box img{ width:100px; height:100px; object-fit:cover; border-radius:6px; border:1px solid #ddd; }
     .sub-img-box button{
-      position:absolute; top:-5px; right:-5px; background:#DC3545; color:white; border:none;
+       background:#DC3545; color:white; border:none;
       border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px;
     }
 
@@ -215,7 +215,7 @@
               </td>
 
               <td>
-                <button type="button" class="chinhsua-sanpham"
+                <button type="button" class="chinhsua-sanpham btnEditProduct"
                         data-id="${p.id}"
                         data-name="${p.name}"
                         data-categoryid="${p.categoryId}"
@@ -246,7 +246,7 @@
                       </button>
                     </c:when>
                     <c:otherwise>
-                      // nếu product đang ko hđ -> hđ
+
                       <input type="hidden" name="isActive" value="1">
                       <button class="chinhsua-sanpham" type="submit"
                               onclick="return confirm('Mở khóa (bán lại) sản phẩm này?')"
@@ -348,7 +348,7 @@
   </div>
 </div>
 
-<script>
+<<script>
   // ====== DATATABLE ======
   $(function () {
     const viUrl = "https://cdn.datatables.net/plug-ins/1.13.8/i18n/vi.json";
@@ -358,8 +358,8 @@
       ordering: true,
       searching: true,
       info: false,
-      language: {url: viUrl},
-      columnDefs: [{orderable: false, targets: [3, 9]}]
+      language: { url: viUrl },
+      columnDefs: [{ orderable: false, targets: [3, 9] }]
     });
   });
 </script>
@@ -396,33 +396,53 @@
 
   const ctx = "${pageContext.request.contextPath}";
 
-  let existingSubUrls = []; // ảnh phụ đang giữ (từ DB, có thể bị user xóa)
-  let subImagesLocal = [];  // ảnh phụ upload mới
+  let existingSubUrls = [];
+  let subImagesLocal = [];
 
-  function openModal() { modal.style.display = "flex"; modal.style.gap = "20px"; }
-  function closeModal() { modal.style.display = "none"; }
-
-  btnClose.addEventListener("click", closeModal);
-  window.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-
-  function normalizeUrl(u){
-    if(!u) return "";
-    u = u.trim();
-    if(u.startsWith("http")) return u;
-    if(u.startsWith(ctx)) return u;
-    return ctx + u; // u dạng /uploads/...
+  function openModal() {
+    modal.style.display = "flex";
   }
 
-  function syncExistingSubHidden(){
-    const rels = existingSubUrls.map(u => (u.startsWith(ctx) ? u.substring(ctx.length) : u));
+  function closeModal() {
+    modal.style.display = "none";
+  }
+
+  btnClose.addEventListener("click", closeModal);
+  window.addEventListener("click", function (e) {
+    if (e.target === modal) closeModal();
+  });
+
+  function normalizeUrl(u) {
+    if (!u) return "";
+    u = u.trim();
+
+    if (u.startsWith("http://") || u.startsWith("https://")) return u;
+    if (u.startsWith(ctx)) return u;
+    if (u.startsWith("/")) return ctx + u;
+
+    return ctx + "/" + u;
+  }
+
+  function syncExistingSubHidden() {
+    const rels = existingSubUrls.map(function (u) {
+      return u.startsWith(ctx) ? u.substring(ctx.length) : u;
+    });
     existingSubInput.value = rels.join(",");
+  }
+
+  function rebuildSubFileInput() {
+    const dt = new DataTransfer();
+    subImagesLocal.forEach(function (item) {
+      dt.items.add(item.file);
+    });
+    thumbnailSub.files = dt.files;
   }
 
   function renderSubImages() {
     subPreviewContainer.innerHTML = "";
 
-    // ảnh phụ cũ
-    existingSubUrls.forEach((url, index) => {
+    // render ảnh phụ cũ từ DB
+    existingSubUrls.forEach(function (url, index) {
       const box = document.createElement("div");
       box.className = "sub-img-box";
 
@@ -431,8 +451,10 @@
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.innerHTML = "×";
-      btn.onclick = () => {
+      btn.innerHTML = "x";
+      btn.title = "Xóa ảnh";
+
+      btn.onclick = function () {
         existingSubUrls.splice(index, 1);
         syncExistingSubHidden();
         renderSubImages();
@@ -443,8 +465,8 @@
       subPreviewContainer.appendChild(box);
     });
 
-    // ảnh phụ mới
-    subImagesLocal.forEach((imgObj, index) => {
+    // render ảnh phụ mới upload
+    subImagesLocal.forEach(function (imgObj, index) {
       const box = document.createElement("div");
       box.className = "sub-img-box";
 
@@ -453,9 +475,13 @@
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.innerHTML = "×";
-      btn.onclick = () => {
+      btn.innerHTML = "x";
+      btn.title = "Xóa ảnh";
+
+      btn.onclick = function () {
+        URL.revokeObjectURL(imgObj.url);
         subImagesLocal.splice(index, 1);
+        rebuildSubFileInput();
         renderSubImages();
       };
 
@@ -465,95 +491,132 @@
     });
   }
 
-  // ADD
-  btnAdd.addEventListener("click", () => {
+  function resetMainImage() {
+    thumbnailInput.value = "";
+    existingThumbInput.value = "";
+    previewImg.src = "";
+    previewImg.style.display = "none";
+    removeImgBtn.style.display = "none";
+  }
+
+  function resetSubImages() {
+    existingSubUrls = [];
+    existingSubInput.value = "";
+
+    subImagesLocal.forEach(function (item) {
+      if (item.url) URL.revokeObjectURL(item.url);
+    });
+
+    subImagesLocal = [];
+    thumbnailSub.value = "";
+    subPreviewContainer.innerHTML = "";
+  }
+
+  // ===== THÊM SẢN PHẨM =====
+  btnAdd.addEventListener("click", function () {
     modalTitle.innerText = "Thêm sản phẩm";
     actionInput.value = "create";
     dbId.value = "";
 
     form.reset();
 
-    // main
-    existingThumbInput.value = "";
-    thumbnailInput.value = "";
-    previewImg.style.display = "none";
-    previewImg.src = "";
-    removeImgBtn.style.display = "none";
-
-    // sub
-    existingSubUrls = [];
-    existingSubInput.value = "";
-    subImagesLocal = [];
-    thumbnailSub.value = "";
-    subPreviewContainer.innerHTML = "";
+    resetMainImage();
+    resetSubImages();
 
     openModal();
   });
 
-  // MAIN preview
+  // ===== ẢNH CHÍNH =====
   thumbnailInput.addEventListener("change", function () {
     const file = this.files[0];
+
     if (file) {
       previewImg.src = URL.createObjectURL(file);
       previewImg.style.display = "block";
       removeImgBtn.style.display = "inline-block";
+      existingThumbInput.value = "";
     }
   });
 
   removeImgBtn.addEventListener("click", function () {
-    thumbnailInput.value = "";
-    existingThumbInput.value = "";
-    previewImg.src = "";
-    previewImg.style.display = "none";
-    removeImgBtn.style.display = "none";
+    resetMainImage();
   });
 
-  // SUB preview
+  // ===== ẢNH PHỤ =====
   thumbnailSub.addEventListener("change", function () {
     const files = Array.from(this.files || []);
-    subImagesLocal = files.map(file => ({ file, url: URL.createObjectURL(file) }));
+
+    subImagesLocal.forEach(function (item) {
+      if (item.url) URL.revokeObjectURL(item.url);
+    });
+
+    subImagesLocal = files.map(function (file) {
+      return {
+        file: file,
+        url: URL.createObjectURL(file)
+      };
+    });
+
+    rebuildSubFileInput();
     renderSubImages();
   });
 
-  // EDIT
-  document.querySelectorAll(".chinhsua-sanpham").forEach(btn => {
-    btn.addEventListener("click", () => {
+  // ===== SỬA SẢN PHẨM =====
+  document.querySelectorAll(".btnEditProduct").forEach(function (btn) {
+    btn.addEventListener("click", function () {
       modalTitle.innerText = "Cập nhật sản phẩm";
       actionInput.value = "update";
 
-      dbId.value = btn.dataset.id;
-      nameInput.value = btn.dataset.name || "";
+      dbId.value = btn.dataset.id || "";
       categoryID.value = btn.dataset.categoryid || "";
-      priceInput.value = btn.dataset.price || 0;
+      nameInput.value = btn.dataset.name || "";
       discountInput.value = btn.dataset.discount || 0;
+      priceInput.value = btn.dataset.price || 0;
       qtyInput.value = btn.dataset.quantity || 0;
       brandInput.value = btn.dataset.brand || "";
-
       sizeInput.value = btn.dataset.size || "";
       madeInInput.value = btn.dataset.madein || "";
       warningInput.value = btn.dataset.warning || "";
 
-      // reset file inputs
+      // reset ảnh mới trước
       thumbnailInput.value = "";
       thumbnailSub.value = "";
+
+      subImagesLocal.forEach(function (item) {
+        if (item.url) URL.revokeObjectURL(item.url);
+      });
       subImagesLocal = [];
 
-      // main từ DB
-      const thumb = btn.dataset.thumbnail;
+      // ảnh chính cũ
+      const thumb = (btn.dataset.thumbnail || "").trim();
       if (thumb) {
-        previewImg.src = thumb;
+        previewImg.src = normalizeUrl(thumb);
         previewImg.style.display = "block";
         removeImgBtn.style.display = "inline-block";
         existingThumbInput.value = thumb.startsWith(ctx) ? thumb.substring(ctx.length) : thumb;
       } else {
+        previewImg.src = "";
         previewImg.style.display = "none";
         removeImgBtn.style.display = "none";
         existingThumbInput.value = "";
       }
 
-      // sub từ DB
+      // ảnh phụ cũ
       const rawSubs = (btn.dataset.subimages || "").trim();
-      existingSubUrls = rawSubs ? rawSubs.split(",").map(s => s.trim()).filter(Boolean) : [];
+
+      existingSubUrls = rawSubs
+              ? Array.from(
+                      new Set(
+                              rawSubs
+                                      .replace(/^\[/, "")
+                                      .replace(/\]$/, "")
+                                      .split(",")
+                                      .map(function (s) { return s.trim(); })
+                                      .filter(function (s) { return s !== ""; })
+                      )
+              )
+              : [];
+
       syncExistingSubHidden();
       renderSubImages();
 
