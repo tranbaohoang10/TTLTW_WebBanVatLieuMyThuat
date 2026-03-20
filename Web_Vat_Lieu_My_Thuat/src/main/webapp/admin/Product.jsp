@@ -544,7 +544,12 @@
 
   // ===== ẢNH PHỤ =====
   thumbnailSub.addEventListener("change", function () {
-    const files = Array.from(this.files || []);
+    let files = Array.from(this.files || []);
+
+    if (files.length > 3) {
+      alert("Chỉ được chọn tối đa 3 ảnh phụ.");
+      files = files.slice(0, 3);
+    }
 
     subImagesLocal.forEach(function (item) {
       if (item.url) URL.revokeObjectURL(item.url);
@@ -614,7 +619,7 @@
                                       .map(function (s) { return s.trim(); })
                                       .filter(function (s) { return s !== ""; })
                       )
-              )
+              ).slice(0, 3)
               : [];
 
       syncExistingSubHidden();
