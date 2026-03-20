@@ -237,7 +237,6 @@
                   <input type="hidden" name="action" value="toggleActive">
                   <input type="hidden" name="id" value="${p.id}">
                   <c:choose>
-                    // nếu product đang hđ -> ko hđ
                     <c:when test="${p.isActive == 1}">
                       <input type="hidden" name="isActive" value="0">
                       <button class="xoa-sanpham" type="submit"

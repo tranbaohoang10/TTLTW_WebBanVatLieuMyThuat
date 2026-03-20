@@ -121,7 +121,20 @@
         .toggle-btn:focus i {
             color: #000 !important;
         }
+        .btn-lock{
+            background:#dc3545;
+            color:#fff;
+        }
 
+        .btn-unlock{
+            background:#28a745;
+            color:#fff;
+        }
+
+        .btn-lock:hover,
+        .btn-unlock:hover{
+            opacity:0.85;
+        }
     </style>
 </head>
 
