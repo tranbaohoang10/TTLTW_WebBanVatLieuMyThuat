@@ -59,8 +59,14 @@ public class PlaceOrderController extends HttpServlet {
             resp.sendRedirect(paymentUrl);
             return; 
         }
-        session.removeAttribute("cart");
-        session.setAttribute("cartCount", 0);
+        Cart cart = (Cart) session.getAttribute("cart");
+        if (cart != null) {
+            cart.removeCartTemp(cartTemp);
+            session.setAttribute("cart", cart);
+            session.setAttribute("cartCount", cart.getTotalQuantity());
+        }
+
+        session.removeAttribute("cartTemp");
         session.setAttribute("paidOrder", order);
         session.removeAttribute("appliedVoucherId");
         resp.sendRedirect(req.getContextPath() + "/payment-success");

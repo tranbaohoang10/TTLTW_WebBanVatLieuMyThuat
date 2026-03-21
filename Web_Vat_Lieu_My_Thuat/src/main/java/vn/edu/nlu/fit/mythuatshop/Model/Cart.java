@@ -116,4 +116,13 @@ public class Cart {
         }
         return cartTemp;
     }
+    public void removeCartTemp(Cart cartTemp) {
+        if (cartTemp == null) {
+            return;
+        }
+
+        for (Integer id : cartTemp.getCarts().keySet()) {
+            carts.remove(id);
+        }
+    }
 }
