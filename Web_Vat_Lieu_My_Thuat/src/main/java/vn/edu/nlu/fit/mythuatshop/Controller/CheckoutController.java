@@ -19,11 +19,12 @@ public class CheckoutController extends HttpServlet {
             resp.sendRedirect("login");
             return;
         }
-        Cart cart = (Cart) session.getAttribute("cart");
-        if (cart == null || cart.cartSize() == 0) {
-            resp.sendRedirect("Cart.jsp");
+        Cart cartTemp = (Cart) session.getAttribute("cartTemp");
+        if (cartTemp == null || cartTemp.cartSize() == 0) {
+            resp.sendRedirect(req.getContextPath() + "/cart");
             return;
         }
+
         req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
 
     }
@@ -47,8 +48,13 @@ public class CheckoutController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
+        Cart cartTemp = cart.getCartByIds(productIds);
+        if (cartTemp.cartSize() == 0) {
+            response.sendRedirect(request.getContextPath() + "/cart");
+            return;
+        }
 
-        session.setAttribute("productIds", productIds);
+        session.setAttribute("cartTemp", cartTemp);
         response.sendRedirect(request.getContextPath() + "/checkout");
     }
 }
