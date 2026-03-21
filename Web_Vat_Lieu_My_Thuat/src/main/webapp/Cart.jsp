@@ -362,9 +362,7 @@
                 </p>
                 <div class="divider"></div>
 
-                <form
-                        action="${pageContext.request.contextPath}/AddToCart?action=update"
-                        method="post">
+                <form id="cartForm" action="${pageContext.request.contextPath}/checkout" method="post">
                     <c:if test="${not empty cartItems}">
                         <div class="select-all-wrap">
                             <label for="selectAllItems">
@@ -387,6 +385,7 @@
                                             <div class="item-grid">
                                                 <div class="item-check">
                                                     <input type="checkbox" class="cart-item-checkbox"
+                                                           name="productIds"
                                                            value="${item.productId}" checked>
                                                 </div>
                                                 <div class="thumb">
@@ -516,8 +515,8 @@
                             </button>
                         </c:when>
                         <c:otherwise>
-                            <button class="btn" ${cart.cartSize() == 0 ?
-                                    'disabled' : ''}>Đặt hàng
+                            <button type="submit" form="cartForm" class="btn" ${cartSize == 0 ? 'disabled' : ''}>
+                                Đặt hàng
                             </button>
                         </c:otherwise>
                     </c:choose>
