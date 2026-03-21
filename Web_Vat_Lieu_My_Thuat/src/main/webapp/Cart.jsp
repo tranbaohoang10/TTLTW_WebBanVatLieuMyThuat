@@ -390,14 +390,16 @@
                                                            value="${item.productId}" checked>
                                                 </div>
                                                 <div class="thumb">
-                                                    <c:set var="cartThumbUrl" value="${item.thumbnail}" />
+                                                    <c:set var="cartThumbUrl" value="${item.thumbnail}"/>
                                                     <c:if test="${not empty cartThumbUrl and not fn:startsWith(cartThumbUrl,'http') and not fn:startsWith(cartThumbUrl, pageContext.request.contextPath)}">
                                                         <c:choose>
                                                             <c:when test="${fn:startsWith(cartThumbUrl,'/')}">
-                                                                <c:set var="cartThumbUrl" value="${pageContext.request.contextPath}${cartThumbUrl}" />
+                                                                <c:set var="cartThumbUrl"
+                                                                       value="${pageContext.request.contextPath}${cartThumbUrl}"/>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <c:set var="cartThumbUrl" value="${pageContext.request.contextPath}/${cartThumbUrl}" />
+                                                                <c:set var="cartThumbUrl"
+                                                                       value="${pageContext.request.contextPath}/${cartThumbUrl}"/>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </c:if>
@@ -588,24 +590,20 @@
                     return;
                 }
 
-                // cập nhật thành tiền từng dòng
                 const subSpan = document.getElementById('subtotal-' + productId);
                 if (subSpan) {
                     subSpan.textContent = formatCurrency(data.itemSubtotal);
                 }
 
-                // cập nhật tổng tiền
                 const totalSpan = document.querySelector('.thanh-tien');
                 if (totalSpan) {
                     totalSpan.textContent = formatCurrency(data.totalAmount);
                 }
 
-                // cập nhật số trên icon giỏ hàng
                 const cartIcon = document.getElementById('cartIcon');
                 if (cartIcon) {
                     cartIcon.setAttribute('data-count', data.cartCount);
                 }
-                // cập nhật tổng sản phẩm sản phẩm
                 const cartTotalQty = document.getElementById('cart-total-quantity');
                 if (cartTotalQty) {
                     cartTotalQty.textContent = data.cartCount;
@@ -613,6 +611,37 @@
             })
             .catch(err => console.error(err));
     }
+
+    //nút chọn tất cả
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkAll = document.getElementById('selectAllItems');
+        const listCheck = document.querySelectorAll('.cart-item-checkbox');
+
+        if (checkAll) {
+            checkAll.addEventListener('change', function () {
+                listCheck.forEach(function (item) {
+                    item.checked = checkAll.checked;
+                });
+            });
+        }
+
+        listCheck.forEach(function (item) {
+            item.addEventListener('change', function () {
+                let ok = true;
+
+                listCheck.forEach(function (cb) {
+                    if (!cb.checked) {
+                        ok = false;
+                    }
+                });
+
+                if (checkAll) {
+                    checkAll.checked = ok;
+                }
+            });
+        });
+    });
+
 </script>
 </body>
 
