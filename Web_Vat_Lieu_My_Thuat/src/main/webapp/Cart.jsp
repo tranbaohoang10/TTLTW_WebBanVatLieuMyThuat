@@ -35,7 +35,6 @@
     }
 
     .breadcrumb {
-        /* background-color: #f3f4f6; */
         background: #DBE8FF;
         color: #17479d;
         font-weight: 500;
@@ -310,7 +309,6 @@
         color: #2659F3;
     }
 
-    /* từ sửa sau */
     html,
     body {
         height: 100%;
@@ -333,11 +331,10 @@
 
 <body>
 <%@ include file="Header.jsp" %>
-<!-- Breadcrumb -->
+
 <div class="breadcrumb">Trang chủ / Giỏ hàng</div>
 <div class="container">
     <div class="grid">
-        <!-- LEFT: CART -->
         <div class="card">
             <div class="card-body">
                 <h2 class="card-title">Giỏ hàng của bạn</h2>
@@ -430,9 +427,11 @@
                                                                 name="quantity"
                                                                 value="${item.quantity}"
                                                                 min="1"
+                                                                max="${item.stockQuantity}"
                                                                 class="qty-input"
                                                                 id="qty-${item.productId}"
                                                                 data-product-id="${item.productId}"
+                                                                data-stock="${item.stockQuantity}"
                                                                 readonly/>
 
                                                         <button
@@ -453,12 +452,10 @@
                         </c:choose>
                     </div>
 
-                    <!-- nút cập nhật -->
                 </form>
             </div>
         </div>
 
-        <!-- RIGHT: TỔNG TIỀN -->
         <div class="card summary">
             <div class="card-body">
                 <div class="head">
@@ -502,18 +499,33 @@
 <%@ include file="Footer.jsp" %>
 <script>
     function increaseQty(productId) {
-        const input = document.getElementById('qty-' + productId);
-        let currentQty = parseInt(input.value, 10);
-        if (isNaN(currentQty)) currentQty = 0;
-        currentQty++;
-        input.value = currentQty;
-        updateCartItem(productId, currentQty);
+        var input = document.getElementById("qty-" + productId);
+        var currentQty = parseInt(input.value);
+        var maxQty = parseInt(input.getAttribute("data-stock"));
+
+        if (isNaN(currentQty)) {
+            currentQty = 1;
+        }
+
+        if (isNaN(maxQty)) {
+            maxQty = 1;
+        }
+
+        if (currentQty < maxQty) {
+            currentQty++;
+            input.value = currentQty;
+            updateCartItem(productId, currentQty);
+        }
     }
 
     function decreaseQty(productId) {
-        const input = document.getElementById('qty-' + productId);
-        let currentQty = parseInt(input.value, 10);
-        if (isNaN(currentQty)) currentQty = 1;
+        var input = document.getElementById("qty-" + productId);
+        var currentQty = parseInt(input.value);
+
+        if (isNaN(currentQty)) {
+            currentQty = 1;
+        }
+
         if (currentQty > 1) {
             currentQty--;
             input.value = currentQty;
@@ -563,24 +575,20 @@
                     return;
                 }
 
-                // cập nhật thành tiền từng dòng
                 const subSpan = document.getElementById('subtotal-' + productId);
                 if (subSpan) {
                     subSpan.textContent = formatCurrency(data.itemSubtotal);
                 }
 
-                // cập nhật tổng tiền
                 const totalSpan = document.querySelector('.thanh-tien');
                 if (totalSpan) {
                     totalSpan.textContent = formatCurrency(data.totalAmount);
                 }
 
-                // cập nhật số trên icon giỏ hàng
                 const cartIcon = document.getElementById('cartIcon');
                 if (cartIcon) {
                     cartIcon.setAttribute('data-count', data.cartCount);
                 }
-                // cập nhật tổng sản phẩm sản phẩm
                 const cartTotalQty = document.getElementById('cart-total-quantity');
                 if (cartTotalQty) {
                     cartTotalQty.textContent = data.cartCount;
