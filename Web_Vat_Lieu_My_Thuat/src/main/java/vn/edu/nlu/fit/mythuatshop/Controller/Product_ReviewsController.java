@@ -44,7 +44,7 @@ public class Product_ReviewsController extends HttpServlet {
         avgRating = Math.round(avgRating * 10.0) / 10.0;
         int reviewCount = reviews.size();
 
-        // 4. Gắn dữ liệu vào request
+
         request.setAttribute("product", product);
         request.setAttribute("reviews", reviews);
         request.setAttribute("avgRating", avgRating);
@@ -57,7 +57,7 @@ public class Product_ReviewsController extends HttpServlet {
         Users currentUser = (session != null) ? (Users) session.getAttribute("currentUser") : null;
 
         if (currentUser == null) {
-            // Chưa đăng nhập → bắt đăng nhập trước khi đánh giá
+            // Chưa đăng nhập -> bắt đăng nhập trước khi đánh giá
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -88,10 +88,15 @@ public class Product_ReviewsController extends HttpServlet {
             review.setRating(rating);
             review.setComment(comment != null ? comment.trim() : "");
 
-            // 4. Gọi service để lưu DB
+            boolean canReview = reviewService.canReviewProduct(currentUser.getId(),productID);
+            if(!canReview){
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,"Chỉ được đánh giá khi đã mua sản phẩm này");
+                return;
+            }
+
             reviewService.addReview(review);
 
-            // 5. Redirect về lại trang review của sản phẩm đó
+
             response.sendRedirect(
                     request.getContextPath() + "/Product_ReviewsController?id=" + productID
             );

@@ -52,4 +52,25 @@ public class Product_ReviewsDao {
                         .execute()
         );
     }
+
+    public boolean canReviewProduct(int id, int productID) {
+        String sql = """
+            SELECT COUNT(*)
+            FROM orders o
+            JOIN order_details od ON o.orderID = od.orderID
+            JOIN order_statuses os ON os.ID = o.orderStatusID
+            WHERE o.userID = :userID
+              AND od.productID = :productID
+              AND os.statusName = 'Hoàn thành'
+            """;
+
+        Integer count = jdbi.withHandle(h -> h.createQuery(sql)
+                .bind("userID", id)
+                .bind("productID", productID)
+                .mapTo(Integer.class)
+                .one()
+        );
+
+        return count != null && count > 0;
+    }
 }
