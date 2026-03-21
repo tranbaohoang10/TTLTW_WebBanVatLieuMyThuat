@@ -52,7 +52,7 @@ public class RegisterController extends HttpServlet {
 
         boolean success = userService.register(fullName, email, phoneNumber, password, baseUrl);
         if(!success){
-            req.setAttribute("error", "Email đã được sử dụng, vui lòng nhập email khác!");
+            req.setAttribute("error", "Đăng ký thất bại. Email có thể đã được sử dụng hoặc tài khoản chưa được xác thực.");
             req.getRequestDispatcher("Register.jsp").forward(req,resp);
             return;
         }
