@@ -27,6 +27,7 @@ public class Product_ReviewsController extends HttpServlet {
     }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
     String url = request.getParameter("id");
         if (url == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing product id");
@@ -43,7 +44,24 @@ public class Product_ReviewsController extends HttpServlet {
         // làm tròn 1 chữ số thập phân
         avgRating = Math.round(avgRating * 10.0) / 10.0;
         int reviewCount = reviews.size();
+        HttpSession session = request.getSession(false);
+        Users currentUser = (session != null) ? (Users) session.getAttribute("currentUser") : null;
 
+        boolean canReview = false;
+        boolean hasReviewed = false;
+
+        if (currentUser != null) {
+            canReview = reviewService.canReviewProduct(currentUser.getId(), productID);
+            hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
+        }
+
+        if (currentUser != null) {
+            canReview = reviewService.canReviewProduct(currentUser.getId(), productID);
+            hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
+        }
+
+        request.setAttribute("canReview", canReview);
+        request.setAttribute("hasReviewed", hasReviewed);
 
         request.setAttribute("product", product);
         request.setAttribute("reviews", reviews);

@@ -57,7 +57,7 @@ public class Product_ReviewsDao {
         String sql = """
             SELECT COUNT(*)
             FROM orders o
-            JOIN order_details od ON o.orderID = od.orderID
+            JOIN order_details od ON o.ID = od.orderID
             JOIN order_statuses os ON os.ID = o.orderStatusID
             WHERE o.userID = :userID
               AND od.productID = :productID
