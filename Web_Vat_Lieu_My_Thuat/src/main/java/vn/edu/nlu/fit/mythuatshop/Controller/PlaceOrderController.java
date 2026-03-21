@@ -32,8 +32,8 @@ public class PlaceOrderController extends HttpServlet {
             resp.sendRedirect("login");
             return;
         }
-        Cart cart = (Cart) session.getAttribute("cart");
-        if (cart == null || cart.cartSize() == 0) {
+        Cart cartTemp = (Cart) session.getAttribute("cartTemp");
+        if (cartTemp == null || cartTemp.cartSize() == 0) {
             resp.sendRedirect("Cart.jsp");
             return;
         }
@@ -45,7 +45,7 @@ public class PlaceOrderController extends HttpServlet {
         String paymentName = req.getParameter("payment");
         Integer voucherId = (Integer) session.getAttribute("appliedVoucherId");
 
-        Order order = orderService.createOrder(currentUser, cart, fullName, email, phone,
+        Order order = orderService.createOrder(currentUser, cartTemp, fullName, email, phone,
                 address, note, paymentName, voucherId);
 
         if (order == null) {
