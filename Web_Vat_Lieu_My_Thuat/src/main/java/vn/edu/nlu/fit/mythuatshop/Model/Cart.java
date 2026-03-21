@@ -94,5 +94,26 @@ public class Cart {
     public double getTotalPriceToPay() {
         return getTotalProductPrice() - discount + fee;
     }
+    public Cart getCartByIds(String[] productIds) {
+        Cart cartTemp = new Cart();
 
+        if (productIds == null) {
+            return cartTemp;
+        }
+
+        for (String id : productIds) {
+            try {
+                int productId = Integer.parseInt(id);
+                CartItem item = carts.get(productId);
+
+                if (item != null) {
+                    CartItem itemNew = new CartItem(item.getProductId(), item.getName(), item.getPrice(), item.getDiscountDefault(), item.getThumbnail(), item.getQuantity());
+                    cartTemp.addCartItem(itemNew);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return cartTemp;
+    }
 }
