@@ -53,7 +53,29 @@ public class UserService {
         email = email.trim();
         Users checkUser = userDao.findByEmail(email);
         if(checkUser != null){
-            return false;
+           if(checkUser.getIsActive()==1){
+               return false;
+           }
+           if(checkUser.getIsActive()==0){
+               String oldToken = tokenDao.findValidTokenByUserId(checkUser.getId());
+               if(oldToken==null){
+                   return false;
+               }
+               String newToken = UUID.randomUUID().toString().replace("-", "");
+               LocalDateTime hanXT = LocalDateTime.now().plusHours(24);
+
+               tokenDao.deleteTokensByUserId(checkUser.getId());
+               tokenDao.insert(checkUser.getId(), newToken,  hanXT);
+
+               String verify = baseUrl + "/verify-email?token=" + newToken;
+               String emailTitle = "Xác nhận đăng ký tài khoản";
+               String nd = "" + "<p>Chào bạn,</p>" + "<p>Bạn đã yêu cầu gửi lại email xác thực tài khoản.</p>"
+                       + "<p>Vui lòng nhấn vào link bên dưới để kích hoạt tài khoản:</p>" + "<p><a href='" + verify
+                       + "'>Kích hoạt tài khoản</a></p>" + "<p>Link này sẽ hết hạn sau 24 giờ.</p>";
+               EmailUtil .sendHtml(email, emailTitle, nd);
+               return true;
+           }
+           return false;
         }
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
         Users newUser = new Users();
