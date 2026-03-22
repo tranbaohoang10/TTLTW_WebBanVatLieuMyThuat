@@ -83,19 +83,7 @@
     #section-main .section-main-filter-tieuchi .list label {
         white-space: nowrap;
     }
-    #section-main .section-main-filter button {
-        margin-top: 10px;
-        width: 100%;
-        padding: 8px 18px;
-        border: none;
-        border-radius: 20px;
-        background-color: #5980f6;
-        color: #fff;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
 
-    }
 
 </style>
 <div class="section-main-filter">
@@ -170,6 +158,14 @@
             </div>
         </div>
 
-        <button type="submit">Lọc</button>
     </form>
 </div>
+<script>
+    var listRadio = document.querySelectorAll('#filterForm input[type="radio"]');
+    for (var i = 0; i < listRadio.length; i++) {
+        listRadio[i].onclick = function () {
+            document.getElementById("filterForm").submit();
+        }
+    }
+</script>
+

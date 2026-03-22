@@ -1,4 +1,3 @@
-// ProfileController.java
 package vn.edu.nlu.fit.mythuatshop.Controller;
 
 import jakarta.servlet.ServletException;
@@ -38,7 +37,7 @@ public class ProfileController extends HttpServlet {
         }
 
         if (userToUse.getDob() != null) {
-            String dobString = userToUse.getDob().toString(); // yyyy-MM-dd
+            String dobString = userToUse.getDob().toString();
             req.setAttribute("dob", dobString);
         }
 
@@ -60,22 +59,15 @@ public class ProfileController extends HttpServlet {
 
         String fullName = req.getParameter("fullName");
         String phoneNumber = req.getParameter("phoneNumber");
-        String dob = req.getParameter("dob");        // dạng yyyy-MM-dd
+        String dob = req.getParameter("dob");
         String address = req.getParameter("address");
 
-        boolean success = userService.updateProfile(
-                currentUser.getId(),
-                fullName,
-                phoneNumber,
-                dob,
-                address
-        );
+        boolean success = userService.updateProfile(currentUser.getId(), fullName, phoneNumber, dob, address);
 
         if (!success) {
             req.setAttribute("error", "Cập nhật thông tin thất bại, vui lòng thử lại!");
             req.setAttribute("dob", dob);
             req.getRequestDispatcher("Profile.jsp").forward(req, resp);
-            return;
         } else {
             Users updatedUser = userService.getUserById(currentUser.getId());
             if (updatedUser != null) {
@@ -86,5 +78,5 @@ public class ProfileController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/profile?success=true");
         }
 
-        }
+    }
 }
