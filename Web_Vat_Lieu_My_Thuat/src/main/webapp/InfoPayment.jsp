@@ -672,8 +672,7 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </c:if>
-
-                                        <img src="${ckThumbUrl}" alt="${item.name}">
+                                                                                    <img src="${ckThumbUrl}" alt="${item.name}">
                                         <span class="item-quantity">${item.quantity}</span>
                                     </div>
 
