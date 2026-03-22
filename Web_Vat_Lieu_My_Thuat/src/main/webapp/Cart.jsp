@@ -94,7 +94,7 @@
 
     .item-grid {
         display: grid;
-        grid-template-columns: 80px 1fr auto auto;
+        grid-template-columns: 36px 80px 1fr auto auto;
         align-items: center;
         gap: 16px;
     }
@@ -326,7 +326,21 @@
         flex: 1;
     }
 
-    /* end style shopping cart */
+    .select-all-wrap {
+        margin-bottom: 15px;
+    }
+
+    .select-all-wrap label {
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .item-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
 </style>
 
 <body>
@@ -345,9 +359,15 @@
                 </p>
                 <div class="divider"></div>
 
-                <form
-                        action="${pageContext.request.contextPath}/AddToCart?action=update"
-                        method="post">
+                <form id="cartForm" action="${pageContext.request.contextPath}/checkout" method="post">
+                    <c:if test="${not empty cartItems}">
+                        <div class="select-all-wrap">
+                            <label for="selectAllItems">
+                                <input type="checkbox" id="selectAllItems" checked>
+                                Chọn tất cả
+                            </label>
+                        </div>
+                    </c:if>
                     <div class="cart-list">
                         <c:choose>
                             <c:when test="${empty cartItems}">
@@ -360,16 +380,22 @@
                                     <div class="cart-item-card">
                                         <div class="item">
                                             <div class="item-grid">
-
+                                                <div class="item-check">
+                                                    <input type="checkbox" class="cart-item-checkbox"
+                                                           name="productIds"
+                                                           value="${item.productId}" checked>
+                                                </div>
                                                 <div class="thumb">
-                                                    <c:set var="cartThumbUrl" value="${item.thumbnail}" />
+                                                    <c:set var="cartThumbUrl" value="${item.thumbnail}"/>
                                                     <c:if test="${not empty cartThumbUrl and not fn:startsWith(cartThumbUrl,'http') and not fn:startsWith(cartThumbUrl, pageContext.request.contextPath)}">
                                                         <c:choose>
                                                             <c:when test="${fn:startsWith(cartThumbUrl,'/')}">
-                                                                <c:set var="cartThumbUrl" value="${pageContext.request.contextPath}${cartThumbUrl}" />
+                                                                <c:set var="cartThumbUrl"
+                                                                       value="${pageContext.request.contextPath}${cartThumbUrl}"/>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <c:set var="cartThumbUrl" value="${pageContext.request.contextPath}/${cartThumbUrl}" />
+                                                                <c:set var="cartThumbUrl"
+                                                                       value="${pageContext.request.contextPath}/${cartThumbUrl}"/>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </c:if>
@@ -486,8 +512,8 @@
                             </button>
                         </c:when>
                         <c:otherwise>
-                            <button class="btn" ${cart.cartSize() == 0 ?
-                                    'disabled' : ''}>Đặt hàng
+                            <button type="submit" form="cartForm" class="btn" ${cartSize == 0 ? 'disabled' : ''}>
+                                Đặt hàng
                             </button>
                         </c:otherwise>
                     </c:choose>
@@ -596,6 +622,37 @@
             })
             .catch(err => console.error(err));
     }
+
+    //nút chọn tất cả
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkAll = document.getElementById('selectAllItems');
+        const listCheck = document.querySelectorAll('.cart-item-checkbox');
+
+        if (checkAll) {
+            checkAll.addEventListener('change', function () {
+                listCheck.forEach(function (item) {
+                    item.checked = checkAll.checked;
+                });
+            });
+        }
+
+        listCheck.forEach(function (item) {
+            item.addEventListener('change', function () {
+                let ok = true;
+
+                listCheck.forEach(function (cb) {
+                    if (!cb.checked) {
+                        ok = false;
+                    }
+                });
+
+                if (checkAll) {
+                    checkAll.checked = ok;
+                }
+            });
+        });
+    });
+
 </script>
 </body>
 

@@ -658,7 +658,7 @@
                         <h4 class="cart-title">Giỏ hàng</h4>
 
                         <div class="cart-items">
-                            <c:forEach var="item" items="${sessionScope.cart.carts.values()}">
+                            <c:forEach var="item" items="${sessionScope.cartTemp.carts.values()}">
                                 <div class="cart-item">
                                     <div class="item-image">
                                         <c:set var="ckThumbUrl" value="${item.thumbnail}" />
@@ -699,28 +699,28 @@
                             <div class="price-row">
                                 <span>Tạm tính</span>
                                 <span>
-                                    <fmt:formatNumber value="${sessionScope.cart.totalProductPrice}" type="number"/>₫
+                                    <fmt:formatNumber value="${sessionScope.cartTemp.totalProductPrice}" type="number"/>₫
                                 </span>
                             </div>
 
                             <div class="price-row">
                                 <span>Giảm giá</span>
                                 <span id="discountValue">
-                                    <fmt:formatNumber value="${sessionScope.cart.discount}" type="number"/>₫
+                                    <fmt:formatNumber value="${sessionScope.cartTemp.discount}" type="number"/>₫
                                 </span>
                             </div>
 
                             <div class="price-row">
                                 <span>Phí vận chuyển</span>
                                 <span id="shippingFeeText">
-                                    <fmt:formatNumber value="${sessionScope.cart.fee}" type="number"/>₫
+                                    <fmt:formatNumber value="${sessionScope.cartTemp.fee}" type="number"/>₫
                                 </span>
                             </div>
 
                             <div class="price-row total">
                                 <span>Tổng cộng</span>
                                 <span id="totalPayText" class="total-amount">
-                                    <fmt:formatNumber value="${sessionScope.cart.totalPriceToPay}" type="number"/>₫
+                                    <fmt:formatNumber value="${sessionScope.cartTemp.totalPriceToPay}" type="number"/>₫
                                 </span>
                             </div>
                         </div>
