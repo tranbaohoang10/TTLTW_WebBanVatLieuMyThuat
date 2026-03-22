@@ -27,4 +27,12 @@ public class Product_ReviewService {
     public void addReview(Product_Review review) {
         product_reviewsDao.insert(review);
     }
+
+    public boolean canReviewProduct(int userId, int productID) {
+        return product_reviewsDao.canReviewProduct(userId, productID);
+    }
+
+    public boolean hasReviewProduct(int userId, int productID) {
+        return product_reviewsDao.hasUserReviewed(userId, productID);
+    }
 }

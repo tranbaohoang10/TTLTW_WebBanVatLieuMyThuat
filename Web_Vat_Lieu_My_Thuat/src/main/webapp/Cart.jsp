@@ -35,7 +35,6 @@
     }
 
     .breadcrumb {
-        /* background-color: #f3f4f6; */
         background: #DBE8FF;
         color: #17479d;
         font-weight: 500;
@@ -95,7 +94,7 @@
 
     .item-grid {
         display: grid;
-        grid-template-columns: 80px 1fr auto auto;
+        grid-template-columns: 36px 80px 1fr auto auto;
         align-items: center;
         gap: 16px;
     }
@@ -310,7 +309,6 @@
         color: #2659F3;
     }
 
-    /* từ sửa sau */
     html,
     body {
         height: 100%;
@@ -328,16 +326,29 @@
         flex: 1;
     }
 
-    /* end style shopping cart */
+    .select-all-wrap {
+        margin-bottom: 15px;
+    }
+
+    .select-all-wrap label {
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .item-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
 </style>
 
 <body>
 <%@ include file="Header.jsp" %>
-<!-- Breadcrumb -->
+
 <div class="breadcrumb">Trang chủ / Giỏ hàng</div>
 <div class="container">
     <div class="grid">
-        <!-- LEFT: CART -->
         <div class="card">
             <div class="card-body">
                 <h2 class="card-title">Giỏ hàng của bạn</h2>
@@ -348,9 +359,15 @@
                 </p>
                 <div class="divider"></div>
 
-                <form
-                        action="${pageContext.request.contextPath}/AddToCart?action=update"
-                        method="post">
+                <form id="cartForm" action="${pageContext.request.contextPath}/checkout" method="post">
+                    <c:if test="${not empty cartItems}">
+                        <div class="select-all-wrap">
+                            <label for="selectAllItems">
+                                <input type="checkbox" id="selectAllItems" checked>
+                                Chọn tất cả
+                            </label>
+                        </div>
+                    </c:if>
                     <div class="cart-list">
                         <c:choose>
                             <c:when test="${empty cartItems}">
@@ -363,16 +380,22 @@
                                     <div class="cart-item-card">
                                         <div class="item">
                                             <div class="item-grid">
-
+                                                <div class="item-check">
+                                                    <input type="checkbox" class="cart-item-checkbox"
+                                                           name="productIds"
+                                                           value="${item.productId}" checked>
+                                                </div>
                                                 <div class="thumb">
-                                                    <c:set var="cartThumbUrl" value="${item.thumbnail}" />
+                                                    <c:set var="cartThumbUrl" value="${item.thumbnail}"/>
                                                     <c:if test="${not empty cartThumbUrl and not fn:startsWith(cartThumbUrl,'http') and not fn:startsWith(cartThumbUrl, pageContext.request.contextPath)}">
                                                         <c:choose>
                                                             <c:when test="${fn:startsWith(cartThumbUrl,'/')}">
-                                                                <c:set var="cartThumbUrl" value="${pageContext.request.contextPath}${cartThumbUrl}" />
+                                                                <c:set var="cartThumbUrl"
+                                                                       value="${pageContext.request.contextPath}${cartThumbUrl}"/>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <c:set var="cartThumbUrl" value="${pageContext.request.contextPath}/${cartThumbUrl}" />
+                                                                <c:set var="cartThumbUrl"
+                                                                       value="${pageContext.request.contextPath}/${cartThumbUrl}"/>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </c:if>
@@ -430,9 +453,11 @@
                                                                 name="quantity"
                                                                 value="${item.quantity}"
                                                                 min="1"
+                                                                max="${item.stockQuantity}"
                                                                 class="qty-input"
                                                                 id="qty-${item.productId}"
                                                                 data-product-id="${item.productId}"
+                                                                data-stock="${item.stockQuantity}"
                                                                 readonly/>
 
                                                         <button
@@ -453,12 +478,10 @@
                         </c:choose>
                     </div>
 
-                    <!-- nút cập nhật -->
                 </form>
             </div>
         </div>
 
-        <!-- RIGHT: TỔNG TIỀN -->
         <div class="card summary">
             <div class="card-body">
                 <div class="head">
@@ -489,8 +512,8 @@
                             </button>
                         </c:when>
                         <c:otherwise>
-                            <button class="btn" ${cart.cartSize() == 0 ?
-                                    'disabled' : ''}>Đặt hàng
+                            <button type="submit" form="cartForm" class="btn" ${cartSize == 0 ? 'disabled' : ''}>
+                                Đặt hàng
                             </button>
                         </c:otherwise>
                     </c:choose>
@@ -502,18 +525,33 @@
 <%@ include file="Footer.jsp" %>
 <script>
     function increaseQty(productId) {
-        const input = document.getElementById('qty-' + productId);
-        let currentQty = parseInt(input.value, 10);
-        if (isNaN(currentQty)) currentQty = 0;
-        currentQty++;
-        input.value = currentQty;
-        updateCartItem(productId, currentQty);
+        var input = document.getElementById("qty-" + productId);
+        var currentQty = parseInt(input.value);
+        var maxQty = parseInt(input.getAttribute("data-stock"));
+
+        if (isNaN(currentQty)) {
+            currentQty = 1;
+        }
+
+        if (isNaN(maxQty)) {
+            maxQty = 1;
+        }
+
+        if (currentQty < maxQty) {
+            currentQty++;
+            input.value = currentQty;
+            updateCartItem(productId, currentQty);
+        }
     }
 
     function decreaseQty(productId) {
-        const input = document.getElementById('qty-' + productId);
-        let currentQty = parseInt(input.value, 10);
-        if (isNaN(currentQty)) currentQty = 1;
+        var input = document.getElementById("qty-" + productId);
+        var currentQty = parseInt(input.value);
+
+        if (isNaN(currentQty)) {
+            currentQty = 1;
+        }
+
         if (currentQty > 1) {
             currentQty--;
             input.value = currentQty;
@@ -563,24 +601,20 @@
                     return;
                 }
 
-                // cập nhật thành tiền từng dòng
                 const subSpan = document.getElementById('subtotal-' + productId);
                 if (subSpan) {
                     subSpan.textContent = formatCurrency(data.itemSubtotal);
                 }
 
-                // cập nhật tổng tiền
                 const totalSpan = document.querySelector('.thanh-tien');
                 if (totalSpan) {
                     totalSpan.textContent = formatCurrency(data.totalAmount);
                 }
 
-                // cập nhật số trên icon giỏ hàng
                 const cartIcon = document.getElementById('cartIcon');
                 if (cartIcon) {
                     cartIcon.setAttribute('data-count', data.cartCount);
                 }
-                // cập nhật tổng sản phẩm sản phẩm
                 const cartTotalQty = document.getElementById('cart-total-quantity');
                 if (cartTotalQty) {
                     cartTotalQty.textContent = data.cartCount;
@@ -588,6 +622,37 @@
             })
             .catch(err => console.error(err));
     }
+
+    //nút chọn tất cả
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkAll = document.getElementById('selectAllItems');
+        const listCheck = document.querySelectorAll('.cart-item-checkbox');
+
+        if (checkAll) {
+            checkAll.addEventListener('change', function () {
+                listCheck.forEach(function (item) {
+                    item.checked = checkAll.checked;
+                });
+            });
+        }
+
+        listCheck.forEach(function (item) {
+            item.addEventListener('change', function () {
+                let ok = true;
+
+                listCheck.forEach(function (cb) {
+                    if (!cb.checked) {
+                        ok = false;
+                    }
+                });
+
+                if (checkAll) {
+                    checkAll.checked = ok;
+                }
+            });
+        });
+    });
+
 </script>
 </body>
 

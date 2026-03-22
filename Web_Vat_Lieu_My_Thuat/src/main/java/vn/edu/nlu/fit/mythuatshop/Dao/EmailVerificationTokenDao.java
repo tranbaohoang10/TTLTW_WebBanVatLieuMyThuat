@@ -32,4 +32,18 @@ public class EmailVerificationTokenDao {
         String sql = "UPDATE email_verification_tokens SET used_at = NOW() WHERE token = :token";
         jdbi.useHandle(h -> h.createUpdate(sql).bind("token", token).execute());
     }
+    public String findValidTokenByUserId(int userId) {
+        String sql = "SELECT token FROM email_verification_tokens " +
+                "WHERE user_id = ? AND used_at IS NULL AND expires_at > NOW() LIMIT 1";
+        String token = JDBIConnector.getJdbi().withHandle(handle ->
+                handle.createQuery(sql).bind(0, userId).mapTo(String.class).findOne().orElse(null)
+        );
+        return token;
+    }
+    public void deleteTokensByUserId(int userId) {
+        String sql = "DELETE FROM email_verification_tokens WHERE user_id = ?";
+        JDBIConnector.getJdbi().useHandle(handle -> {
+            handle.createUpdate(sql).bind(0, userId).execute();
+        });
+    }
 }

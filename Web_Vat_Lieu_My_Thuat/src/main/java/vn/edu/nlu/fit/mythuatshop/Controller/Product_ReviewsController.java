@@ -27,6 +27,7 @@ public class Product_ReviewsController extends HttpServlet {
     }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
     String url = request.getParameter("id");
         if (url == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing product id");
@@ -43,8 +44,25 @@ public class Product_ReviewsController extends HttpServlet {
         // làm tròn 1 chữ số thập phân
         avgRating = Math.round(avgRating * 10.0) / 10.0;
         int reviewCount = reviews.size();
+        HttpSession session = request.getSession(false);
+        Users currentUser = (session != null) ? (Users) session.getAttribute("currentUser") : null;
 
-        // 4. Gắn dữ liệu vào request
+        boolean canReview = false;
+        boolean hasReviewed = false;
+
+        if (currentUser != null) {
+            canReview = reviewService.canReviewProduct(currentUser.getId(), productID);
+            hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
+        }
+
+        if (currentUser != null) {
+            canReview = reviewService.canReviewProduct(currentUser.getId(), productID);
+            hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
+        }
+
+        request.setAttribute("canReview", canReview);
+        request.setAttribute("hasReviewed", hasReviewed);
+
         request.setAttribute("product", product);
         request.setAttribute("reviews", reviews);
         request.setAttribute("avgRating", avgRating);
@@ -57,7 +75,7 @@ public class Product_ReviewsController extends HttpServlet {
         Users currentUser = (session != null) ? (Users) session.getAttribute("currentUser") : null;
 
         if (currentUser == null) {
-            // Chưa đăng nhập → bắt đăng nhập trước khi đánh giá
+            // Chưa đăng nhập -> bắt đăng nhập trước khi đánh giá
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -88,10 +106,19 @@ public class Product_ReviewsController extends HttpServlet {
             review.setRating(rating);
             review.setComment(comment != null ? comment.trim() : "");
 
-            // 4. Gọi service để lưu DB
+            boolean canReview = reviewService.canReviewProduct(currentUser.getId(),productID);
+            if(!canReview){
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,"Chỉ được đánh giá khi đã mua sản phẩm này");
+                return;
+            }
+            boolean hasReview = reviewService.hasReviewProduct(currentUser.getId(),productID);
+            if(hasReview){
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,"Bạn đã đánh giá sản phẩm này rồi");
+                return;
+            }
             reviewService.addReview(review);
 
-            // 5. Redirect về lại trang review của sản phẩm đó
+
             response.sendRedirect(
                     request.getContextPath() + "/Product_ReviewsController?id=" + productID
             );

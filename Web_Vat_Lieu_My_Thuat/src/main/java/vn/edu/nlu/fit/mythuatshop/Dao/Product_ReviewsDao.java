@@ -25,7 +25,7 @@ public class Product_ReviewsDao {
     public List<Product_Review> findByProductId(int productId) {
         String sql =
                 "SELECT pr.id, pr.userID, pr.productID, pr.rating, pr.comment, pr.createAt, " +
-                        "       u.fullName AS username " +
+                        "u.fullName AS username " +
                         "FROM product_reviews pr " +
                         "JOIN users u ON pr.userID = u.id " +
                         "WHERE pr.productID = :pid " +
@@ -51,5 +51,41 @@ public class Product_ReviewsDao {
                         .bind("comment", review.getComment())
                         .execute()
         );
+    }
+
+    public boolean canReviewProduct(int userId, int productID) {
+        String sql = """
+            SELECT COUNT(*)
+            FROM orders o
+            JOIN order_details od ON o.ID = od.orderID
+            JOIN order_statuses os ON os.ID = o.orderStatusID
+            WHERE o.userID = :userID
+              AND od.productID = :productID
+              AND os.statusName = 'Hoàn thành'
+            """;
+
+        Integer count = jdbi.withHandle(h -> h.createQuery(sql)
+                .bind("userID", userId)
+                .bind("productID", productID)
+                .mapTo(Integer.class)
+                .one()
+        );
+
+        return count != null && count > 0;
+    }
+
+    public boolean hasUserReviewed(int userId, int productID) {
+        String sql = """
+                SELECT COUNT(*)
+                FROM product_reviews pr
+                WHERE pr.userId = :userId
+                AND pr.productID = :productID
+                """;
+        Integer count = jdbi.withHandle(h -> h.createQuery(sql)
+                .bind("userId",userId)
+                .bind("productID",productID)
+                .mapTo(Integer.class).one()
+        );
+        return count != null && count > 0;
     }
 }

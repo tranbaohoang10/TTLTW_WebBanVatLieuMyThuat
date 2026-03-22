@@ -86,7 +86,8 @@ public class AddToCartController extends HttpServlet {
                 p.getPrice(),
                 p.getDiscountDefault(),
                 p.getThumbnail(),
-                quantity
+                quantity,
+                p.getQuantityStock()
         );
 
         cart.addCartItem(cartItem);

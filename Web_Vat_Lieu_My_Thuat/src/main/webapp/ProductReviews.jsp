@@ -245,14 +245,22 @@
             <p>Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá!</p>
         </c:if>
 
-        <!-- FORM gửi đánh giá -->
-        <div class="reviews-section">
-            <form class="form" action="${pageContext.request.contextPath}/Product_ReviewsController" method="post">
-                <!-- Gửi kèm productID -->
-                <input type="hidden" name="productID" value="${product.id}"/>
 
-                <!-- Chọn số sao -->
-                <p class="reviews_star">
+        <div class="reviews-section">
+            <c:choose>
+                <c:when test="${empty sessionScope.currentUser}">
+                    <p>Bạn cần đăng nhập để đánh giá sản phẩm.</p>
+                </c:when>
+
+                <c:when test="${hasReviewed}">
+                    <p>Bạn đã đánh giá sản phẩm này rồi.</p>
+                </c:when>
+
+                <c:when test="${canReview}">
+                    <form class="form" action="${pageContext.request.contextPath}/Product_ReviewsController" method="post">
+                        <input type="hidden" name="productID" value="${product.id}"/>
+
+                        <p class="reviews_star">
                     <span class="star-rating">
                         <input type="radio" name="rating" id="rate-0" value="0" checked style="display: none;">
                         <label for="rate-1"><i class="fa-solid fa-star"></i></label>
@@ -266,24 +274,30 @@
                         <label for="rate-5"><i class="fa-solid fa-star"></i></label>
                         <input type="radio" name="rating" id="rate-5" value="5">
                     </span>
-                </p>
+                        </p>
 
-                <!-- Thông tin người đánh giá + nội dung -->
-                <div class="form-group form_review">
-                    <input type="text" name="fullName" class="infor_contact" value="${sessionScope.currentUser.fullName}" placeholder="Họ và tên">
-                    <input type="text" name="phone" class="infor_contact" value="${sessionScope.currentUser.phoneNumber}" placeholder="Số điện thoại">
-                </div>
+                        <div class="form-group form_review">
+                            <input type="text" name="fullName" class="infor_contact"
+                                   value="${sessionScope.currentUser.fullName}" placeholder="Họ và tên" readonly>
+                            <input type="text" name="phone" class="infor_contact"
+                                   value="${sessionScope.currentUser.phoneNumber}" placeholder="Số điện thoại" readonly>
+                        </div>
 
-                <textarea class="area_review" name="comment" placeholder="Nhập nội dung đánh giá"></textarea>
+                        <textarea class="area_review" name="comment" placeholder="Nhập nội dung đánh giá"></textarea>
 
-                <div class="area_submit">
-                    <button type="submit" class="btn_writeReview">Gửi đánh giá</button>
-                </div>
-            </form>
+                        <div class="area_submit">
+                            <button type="submit" class="btn_writeReview">Gửi đánh giá</button>
+                        </div>
+                    </form>
+                </c:when>
+
+                <c:otherwise>
+                    <p>Bạn chỉ được đánh giá sau khi đã mua sản phẩm này</p>
+                </c:otherwise>
+            </c:choose>
         </div>
-    </div>
 
-    <!-- KHỐI HIỂN THỊ DANH SÁCH ĐÁNH GIÁ -->
+
 
     <div class="review-container bg-while">
         <div class="filter-section">
@@ -292,7 +306,7 @@
                 (<span>${reviewCount}</span> đánh giá,
                 trung bình <span>${avgRating}</span> ★)
             </h2>
-            <!-- phần filter button giữ nguyên hoặc làm sau -->
+
         </div>
 
         <div class="reviews-section">

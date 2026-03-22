@@ -50,9 +50,9 @@ public class RegisterController extends HttpServlet {
                 + ((req.getServerPort() == 80 || req.getServerPort() == 443) ? "" : (":" + req.getServerPort()))
                 + req.getContextPath();
 
-        boolean success = userService.register(fullName, email, phoneNumber, password, address, baseUrl);
+        boolean success = userService.register(fullName, email, phoneNumber, password, baseUrl);
         if(!success){
-            req.setAttribute("error", "Email đã được sử dụng, vui lòng nhập email khác!");
+            req.setAttribute("error", "Đăng ký thất bại. Email có thể đã được sử dụng hoặc tài khoản chưa được xác thực.");
             req.getRequestDispatcher("Register.jsp").forward(req,resp);
             return;
         }

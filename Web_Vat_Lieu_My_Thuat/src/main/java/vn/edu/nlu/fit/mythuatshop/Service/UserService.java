@@ -19,91 +19,124 @@ public class UserService {
         this.userDao = new UserDao();
     }
 
-    //  LOGIN: chặn tài khoản bị khóa
+
     public Users login(String email, String password) {
+        if (email == null || password == null) {
+            return null;
+        }
+        email = email.trim();
         Users user = userDao.findByEmail(email);
-        if (user == null) return null;
-
-        if (!BCrypt.checkpw(password, user.getPassword())) return null;
-
+        if (user == null) {
+            return null;
+        }
+        if(user.getIsActive()==0){
+            return null;
+        }
+        if(user.getIsActive()==3){
+            return null;
+        }
+        boolean checkPass = BCrypt.checkpw(password, user.getPassword());
+        if (!checkPass) {
+            return null;
+        }
         return user;
     }
 
 
-    //  REGISTER: set address + set isActive=1
-    public boolean register(String fullName, String email, String phoneNumber, String password, String address, String baseUrl) {
-        if (email == null || email.isBlank()) return false;
-        if (password == null || password.isBlank()) return false;
-
+    public boolean register( String fullName, String email, String phoneNumber, String password, String baseUrl) {
+        if(email == null || email.isBlank()){
+            return false;
+        }
+        if(password == null || password.isBlank()){
+            return false;
+        }
         email = email.trim();
+        Users checkUser = userDao.findByEmail(email);
+        if(checkUser != null){
+           if(checkUser.getIsActive()==1){
+               return false;
+           }
+           if(checkUser.getIsActive()==0){
+               String oldToken = tokenDao.findValidTokenByUserId(checkUser.getId());
+               if(oldToken==null){
+                   return false;
+               }
+               String newToken = UUID.randomUUID().toString().replace("-", "");
+               LocalDateTime hanXT = LocalDateTime.now().plusHours(24);
 
-        if (userDao.findByEmail(email) != null) return false;
+               tokenDao.deleteTokensByUserId(checkUser.getId());
+               tokenDao.insert(checkUser.getId(), newToken,  hanXT);
 
+               String verify = baseUrl + "/verify-email?token=" + newToken;
+               String emailTitle = "Xác nhận đăng ký tài khoản";
+               String nd = "" + "<p>Chào bạn,</p>" + "<p>Bạn đã yêu cầu gửi lại email xác thực tài khoản.</p>"
+                       + "<p>Vui lòng nhấn vào link bên dưới để kích hoạt tài khoản:</p>" + "<p><a href='" + verify
+                       + "'>Kích hoạt tài khoản</a></p>" + "<p>Link này sẽ hết hạn sau 24 giờ.</p>";
+               EmailUtil .sendHtml(email, emailTitle, nd);
+               return true;
+           }
+           return false;
+        }
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
+        Users newUser = new Users();
+        newUser.setFullName(fullName);
+        newUser.setEmail(email);
+        newUser.setPassword(hashedPassword);
+        newUser.setPhoneNumber(phoneNumber);
+        newUser.setRole("USER");
+        newUser.setIsActive(0);
 
-        Users user = new Users();
-        user.setFullName(fullName);
-        user.setEmail(email);
-        user.setPassword(hashedPassword);
-        user.setPhoneNumber(phoneNumber);
-        user.setAddress(address);
-        user.setRole("USER");
-
-        user.setIsActive(0); // ✅ CHƯA KÍCH HOẠT
-
-        int userId = userDao.insertUserAndReturnId(user);
-        if (userId <= 0) return false;
-
-        // tạo token
+        int userId = userDao.insertUserAndReturnId(newUser);
+        if(userId <=0){
+            return false;
+        }
         String token = UUID.randomUUID().toString().replace("-", "");
-        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
-        tokenDao.insert(userId, token, expiresAt);
+        LocalDateTime hanXacThuc =  LocalDateTime.now().plusHours(24);
 
-        // gửi mail
-        String verifyLink = baseUrl + "/verify-email?token=" + token;
-        String subject = "Xác nhận đăng ký tài khoản";
-        String html = ""
-                + "<p>Chào bạn,</p>"
-                + "<p>Vui lòng nhấn link sau để kích hoạt tài khoản:</p>"
-                + "<p><a href='" + verifyLink + "'>Kích hoạt tài khoản</a></p>"
-                + "<p>Link hết hạn sau 24 giờ.</p>";
+        tokenDao.insert(userId, token, hanXacThuc);
 
-        EmailUtil.sendHtml(email, subject, html);
+        String verify = baseUrl + "/verify-email?token=" + token;
+        String emailTitle = "Xác nhận đăng ký tài khoản";
+        String nd = "" + "<p>Chào bạn,</p>" + "<p>Vui lòng nhấn vào link bên dưới để kích hoạt tài khoản:</p>"
+                + "<p><a href='" + verify + "'>Kích hoạt tài khoản</a></p>" + "<p>Link này sẽ hết hạn sau 24 giờ.</p>";
+        EmailUtil .sendHtml(email, emailTitle, nd);
+        return true;
+    }
+    public boolean verifyEmailToken(String token) {
+        if (token == null || token.isBlank()) return false;
+
+        Integer userId = tokenDao.findUserIdIfValid(token);
+        if (userId == null) return false;
+
+        userDao.setActive(userId, 1);
+        tokenDao.markUsed(token);
         return true;
     }
 
-    // =================== Cập nhật thông tin ===================
     public Users getUserById(int id) {
         return userDao.findById(id);
     }
 
-    public boolean updateProfile(int userId, String fullName, String phoneNumber, String dobStr, String address) {
+    public boolean updateProfile(int userId, String fullName, String phoneNumber, String dobStr, String address){
         Users user = userDao.findById(userId);
-        if (user == null) return false;
-
-        //  nếu user bị khóa thì bạn có thể chặn sửa profile (tuỳ bạn)
-        // if (user.getIsActive() == 0) return false;
-
+        if(user == null){
+            return false;
+        }
         user.setFullName(fullName);
         user.setPhoneNumber(phoneNumber);
         user.setAddress(address);
 
         if (dobStr != null && !dobStr.isEmpty()) {
-            LocalDate ld = LocalDate.parse(dobStr);
-            user.setDob(ld);
+            LocalDate dob = LocalDate.parse(dobStr);
+            user.setDob(dob);
         }
 
-        int row = userDao.updateUser(user);
-        return row > 0;
+        int result = userDao.updateUser(user);
+        return result >0;
     }
 
-    // =================== Đổi mật khẩu ===================
     public boolean changePassword(int userId, String oldPassword, String newPassword) {
         Users user = userDao.findById(userId);
-        if (user == null) return false;
-
-        //  nếu user bị khóa thì chặn đổi pass (tuỳ bạn)
-        // if (user.getIsActive() == 0) return false;
 
         String currentHash = user.getPassword();
         boolean match = BCrypt.checkpw(oldPassword, currentHash);
@@ -113,20 +146,18 @@ public class UserService {
         return userDao.updatePassword(userId, newHash);
     }
 
-    // =================== Quên mật khẩu ===================
     public Users getUserByEmail(String email) {
         return userDao.findByEmailFp(email);
     }
 
     public boolean resetAndSendEmail(String email) {
-        if (email == null) return false;
+        if (email == null){
+            return false;
+        }
         email = email.trim();
 
         Users user = userDao.findByEmailFp(email);
         if (user == null) return false;
-
-        //  nếu user bị khóa thì bạn có thể chặn reset (tuỳ bạn)
-        // if (user.getIsActive() == 0) return false;
 
         String matKhauMoi = generateRandomPassword();
         String hashed = BCrypt.hashpw(matKhauMoi, BCrypt.gensalt(12));
@@ -156,20 +187,17 @@ public class UserService {
         return sb.toString();
     }
 
-    // =================== Đăng nhập bằng Google ===================
     public Users findByEmailForGG(String email) {
         if (email == null) return null;
         return userDao.findByEmail(email.trim());
     }
 
-    //  register google: role USER + isActive=1
     public Users registerGoogleUser(String name, String email) {
         if (email == null || email.isBlank()) return null;
         email = email.trim();
 
-        // nếu đã tồn tại thì trả về user hiện có
-        Users existed = userDao.findByEmail(email);
-        if (existed != null) return existed;
+        Users userExisted = userDao.findByEmail(email);
+        if (userExisted != null) return userExisted;
 
         String randomPassword = UUID.randomUUID().toString();
         String hashed = BCrypt.hashpw(randomPassword, BCrypt.gensalt(12));
@@ -178,16 +206,15 @@ public class UserService {
         user.setFullName(name);
         user.setEmail(email);
         user.setPassword(hashed);
-        user.setRole("USER");      //  đồng nhất role
+        user.setRole("USER");
         user.setPhoneNumber("");
         user.setAddress("");
-        user.setIsActive(1);       //  mặc định active
+        user.setIsActive(1);
 
         userDao.insertUser(user);
         return userDao.findByEmail(email);
     }
 
-    //  bản safe cũng set isActive=1
     public void registerGoogleUserSafe(String name, String email) {
         if (email == null || email.isBlank()) return;
         email = email.trim();
@@ -205,20 +232,9 @@ public class UserService {
         user.setPhoneNumber("");
         user.setAddress("");
         user.setRole("USER");
-        user.setIsActive(1);       //  mặc định active
+        user.setIsActive(1);
 
         userDao.insertUser(user);
-    }
-    // xác nhân tài khoản
-    public boolean verifyEmailToken(String token) {
-        if (token == null || token.isBlank()) return false;
-
-        Integer userId = tokenDao.findUserIdIfValid(token);
-        if (userId == null) return false;
-
-        userDao.setActive(userId, 1);
-        tokenDao.markUsed(token);
-        return true;
     }
 
 }

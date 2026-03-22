@@ -3,6 +3,7 @@ package vn.edu.nlu.fit.mythuatshop.Controller;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
+import vn.edu.nlu.fit.mythuatshop.Model.Cart;
 import vn.edu.nlu.fit.mythuatshop.Model.Order;
 import vn.edu.nlu.fit.mythuatshop.Service.OrderService;
 import vn.edu.nlu.fit.mythuatshop.Service.VnpayService;
@@ -59,10 +60,19 @@ public class VnpayReturnController extends HttpServlet {
 
 
         HttpSession session = req.getSession();
-        session.removeAttribute("cart");
-        session.setAttribute("cartCount", 0);
+
+        Cart cart = (Cart) session.getAttribute("cart");
+        Cart cartTemp = (Cart) session.getAttribute("cartTemp");
+
+        if (cart != null && cartTemp != null) {
+            cart.removeCartTemp(cartTemp);
+            session.setAttribute("cart", cart);
+            session.setAttribute("cartCount", cart.getTotalQuantity());
+        }
+
+        session.removeAttribute("cartTemp");
         session.setAttribute("paidOrder", paidOrder);
-        
+
         resp.sendRedirect(req.getContextPath() + "/payment-success");
 
     }

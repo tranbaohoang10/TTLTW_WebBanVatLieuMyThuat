@@ -41,8 +41,16 @@ public class Cart {
         int productId = newItem.getProductId();
         if (carts.containsKey(productId)) {
             CartItem item = carts.get(productId);
-            item.setQuantity(item.getQuantity() + newItem.getQuantity());
+            int newQuantity = item.getQuantity() + newItem.getQuantity();
+            if (newQuantity > newItem.getStockQuantity()) {
+                newQuantity = newItem.getStockQuantity();
+            }
+            item.setQuantity(newQuantity);
+            item.setStockQuantity(newItem.getStockQuantity());
         } else {
+            if (newItem.getQuantity() > newItem.getStockQuantity()) {
+                newItem.setQuantity(newItem.getStockQuantity());
+            }
             carts.put(productId, newItem);
         }
     }
@@ -94,5 +102,35 @@ public class Cart {
     public double getTotalPriceToPay() {
         return getTotalProductPrice() - discount + fee;
     }
+    public Cart getCartByIds(String[] productIds) {
+        Cart cartTemp = new Cart();
 
+        if (productIds == null) {
+            return cartTemp;
+        }
+
+        for (String id : productIds) {
+            try {
+                int productId = Integer.parseInt(id);
+                CartItem item = carts.get(productId);
+
+                if (item != null) {
+                    CartItem itemNew = new CartItem(item.getProductId(), item.getName(), item.getPrice(), item.getDiscountDefault(), item.getThumbnail(), item.getQuantity());
+                    cartTemp.addCartItem(itemNew);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return cartTemp;
+    }
+    public void removeCartTemp(Cart cartTemp) {
+        if (cartTemp == null) {
+            return;
+        }
+
+        for (Integer id : cartTemp.getCarts().keySet()) {
+            carts.remove(id);
+        }
+    }
 }
