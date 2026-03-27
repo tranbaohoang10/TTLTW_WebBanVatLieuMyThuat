@@ -1,7 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <!DOCTYPE html>
@@ -11,8 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết đơn hàng</title>
 
-    <link rel="stylesheet"
-          href="${pageContext.request.contextPath}/assets/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
           integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
@@ -62,25 +60,20 @@
             color: #92400E;
         }
 
-        /* chờ xử lý */
         .st-shipping {
             background: #DBEAFE;
             color: #1D4ED8;
         }
 
-        /* đang vận chuyển */
         .st-completed {
             background: #DCFCE7;
             color: #166534;
         }
 
-        /* hoàn thành */
         .st-cancelled {
             background: #FEE2E2;
             color: #B91C1C;
         }
-
-        /* đã hủy */
 
         .order-items-title {
             margin: 16px 0 10px;
@@ -132,6 +125,10 @@
         .od-qty {
             margin: 4px 0 0;
             color: #6b7280;
+        }
+
+        .od-review-wrap {
+            margin-top: 8px;
         }
 
         .od-price {
@@ -206,7 +203,7 @@
             filter: brightness(0.97);
         }
 
-        page-offset {
+        .page-offset {
             padding-top: 24px;
         }
 
@@ -222,7 +219,7 @@
 
         @media (max-width: 768px) {
             .order-meta {
-                grid-template-columns:1fr;
+                grid-template-columns: 1fr;
             }
 
             .od-price {
@@ -300,6 +297,15 @@
                     <div class="od-info">
                         <p class="od-name">${item.name}</p>
                         <p class="od-qty">Số lượng: ${item.quantity}</p>
+
+                        <c:if test="${order.orderStatusId == 3}">
+                            <div class="od-review-wrap">
+                                <a class="od-btn od-btn-review"
+                                   href="${pageContext.request.contextPath}/Product_ReviewsController?productId=${item.productId}&orderId=${order.id}">
+                                    Đánh giá
+                                </a>
+                            </div>
+                        </c:if>
                     </div>
 
                     <div class="od-price">
@@ -334,11 +340,6 @@
                 <c:if test="${order.orderStatusId == 1}">
                     <a class="od-btn od-btn-cancel"
                        href="${pageContext.request.contextPath}/cancel-order?id=${order.id}">Hủy đơn</a>
-                </c:if>
-
-                <c:if test="${order.orderStatusId == 3}">
-                    <a class="od-btn od-btn-review"
-                       href="${pageContext.request.contextPath}/review?orderId=${order.id}">Đánh giá</a>
                 </c:if>
             </div>
 
