@@ -301,7 +301,7 @@
                         <c:if test="${order.orderStatusId == 3}">
                             <div class="od-review-wrap">
                                 <a class="od-btn od-btn-review"
-                                   href="${pageContext.request.contextPath}/Product_ReviewsController?productId=${item.productId}&orderId=${order.id}">
+                                   href="${pageContext.request.contextPath}/Product_ReviewsController?id=${item.productId}">
                                     Đánh giá
                                 </a>
                             </div>
