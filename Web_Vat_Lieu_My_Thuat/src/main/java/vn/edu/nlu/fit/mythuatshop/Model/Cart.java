@@ -116,7 +116,8 @@ public class Cart {
 
                 if (item != null) {
                     CartItem itemNew = new CartItem(item.getProductId(), item.getName(), item.getPrice(), item.getDiscountDefault(), item.getThumbnail(), item.getQuantity());
-                    cartTemp.addCartItem(itemNew);
+                    itemNew.setStockQuantity(item.getStockQuantity());
+                    cartTemp.getCarts().put(productId, itemNew);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
