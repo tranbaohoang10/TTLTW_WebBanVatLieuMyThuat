@@ -609,13 +609,15 @@
 
                 const checkItem = document.querySelector('.cart-item-checkbox[value="' + productId + '"]');
                 if (checkItem) {
-                    checkItem.dataset.price = data.itemSubtotal;
+                    checkItem.dataset.price = data.itemSubtotal;updateCartItem
                 }
+                updateTotal();
 
                 const cartIcon = document.getElementById('cartIcon');
                 if (cartIcon) {
                     cartIcon.setAttribute('data-count', data.cartCount);
                 }
+
                 const cartTotalQty = document.getElementById('cart-total-quantity');
                 if (cartTotalQty) {
                     cartTotalQty.textContent = data.cartCount;

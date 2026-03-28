@@ -36,24 +36,24 @@ public class VoucherController extends HttpServlet {
 
         try {
             HttpSession session = req.getSession();
-            Cart cart = (Cart) session.getAttribute("cart");
+            Cart cartTemp = (Cart) session.getAttribute("cartTemp");
 
             String code = req.getParameter("code");
 
-            VoucherApplyResult result = voucherService.apply(code, cart);
+            VoucherApplyResult result = voucherService.apply(code, cartTemp);
 
             if (result.isSuccess()) {
-                session.setAttribute("cart", cart);
+                session.setAttribute("cartTemp", cartTemp);
                 Integer vid = null;
                 try {
-                    vid = cart.getVoucherId();
+                    vid = cartTemp.getVoucherId();
                 } catch (Exception ignore) {}
 
                 if (vid != null) {
                     session.setAttribute("appliedVoucherId", vid);
                 }
-                double fee = cart.getFee();
-                double totalToPay = cart.getTotalPriceToPay();
+                double fee = cartTemp.getFee();
+                double totalToPay = cartTemp.getTotalPriceToPay();
 
                 resp.getWriter().write("{"
                         + "\"success\":true,"
