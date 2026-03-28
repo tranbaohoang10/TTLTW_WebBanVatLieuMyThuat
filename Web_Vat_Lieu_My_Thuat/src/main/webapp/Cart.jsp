@@ -383,7 +383,9 @@
                                                 <div class="item-check">
                                                     <input type="checkbox" class="cart-item-checkbox"
                                                            name="productIds"
-                                                           value="${item.productId}" checked>
+                                                           value="${item.productId}"
+                                                           data-price="${item.priceAfterDiscount * item.quantity}"
+                                                           checked>
                                                 </div>
                                                 <div class="thumb">
                                                     <c:set var="cartThumbUrl" value="${item.thumbnail}"/>
@@ -493,10 +495,9 @@
 
                 <div class="tinh-tien">
                     <p>Tổng tiền:</p>
-                    <span class="thanh-tien">
-                                <fmt:formatNumber value="${totalAmount}"
-                                                  type="number"/>đ
-                            </span>
+                    <span class="thanh-tien" id="tongTien">
+                        <fmt:formatNumber value="${totalAmount}" type="number"/>đ
+                    </span>
                 </div>
 
                 <p class="muted">Phí vận chuyển sẽ được tính ở trang
@@ -651,6 +652,58 @@
                 }
             });
         });
+    });
+
+    function formatMoney(x) {
+        return new Intl.NumberFormat('vi-VN').format(x) + 'đ';
+    }
+    function updateTotal() {
+        const listCheck = document.querySelectorAll('.cart-item-checkbox');
+        const tongTien = document.getElementById('tongTien');
+        let sum = 0;
+
+        listCheck.forEach(function (item) {
+            if (item.checked) {
+                sum += Number(item.dataset.price);
+            }
+        });
+
+        if (tongTien) {
+            tongTien.textContent = formatMoney(sum);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkAll = document.getElementById('selectAllItems');
+        const listCheck = document.querySelectorAll('.cart-item-checkbox');
+
+        if (checkAll) {
+            checkAll.addEventListener('change', function () {
+                listCheck.forEach(function (item) {
+                    item.checked = checkAll.checked;
+                });
+            });
+        }
+
+        listCheck.forEach(function (item) {
+            item.addEventListener('change', function () {
+                let ok = true;
+
+                listCheck.forEach(function (cb) {
+                    if (!cb.checked) {
+                        ok = false;
+                    }
+                });
+
+                if (checkAll) {
+                    checkAll.checked = ok;
+                }
+
+                updateTotal();
+            });
+        });
+
+        updateTotal();
     });
 
 </script>
