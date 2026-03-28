@@ -607,9 +607,9 @@
                     subSpan.textContent = formatCurrency(data.itemSubtotal);
                 }
 
-                const totalSpan = document.querySelector('.thanh-tien');
-                if (totalSpan) {
-                    totalSpan.textContent = formatCurrency(data.totalAmount);
+                const checkItem = document.querySelector('.cart-item-checkbox[value="' + productId + '"]');
+                if (checkItem) {
+                    checkItem.dataset.price = data.itemSubtotal;
                 }
 
                 const cartIcon = document.getElementById('cartIcon');
