@@ -3,6 +3,8 @@ package vn.edu.nlu.fit.mythuatshop.Dao;
 import org.jdbi.v3.core.Jdbi;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class UserDao {
@@ -218,6 +220,9 @@ public class UserDao {
                         .one()
         );
     }
-
+    public void updateLoginFail(int userId, int failedLogin, LocalDateTime lockUser){
+        String sql = "UPDATE users SET failedLogin = ?, lockUser=? WHERE id = ?";
+        JDBIConnector.getJdbi().useHandle(h -> h.createUpdate(sql).bind(0, failedLogin).bind(1, lockUser == null ? null: Timestamp.valueOf(lockUser)).bind(2, userId).execute());
+    }
 
 }
