@@ -447,7 +447,7 @@
                       <td><fmt:formatNumber value="${order.totalPrice}" type="number"/>đ</td>
                       <td>
                         <c:choose>
-                          <c:when test="${order.statusName == 'Chờ xác nhận'}">
+                          <c:when test="${order.statusName == 'Chờ xác nhận' || order.statusName == 'Đang xử lý'}">
                             <span class="status pending">${order.statusName}</span>
                           </c:when>
                           <c:when test="${order.statusName == 'Đang giao'}">
