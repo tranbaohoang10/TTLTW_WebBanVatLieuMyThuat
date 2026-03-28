@@ -682,6 +682,7 @@
                 listCheck.forEach(function (item) {
                     item.checked = checkAll.checked;
                 });
+                updateTotal();
             });
         }
 
