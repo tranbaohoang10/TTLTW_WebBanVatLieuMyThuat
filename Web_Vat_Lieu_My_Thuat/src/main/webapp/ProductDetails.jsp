@@ -1003,7 +1003,7 @@
 <%@ include file="Header.jsp" %>
 
 <nav>
-    <!-- Breadcrumb -->
+
     <div class="breadcrumb">
         <a href="index.html">Trang chủ</a>
         <span>/</span>
@@ -1014,13 +1014,13 @@
                 bản Demon Slayer</span>
     </div>
 
-    <!-- Product Detail -->
+
     <div class="product-detail-container">
         <div class="product-detail">
 
-            <!-- CỘT 1: HÌNH ẢNH SẢN PHẨM -->
+
             <div class="product-images">
-                <!-- Ảnh chính -->
+
                 <div class="product-main-image">
                     <c:choose>
                         <c:when test="${not empty subimagesList}">
@@ -1059,7 +1059,7 @@
                        class="main-image-nav main-image-next">&gt;</a>
                 </div>
 
-                <!-- Thumbnail Gallery -->
+
                 <div class="thumbnail-gallery">
                     <div class="thumbnail-container" id="thumbnailContainer">
                         <c:choose>
@@ -1099,9 +1099,9 @@
                         </c:choose>
                     </div>
                 </div>
-            </div> <!-- /product-images -->
+            </div>
 
-            <!-- CỘT 2: THÔNG TIN SẢN PHẨM -->
+
             <div class="product-info">
                 <h1 class="product-title">${product.name}</h1>
 
@@ -1142,7 +1142,7 @@
                 <form action="${pageContext.request.contextPath}/AddToCart?action=add"
                       method="post" id="addToCartForm">
 
-                    <!-- truyền id sản phẩm cho controller -->
+
                     <input type="hidden" name="productId" value="${product.id}"/>
 
                     <div class="quantity-section">
@@ -1151,7 +1151,7 @@
                             <button type="button" class="quantity-btn"
                                     onclick="decreaseQuantity()"
                             ${outOfStock ? "disabled" : ""}>-</button>
-                            <!-- QUAN TRỌNG: thêm name="quantity" -->
+
                             <input type="number" class="quantity-input"
                                    id="quantity" name="quantity"
                                    value="1" min="1"
@@ -1185,10 +1185,10 @@
                         </a>
                     </div>
                 </form>
-            </div> <!-- /product-info -->
+            </div>
 
-        </div> <!-- /product-detail -->
-    </div> <!-- /product-detail-container -->
+        </div>
+    </div>
 
     <div class="section-but">
         <div class="container">

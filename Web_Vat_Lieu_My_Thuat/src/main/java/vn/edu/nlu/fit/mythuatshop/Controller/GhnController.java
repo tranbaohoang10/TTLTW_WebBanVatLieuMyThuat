@@ -83,18 +83,18 @@ public class GhnController extends HttpServlet {
             String wardCode = req.getParameter("wardCode");
 
             HttpSession session = req.getSession();
-            Cart cart = (Cart) session.getAttribute("cart");
-            if (cart == null || cart.cartSize() == 0) {
+            Cart cartTemp = (Cart) session.getAttribute("cartTemp");
+            if (cartTemp == null || cartTemp.cartSize() == 0) {
                 resp.getWriter().write("{\"success\":false,\"message\":\"Cart empty\"}");
                 return;
             }
 
             int fee = ghnService.calculateFee(districtId, wardCode);
 
-            cart.setFee(fee);
-            session.setAttribute("cart", cart);
+            cartTemp.setFee(fee);
+            session.setAttribute("cartTemp", cartTemp);
 
-            long totalToPay = Math.round(cart.getTotalPriceToPay());
+            long totalToPay = Math.round(cartTemp.getTotalPriceToPay());
 
             resp.getWriter().write("{"
                     + "\"success\":true,"

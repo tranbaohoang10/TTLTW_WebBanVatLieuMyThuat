@@ -8,14 +8,27 @@ import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 public class EmailUtil {
 
+    private static final Properties config = new Properties();
 
-    private static final String email = "buivanhieu02102005@gmail.com";
-    private static final String password = "eijs wern gllw traa";
+    static {
+        try (InputStream input = EmailUtil.class.getClassLoader().getResourceAsStream("email.properties")) {
+            if (input == null) {
+                throw new RuntimeException("Không tìm thấy file cấu hình");
+            }
+            config.load(input);
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi đọc file", e);
+        }
+    }
+
+    private static final String email =config.getProperty("mail.username");
+    private static final String password = config.getProperty("mail.password");
 
     public static void send(String to, String subject, String content) {
         try {

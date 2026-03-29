@@ -41,7 +41,7 @@ public class Product_ReviewsController extends HttpServlet {
         }
         List<Product_Review> reviews = reviewService.getReviewsByProductId(productID);
         double avgRating = reviewService.averageRating(productID);
-        // làm tròn 1 chữ số thập phân
+
         avgRating = Math.round(avgRating * 10.0) / 10.0;
         int reviewCount = reviews.size();
         HttpSession session = request.getSession(false);
@@ -75,13 +75,13 @@ public class Product_ReviewsController extends HttpServlet {
         Users currentUser = (session != null) ? (Users) session.getAttribute("currentUser") : null;
 
         if (currentUser == null) {
-            // Chưa đăng nhập -> bắt đăng nhập trước khi đánh giá
+
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try {
-            // Lấy dữ liệu từ form
+
             String productIdStr = request.getParameter("productID");
             String ratingStr = request.getParameter("rating");
             String comment = request.getParameter("comment");
@@ -99,10 +99,10 @@ public class Product_ReviewsController extends HttpServlet {
                 rating = 5;
             }
 
-            //Tạo đối tượng Product_Review
+
             Product_Review review = new Product_Review();
             review.setProductID(productID);
-            review.setUserID(currentUser.getId()); // lấy id từ user đang đăng nhập
+            review.setUserID(currentUser.getId());
             review.setRating(rating);
             review.setComment(comment != null ? comment.trim() : "");
 
@@ -124,7 +124,7 @@ public class Product_ReviewsController extends HttpServlet {
             );
 
         } catch (NumberFormatException e) {
-            // Sai định dạng số
+
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid productID or rating");
         } catch (Exception e) {
             e.printStackTrace();

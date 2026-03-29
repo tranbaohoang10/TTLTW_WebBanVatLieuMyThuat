@@ -196,7 +196,10 @@
           padding: 12px;
           font-size: 14px;
         }
-
+        .order-table td:last-child {
+          text-align: center;
+          vertical-align: middle;
+        }
         .order-table td {
           padding: 12px;
           background: #fafafa;
@@ -216,10 +219,15 @@
 
         /* Trạng thái đơn hàng */
         .status {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 110px;
           padding: 6px 12px;
           border-radius: 8px;
           font-size: 13px;
           font-weight: bold;
+          text-align: center;
         }
 
         .status.pending {
@@ -439,7 +447,7 @@
                       <td><fmt:formatNumber value="${order.totalPrice}" type="number"/>đ</td>
                       <td>
                         <c:choose>
-                          <c:when test="${order.statusName == 'Chờ xác nhận'}">
+                          <c:when test="${order.statusName == 'Chờ xác nhận' || order.statusName == 'Đang xử lý'}">
                             <span class="status pending">${order.statusName}</span>
                           </c:when>
                           <c:when test="${order.statusName == 'Đang giao'}">

@@ -35,11 +35,28 @@ public class UserService {
         if(user.getIsActive()==3){
             return null;
         }
-        boolean checkPass = BCrypt.checkpw(password, user.getPassword());
-        if (!checkPass) {
+        LocalDateTime now = LocalDateTime.now();
+        if(user.getLockedUser() != null && user.getLockedUser().isAfter(now)){
             return null;
         }
-        return user;
+        if(!BCrypt.checkpw(password, user.getPassword())){
+            int failed = user.getFailedLogin() +1;
+            if(failed >= 5){
+                userDao.updateLoginFail(user.getId(), failed, now.plusMinutes(15));
+            }else {
+
+                userDao.updateLoginFail(user.getId(), failed, null);
+            }
+                return null;
+            }
+            userDao.resetLoginFail(user.getId());
+            return user;
+//        }
+//        boolean checkPass = BCrypt.checkpw(password, user.getPassword());
+//        if (!checkPass) {
+//            return null;
+//        }
+//        return user;
     }
 
 
