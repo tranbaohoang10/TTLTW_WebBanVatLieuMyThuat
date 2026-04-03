@@ -55,10 +55,6 @@ public class Product_ReviewsController extends HttpServlet {
             hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
         }
 
-        if (currentUser != null) {
-            canReview = reviewService.canReviewProduct(currentUser.getId(), productID);
-            hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
-        }
 
         request.setAttribute("canReview", canReview);
         request.setAttribute("hasReviewed", hasReviewed);

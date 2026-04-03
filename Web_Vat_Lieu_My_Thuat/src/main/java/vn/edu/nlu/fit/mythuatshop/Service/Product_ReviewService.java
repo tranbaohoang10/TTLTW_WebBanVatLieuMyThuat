@@ -35,4 +35,7 @@ public class Product_ReviewService {
     public boolean hasReviewProduct(int userId, int productID) {
         return product_reviewsDao.hasUserReviewed(userId, productID);
     }
+    public void updateReview(Product_Review review) {
+        product_reviewsDao.update(review);
+    }
 }

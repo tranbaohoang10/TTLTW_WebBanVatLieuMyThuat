@@ -88,4 +88,22 @@ public class Product_ReviewsDao {
         );
         return count != null && count > 0;
     }
+    public void update(Product_Review review) {
+        String sql = """
+            UPDATE product_reviews
+            SET rating = :rating,
+                comment = :comment
+            WHERE userID = :userID
+              AND productID = :productID
+            """;
+
+        jdbi.useHandle(h ->
+                h.createUpdate(sql)
+                        .bind("rating", review.getRating())
+                        .bind("comment", review.getComment())
+                        .bind("userID", review.getUserID())
+                        .bind("productID", review.getProductID())
+                        .execute()
+        );
+    }
 }
