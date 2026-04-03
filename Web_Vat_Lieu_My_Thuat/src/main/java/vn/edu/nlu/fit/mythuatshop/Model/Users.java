@@ -14,10 +14,7 @@ public class Users {
     private String role;
     private LocalDateTime createAt;
     private int isActive;
-    private int failedLogin;
-    private LocalDateTime lockedUser;
 
-    ;
 
     public int getId() {
         return id;
@@ -94,19 +91,5 @@ public class Users {
     public int getIsActive() { return isActive; }
     public void setIsActive(int isActive) { this.isActive = isActive; }
 
-    public int getFailedLogin() {
-        return failedLogin;
-    }
 
-    public void setFailedLogin(int failedLogin) {
-        this.failedLogin = failedLogin;
-    }
-
-    public LocalDateTime getLockedUser() {
-        return lockedUser;
-    }
-
-    public void setLockedUser(LocalDateTime lockedUser) {
-        this.lockedUser = lockedUser;
-    }
 }
