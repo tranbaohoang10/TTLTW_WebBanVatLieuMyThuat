@@ -252,47 +252,42 @@
                     <p>Bạn cần đăng nhập để đánh giá sản phẩm.</p>
                 </c:when>
 
-                <c:when test="${hasReviewed}">
-                    <p>Bạn đã đánh giá sản phẩm này rồi.</p>
-                </c:when>
-
                 <c:when test="${canReview}">
-                    <form class="form" action="${pageContext.request.contextPath}/Product_ReviewsController" method="post">
-                        <input type="hidden" name="productID" value="${product.id}"/>
+                    <h3>
+                        <c:choose>
+                            <c:when test="${hasReviewed}">Chỉnh sửa đánh giá của bạn</c:when>
+                            <c:otherwise>Viết đánh giá của bạn</c:otherwise>
+                        </c:choose>
+                    </h3>
 
-                        <p class="reviews_star">
-                    <span class="star-rating">
-                        <input type="radio" name="rating" id="rate-0" value="0" checked style="display: none;">
-                        <label for="rate-1"><i class="fa-solid fa-star"></i></label>
-                        <input type="radio" name="rating" id="rate-1" value="1">
-                        <label for="rate-2"><i class="fa-solid fa-star"></i></label>
-                        <input type="radio" name="rating" id="rate-2" value="2">
-                        <label for="rate-3"><i class="fa-solid fa-star"></i></label>
-                        <input type="radio" name="rating" id="rate-3" value="3">
-                        <label for="rate-4"><i class="fa-solid fa-star"></i></label>
-                        <input type="radio" name="rating" id="rate-4" value="4">
-                        <label for="rate-5"><i class="fa-solid fa-star"></i></label>
-                        <input type="radio" name="rating" id="rate-5" value="5">
-                    </span>
-                        </p>
+                    <form action="${pageContext.request.contextPath}/Product_ReviewsController" method="post">
+                        <input type="hidden" name="productID" value="${product.id}">
 
-                        <div class="form-group form_review">
-                            <input type="text" name="fullName" class="infor_contact"
-                                   value="${sessionScope.currentUser.fullName}" placeholder="Họ và tên" readonly>
-                            <input type="text" name="phone" class="infor_contact"
-                                   value="${sessionScope.currentUser.phoneNumber}" placeholder="Số điện thoại" readonly>
+                        <div>
+                            <label>Số sao:</label>
+                            <input type="radio" name="rating" value="1"> 1
+                            <input type="radio" name="rating" value="2"> 2
+                            <input type="radio" name="rating" value="3"> 3
+                            <input type="radio" name="rating" value="4"> 4
+                            <input type="radio" name="rating" value="5"> 5
                         </div>
 
-                        <textarea class="area_review" name="comment" placeholder="Nhập nội dung đánh giá"></textarea>
-
-                        <div class="area_submit">
-                            <button type="submit" class="btn_writeReview">Gửi đánh giá</button>
+                        <div>
+                            <label>Nhận xét:</label>
+                            <textarea name="comment"></textarea>
                         </div>
+
+                        <button type="submit">
+                            <c:choose>
+                                <c:when test="${hasReviewed}">Cập nhật đánh giá</c:when>
+                                <c:otherwise>Gửi đánh giá</c:otherwise>
+                            </c:choose>
+                        </button>
                     </form>
                 </c:when>
 
                 <c:otherwise>
-                    <p>Bạn chỉ được đánh giá sau khi đã mua sản phẩm này</p>
+                    <p>Bạn chỉ được đánh giá sau khi đã mua sản phẩm này.</p>
                 </c:otherwise>
             </c:choose>
         </div>
