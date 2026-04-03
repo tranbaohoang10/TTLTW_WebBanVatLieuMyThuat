@@ -1164,7 +1164,7 @@
                     </div>
 
                     <div class="product-actions">
-                        <button type="submit" class="btn btn-add-cart" id="addToCartBtn"
+                        <button type="button" class="btn btn-add-cart" id="addToCartBtn"
                         ${outOfStock ? "disabled" : ""}>
                             <c:if test="${outOfStock}">
                                 <i class="fa-solid fa-ban"></i>
@@ -1175,14 +1175,13 @@
                             THÊM VÀO GIỎ
                         </button>
 
-                        <a href="${outOfStock ? '#' : pageContext.request.contextPath.concat('/checkout')}"
-                           class="btn btn-buy-now link ${outOfStock ? 'btn-disabled' : ''}"
-                        ${outOfStock ? 'aria-disabled="true"' : ''}>
-                            <c:if test="${outOfStock}">
-                                <i class="fa-solid fa-ban"></i>
-                            </c:if>
+                        <button type="submit"
+                                formaction="${pageContext.request.contextPath}/checkout"
+                                formmethod="post"
+                                class="btn btn-buy-now"
+                        ${outOfStock ? "disabled" : ""}>
                             MUA NGAY
-                        </a>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1357,21 +1356,16 @@
     }
 
     const addToCartForm = document.getElementById('addToCartForm');
-    addToCartBtn = document.getElementById('addToCartBtn');
-    
-    addToCartForm.addEventListener('submit', function (e) {
-        e.preventDefault(); // Ngăn form submit mặc định
-        
-        // animation cho nút
+    const addToCartBtn = document.getElementById('addToCartBtn');
+
+    addToCartBtn.addEventListener('click', function () {
         addToCartBtn.classList.add('adding');
         addToCartBtn.disabled = true;
 
-        // Lấy số lượng user chọn
         const qtyInput = document.getElementById('quantity');
         const qty = parseInt(qtyInput.value) || 1;
         const productId = document.querySelector('input[name="productId"]').value;
 
-        // Gửi AJAX request
         fetch('${pageContext.request.contextPath}/AddToCart?action=add', {
             method: 'POST',
             headers: {
@@ -1379,26 +1373,22 @@
             },
             body: 'productId=' + productId + '&quantity=' + qty
         })
-        .then(response => response.text())
-        .then(data => {
-            // Cập nhật số lượng giỏ hàng trên header
-            updateCartCount(qty);
-            
-            // Hiển thị thông báo thành công
-            showToastNotification();
-            
-            // Reset animation
-            setTimeout(() => {
+            .then(response => response.text())
+            .then(data => {
+                updateCartCount(qty);
+                showToastNotification();
+
+                setTimeout(() => {
+                    addToCartBtn.classList.remove('adding');
+                    addToCartBtn.disabled = false;
+                }, 600);
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 addToCartBtn.classList.remove('adding');
                 addToCartBtn.disabled = false;
-            }, 600);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            addToCartBtn.classList.remove('adding');
-            addToCartBtn.disabled = false;
-            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
-        });
+                alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+            });
     });
 
     function updateCartCount(addedQty) {
@@ -1407,10 +1397,10 @@
             // Lấy số lượng hiện tại từ badge
             const currentCount = parseInt(cartIcon.getAttribute('data-count') || 0);
             const newCount = currentCount + addedQty;
-            
+
             // Cập nhật badge
             cartIcon.setAttribute('data-count', newCount);
-            
+
             // Animation
             cartIcon.classList.add('cart-updated');
             setTimeout(() => {

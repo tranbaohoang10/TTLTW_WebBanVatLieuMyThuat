@@ -15,6 +15,10 @@ import java.io.IOException;
 public class CheckoutController extends HttpServlet {
 
     private ProductService productService;
+    @Override
+    public void init() throws ServletException {
+        productService = new ProductService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
