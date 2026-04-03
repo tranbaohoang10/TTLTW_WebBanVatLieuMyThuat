@@ -547,7 +547,24 @@
     #voucherMsg.loading {
         color: #6b7280;
     }
+    .delivery-estimate-row {
+        padding: 10px 12px;
+        background-color: #fff8e8;
+        border: 1px solid #f2d38b;
+        border-radius: 6px;
+        gap: 12px;
+    }
 
+    .delivery-estimate-label {
+        color: #555;
+        font-weight: 500;
+    }
+
+    .delivery-estimate-value {
+        color: #d48806;
+        font-weight: 600;
+        text-align: right;
+    }
 
 </style>
 
@@ -714,6 +731,10 @@
                                 <span id="shippingFeeText">
                                     <fmt:formatNumber value="${sessionScope.cartTemp.fee}" type="number"/>₫
                                 </span>
+                            </div>
+                            <div class="price-row delivery-estimate-row">
+                                <span class="delivery-estimate-label">Dự kiến nhận hàng</span>
+                                <span id="expectedDeliveryText">Chưa có</span>
                             </div>
 
                             <div class="price-row total">
