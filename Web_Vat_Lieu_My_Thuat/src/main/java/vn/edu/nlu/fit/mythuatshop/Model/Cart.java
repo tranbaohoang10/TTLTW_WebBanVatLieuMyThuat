@@ -8,6 +8,8 @@ public class Cart {
     private int fee = 0;
     private double discount = 0;
     private Integer voucherId;
+    private Long expectedDeliveryTime;
+    private String expectedDeliveryDateText;
 
     public Cart() {
         carts = new HashMap<>();
@@ -35,6 +37,27 @@ public class Cart {
 
     public void setDiscount(double discount) {
         this.discount = discount;
+    }
+    public Long getExpectedDeliveryTime() {
+        return expectedDeliveryTime;
+    }
+
+    public void setExpectedDeliveryTime(Long expectedDeliveryTime) {
+        this.expectedDeliveryTime = expectedDeliveryTime;
+    }
+
+    public String getExpectedDeliveryDateText() {
+        return expectedDeliveryDateText;
+    }
+
+    public void setExpectedDeliveryDateText(String expectedDeliveryDateText) {
+        this.expectedDeliveryDateText = expectedDeliveryDateText;
+    }
+
+    public void clearShippingInformation() {
+        this.fee = 0;
+        this.expectedDeliveryTime = null;
+        this.expectedDeliveryDateText = null;
     }
 
     public void addCartItem(CartItem newItem) {
