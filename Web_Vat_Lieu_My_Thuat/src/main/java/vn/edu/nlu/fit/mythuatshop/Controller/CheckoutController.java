@@ -47,11 +47,17 @@ public class CheckoutController extends HttpServlet {
             response.sendRedirect("login");
             return;
         }
-        String productIdStr = request.getParameter("productId");
-        String quantityStr = request.getParameter("quantity");
+        String checkoutMode = request.getParameter("checkoutMode");
 
-        if (productIdStr != null && !productIdStr.isBlank()
-                && quantityStr != null && !quantityStr.isBlank()) {
+
+        if ("buyNow".equals(checkoutMode)) {
+            String productIdStr = request.getParameter("productId");
+            String quantityStr = request.getParameter("quantity");
+
+            if (productIdStr == null || quantityStr == null) {
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
 
             int productId = Integer.parseInt(productIdStr);
             int quantity = Integer.parseInt(quantityStr);
@@ -69,7 +75,6 @@ public class CheckoutController extends HttpServlet {
             }
 
             Cart cartTemp = new Cart();
-
             CartItem item = new CartItem(
                     product.getId(),
                     product.getName(),

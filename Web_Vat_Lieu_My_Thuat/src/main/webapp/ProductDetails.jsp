@@ -1176,6 +1176,8 @@
                         </button>
 
                         <button type="submit"
+                                name="checkoutMode"
+                                value="buyNow"
                                 formaction="${pageContext.request.contextPath}/checkout"
                                 formmethod="post"
                                 class="btn btn-buy-now"
