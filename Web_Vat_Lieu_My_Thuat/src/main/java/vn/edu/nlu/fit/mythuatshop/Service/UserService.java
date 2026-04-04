@@ -244,5 +244,21 @@ public class UserService {
 
         userDao.insertUser(user);
     }
+    public Users updateIsActiveWhenLoginGG(String email){
+        if (email == null || email.isBlank()) return null;
+
+        Users user = userDao.findByEmail(email.trim());
+        if (user == null) return null;
+
+        if (user.getIsActive() == 3) {
+            return user;
+        }
+        if (user.getIsActive() == 0) {
+            userDao.setActive(user.getId(), 1);
+            user.setIsActive(1);
+        }
+
+        return user;
+    }
 
 }

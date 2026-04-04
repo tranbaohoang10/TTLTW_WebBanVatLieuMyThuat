@@ -54,6 +54,8 @@ public class GoogleCallbackController extends HttpServlet {
         Users user = userService.findByEmailForGG(email);
         if (user == null) {
             user = userService.registerGoogleUser(fullName, email);
+        } else {
+            user = userService.updateIsActiveWhenLoginGG(email);
         }
         if (user != null && user.getIsActive() == 3) {
             session.setAttribute("FLASH_ERROR", "Tài khoản đã bị khóa!");
