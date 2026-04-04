@@ -88,6 +88,7 @@ public class ResetPasswordController extends HttpServlet {
             return;
         }
 
-        resp.sendRedirect(req.getContextPath() + "/login?reset=success");
+        req.setAttribute("resetSuccess", "Đặt lại mật khẩu thành công!");
+        req.getRequestDispatcher("ResetPassword.jsp").forward(req, resp);
     }
 }

@@ -123,10 +123,81 @@
         text-decoration: underline;
     }
 
-    .reset-error {
-        color: red;
-        margin-bottom: 16px;
-        font-size: 15px;
+    .success-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .success-popup-box {
+        width: 380px;
+        max-width: 90%;
+        background: #fff;
+        border-radius: 18px;
+        padding: 30px 24px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        animation: popupFadeIn 0.25s ease;
+    }
+
+    .success-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: #22c55e;
+        color: white;
+        font-size: 38px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .success-popup-box h3 {
+        margin: 0 0 10px;
+        font-size: 26px;
+        color: #222;
+    }
+
+    .success-popup-box p {
+        margin: 0 0 22px;
+        font-size: 17px;
+        color: #555;
+        line-height: 1.5;
+    }
+
+    .success-popup-btn {
+        border: none;
+        background: #f0d548;
+        color: #222;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+
+    .success-popup-btn:hover {
+        opacity: 0.95;
+    }
+
+    @keyframes popupFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.96);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
     }
 </style>
 
@@ -147,7 +218,6 @@
         <div class="reset-form-box">
             <h2>LẤY LẠI MẬT KHẨU</h2>
 
-
             <form action="${pageContext.request.contextPath}/reset-password" method="post" class="reset-form">
                 <input type="hidden" name="token" value="${token}">
 
@@ -160,6 +230,9 @@
                     <label for="confirmPassword">Xác nhận mật khẩu <span>*</span></label>
                     <input type="password" id="confirmPassword" name="confirmPassword" required>
                 </div>
+                <c:if test="${not empty error}">
+                    <p class="reset-error">${error}</p>
+                </c:if>
 
                 <div class="form-action">
                     <button type="submit" class="btn-reset">Đặt lại mật khẩu</button>
@@ -169,6 +242,18 @@
         </div>
     </div>
 </div>
+<c:if test="${not empty resetSuccess}">
+    <div id="successPopup" class="success-popup-overlay">
+        <div class="success-popup-box">
+            <div class="success-icon">✓</div>
+            <h3>Thành công</h3>
+            <p>${resetSuccess}</p>
+            <button type="button" class="success-popup-btn" onclick="goToLogin()">
+                Đăng nhập ngay
+            </button>
+        </div>
+    </div>
+</c:if>
 
 <%@ include file="Footer.jsp" %>
 
@@ -196,6 +281,10 @@
     confirmPassword.addEventListener("input", checkConfirmPassword);
     newPassword.addEventListener("input", checkConfirmPassword);
 </script>
-
+<script>
+    function goToLogin() {
+        window.location.href = "${pageContext.request.contextPath}/login";
+    }
+</script>
 </body>
 </html>
