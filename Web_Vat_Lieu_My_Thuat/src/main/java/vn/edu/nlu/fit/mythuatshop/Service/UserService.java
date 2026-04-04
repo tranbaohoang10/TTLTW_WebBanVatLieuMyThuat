@@ -57,15 +57,15 @@ public class UserService {
                return false;
            }
            if(checkUser.getIsActive()==0){
-               String oldToken = tokenDao.findValidTokenByUserId(checkUser.getId());
+               String oldToken = tokenDao.findValidTokenByUserId(checkUser.getId(), "VERIFY_EMAIL");
                if(oldToken==null){
                    return false;
                }
                String newToken = UUID.randomUUID().toString().replace("-", "");
                LocalDateTime hanXT = LocalDateTime.now().plusHours(24);
 
-               tokenDao.deleteTokensByUserId(checkUser.getId());
-               tokenDao.insert(checkUser.getId(), newToken,  hanXT);
+               tokenDao.deleteTokensByUserId(checkUser.getId(), "VERIFY_EMAIL");
+               tokenDao.insert(checkUser.getId(), newToken,  hanXT, "VERIFY_EMAIL");
 
                String verify = baseUrl + "/verify-email?token=" + newToken;
                String emailTitle = "Xác nhận đăng ký tài khoản";
@@ -93,7 +93,7 @@ public class UserService {
         String token = UUID.randomUUID().toString().replace("-", "");
         LocalDateTime hanXacThuc =  LocalDateTime.now().plusHours(24);
 
-        tokenDao.insert(userId, token, hanXacThuc);
+        tokenDao.insert(userId, token, hanXacThuc, "VERIFY_EMAIL");
 
         String verify = baseUrl + "/verify-email?token=" + token;
         String emailTitle = "Xác nhận đăng ký tài khoản";
@@ -105,7 +105,7 @@ public class UserService {
     public boolean verifyEmailToken(String token) {
         if (token == null || token.isBlank()) return false;
 
-        Integer userId = tokenDao.findUserIdIfValid(token);
+        Integer userId = tokenDao.findUserIdIfValid(token, "VERIFY_EMAIL");
         if (userId == null) return false;
 
         userDao.setActive(userId, 1);
