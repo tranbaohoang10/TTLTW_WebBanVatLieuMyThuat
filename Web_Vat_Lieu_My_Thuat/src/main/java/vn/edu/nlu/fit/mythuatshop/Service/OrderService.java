@@ -23,7 +23,7 @@ public class OrderService {
     }
 
     public Order createOrder(Users user, Cart cart, String fullName, String email, String phone,
-                             String address, String note, String paymentName, Integer voucherId) {
+                             String address, String note, String paymentName, Integer voucherId,String provinceId, String districtId, String wardCode) {
 
         if (user == null || cart == null || cart.cartSize() == 0)
             return null;
@@ -37,6 +37,17 @@ public class OrderService {
         order.setPhoneNumber(phone);
         order.setAddress(address);
         order.setNote(note);
+        if (provinceId != null && !provinceId.isBlank()) {
+            order.setDeliveryProvinceId(Integer.parseInt(provinceId));
+        }
+
+        if (districtId != null && !districtId.isBlank()) {
+            order.setDeliveryDistrictId(Integer.parseInt(districtId));
+        }
+
+        order.setDeliveryWardCode(wardCode);
+        order.setExpectedDeliveryTime(cart.getExpectedDeliveryTime());
+        order.setExpectedDeliveryDateText(cart.getExpectedDeliveryDateText());
 
         Payment payment = paymentDao.findByName(paymentName);
         if (payment == null) {

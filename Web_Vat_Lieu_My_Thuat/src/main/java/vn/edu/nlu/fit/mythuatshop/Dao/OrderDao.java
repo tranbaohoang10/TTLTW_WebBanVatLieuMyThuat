@@ -19,8 +19,10 @@ public class OrderDao implements DaoInterface<Order> {
     public int insert(Order order, boolean updateInventory) {
         return jdbi.inTransaction(handle -> {
             String sql = "INSERT INTO Orders (userID, fullName, email, phoneNumber, address, " +
+                    "deliveryProvinceId, deliveryDistrictId, deliveryWardCode, expectedDeliveryTime, expectedDeliveryDateText, " +
                     " totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note,paymentStatus ) " +
                     "VALUES (:userID, :fullName, :email, :phoneNumber, :address, " +
+                    ":deliveryProvinceId, :deliveryDistrictId, :deliveryWardCode, :expectedDeliveryTime, :expectedDeliveryDateText, " +
                     " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount,:shippingFee, :note, :paymentStatus)";
             int orderId = handle.createUpdate(sql)
                     .bind("userID", order.getUserId())
@@ -28,6 +30,11 @@ public class OrderDao implements DaoInterface<Order> {
                     .bind("email", order.getEmail())
                     .bind("phoneNumber", order.getPhoneNumber())
                     .bind("address", order.getAddress())
+                    .bind("deliveryProvinceId", order.getDeliveryProvinceId())
+                    .bind("deliveryDistrictId", order.getDeliveryDistrictId())
+                    .bind("deliveryWardCode", order.getDeliveryWardCode())
+                    .bind("expectedDeliveryTime", order.getExpectedDeliveryTime())
+                    .bind("expectedDeliveryDateText", order.getExpectedDeliveryDateText())
                     .bind("totalPrice", order.getTotalPrice())
                     .bind("paymentID", order.getPaymentId())
                     .bind("orderStatusID", order.getOrderStatusId())

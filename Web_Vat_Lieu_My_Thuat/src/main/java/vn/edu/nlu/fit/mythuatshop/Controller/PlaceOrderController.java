@@ -58,7 +58,7 @@ public class PlaceOrderController extends HttpServlet {
             return;
         }
         Order order = orderService.createOrder(currentUser, cartTemp, fullName, email, phone,
-                address, note, paymentName, voucherId);
+                address, note, paymentName, voucherId,provinceId, districtId, wardCode);
 
         if (order == null) {
             req.setAttribute("errorMessage", "Đặt hàng thất bại");
