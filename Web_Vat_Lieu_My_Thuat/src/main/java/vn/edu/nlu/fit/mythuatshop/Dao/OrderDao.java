@@ -174,6 +174,7 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.email         AS email, " +
                         "       o.phoneNumber   AS phoneNumber, " +
                         "       o.address       AS address, " +
+                        "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                         "       o.totalPrice    AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +
@@ -184,6 +185,7 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.createAt      AS createAt, " +
                         "       o.note          AS note, " +
                         "       os.statusName   AS statusName " +
+
                         "FROM Orders o " +
                         "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
                         "WHERE o.userID = :userId ";
@@ -234,6 +236,7 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.email         AS email, " +
                 "       o.phoneNumber   AS phoneNumber, " +
                 "       o.address       AS address, " +
+                "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                 "       o.totalPrice    AS totalPrice, " +
                 "       o.paymentID     AS paymentId, " +
                 "       o.orderStatusID AS orderStatusId, " +

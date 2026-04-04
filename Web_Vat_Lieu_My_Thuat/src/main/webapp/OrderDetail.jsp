@@ -210,6 +210,11 @@
         .order-meta .payment-line {
             grid-column: 2;
         }
+        .order-expected-delivery {
+            color: #b45309;
+            font-weight: 600;
+        }
+
 
         @media (min-width: 768px) {
             .page-offset {
@@ -268,6 +273,19 @@
                 <p><b>Người nhận:</b> ${order.fullName}</p>
                 <p><b>Số điện thoại:</b> ${order.phoneNumber}</p>
                 <p><b>Địa chỉ:</b> ${order.address}</p>
+                <p>
+                    <b>Dự kiến nhận hàng:</b>
+                    <span class="order-expected-delivery">
+        <c:choose>
+            <c:when test="${not empty order.expectedDeliveryDateText}">
+                ${order.expectedDeliveryDateText}
+            </c:when>
+            <c:otherwise>
+                Chưa có thông tin
+            </c:otherwise>
+        </c:choose>
+    </span>
+                </p>
                 <p><b>Phương thức thanh toán:</b> ${order.paymentName}</p>
 
                 <c:if test="${not empty order.note}">

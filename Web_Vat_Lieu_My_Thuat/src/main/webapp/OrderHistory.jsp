@@ -318,6 +318,24 @@
         border: 1px solid #fca5a5;
     }
 
+    .order-delivery-label {
+            font-weight: 600;
+        font-size: 16px;
+    }
+
+    .order-delivery-date {
+        color: #d97706;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    .order-delivery-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-left: 24px;
+        padding-right: 24px;
+        margin-bottom: 22px;
+    }
 
     /* ENd section-main-ca-nhan */
 </style>
@@ -399,14 +417,16 @@
                                 <div class="order-items">
                                     <c:forEach var="item" items="${order.viewItems}">
                                         <div class="order-item">
-                                            <c:set var="hisThumbUrl" value="${item.thumbnail}" />
+                                            <c:set var="hisThumbUrl" value="${item.thumbnail}"/>
                                             <c:if test="${not empty hisThumbUrl and not fn:startsWith(hisThumbUrl,'http') and not fn:startsWith(hisThumbUrl, pageContext.request.contextPath)}">
                                                 <c:choose>
                                                     <c:when test="${fn:startsWith(hisThumbUrl,'/')}">
-                                                        <c:set var="hisThumbUrl" value="${pageContext.request.contextPath}${hisThumbUrl}" />
+                                                        <c:set var="hisThumbUrl"
+                                                               value="${pageContext.request.contextPath}${hisThumbUrl}"/>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <c:set var="hisThumbUrl" value="${pageContext.request.contextPath}/${hisThumbUrl}" />
+                                                        <c:set var="hisThumbUrl"
+                                                               value="${pageContext.request.contextPath}/${hisThumbUrl}"/>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </c:if>
@@ -426,6 +446,19 @@
                                             </div>
                                         </div>
                                     </c:forEach>
+                                </div>
+                                <div class="order-delivery-info">
+                                    <span class="order-delivery-label">Dự kiến nhận :</span>
+                                    <span class="order-delivery-date">
+                                <c:choose>
+                                    <c:when test="${not empty order.expectedDeliveryDateText}">
+                                        ${order.expectedDeliveryDateText}
+                                    </c:when>
+                                    <c:otherwise>
+                                        Chưa có thông tin
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
                                 </div>
 
                                 <div class="order-footer">
