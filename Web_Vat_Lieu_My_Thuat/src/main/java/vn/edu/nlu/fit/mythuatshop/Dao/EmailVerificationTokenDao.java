@@ -45,7 +45,7 @@ public class EmailVerificationTokenDao {
     public void deleteTokensByUserId(int userId, String type) {
         String sql = "DELETE FROM email_verification_tokens WHERE user_id = :userId AND type = :type";
         JDBIConnector.getJdbi().useHandle(handle -> {
-            handle.createUpdate(sql).bind(0, userId).bind("type", type).execute();
+            handle.createUpdate(sql).bind("userId", userId).bind("type", type).execute();
         });
     }
 }
