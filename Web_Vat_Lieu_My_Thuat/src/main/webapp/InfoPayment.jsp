@@ -565,6 +565,10 @@
         font-weight: 600;
         text-align: right;
     }
+    #shippingAreaError {
+        color: red;
+    }
+
 
 </style>
 
@@ -580,7 +584,7 @@
                 <span>Thông tin giao hàng</span>
             </div>
 
-            <form action="${pageContext.request.contextPath}/place-order" method="post">
+            <form id="checkoutForm" action="${pageContext.request.contextPath}/place-order" method="post">
                 <div class="checkout-container">
 
                     <!-- LEFT -->
@@ -632,6 +636,7 @@
                                 <option value="">-- Chọn phường/xã --</option>
                             </select>
                         </div>
+                        <div id="shippingAreaError" class="text-danger mt-2"></div>
 
                         <div class="input-group">
                             <label for="address">Địa chỉ</label>
@@ -712,6 +717,9 @@
                         </div>
                         <input type="hidden" id="baseTotalToPay"
                                value="${Math.round(sessionScope.cartTemp.totalProductPrice - sessionScope.cartTemp.discount)}">
+                        <input type="hidden" name="provinceId" id="provinceIdInput">
+                        <input type="hidden" name="districtId" id="districtIdInput">
+                        <input type="hidden" name="wardCode" id="wardCodeInput">
                         <div class="price-summary">
                             <div class="price-row">
                                 <span>Tạm tính</span>
@@ -800,6 +808,12 @@
         const shippingFeeText = $("shippingFeeText");
         const expectedDeliveryText = $("expectedDeliveryText");
 
+        const provinceIdInput = $("provinceIdInput");
+        const districtIdInput = $("districtIdInput");
+        const wardCodeInput = $("wardCodeInput");
+        const shippingAreaError = $("shippingAreaError");
+        const checkoutForm = $("checkoutForm");
+
         if (!provinceSelect || !districtSelect || !wardSelect) {
             console.warn("Missing select elements for GHN");
             return;
@@ -845,6 +859,17 @@
                     voucherMsg.textContent = "Lỗi áp dụng voucher";
                 }
             });
+        }
+        function updateShippingAreaInputs() {
+            if (provinceIdInput) {
+                provinceIdInput.value = provinceSelect.value || "";
+            }
+            if (districtIdInput) {
+                districtIdInput.value = districtSelect.value || "";
+            }
+            if (wardCodeInput) {
+                wardCodeInput.value = wardSelect.value || "";
+            }
         }
 
         async function loadProvinces() {
@@ -970,6 +995,7 @@
             districtSelect.innerHTML = `<option value="">-- Chọn quận/huyện --</option>`;
             wardSelect.innerHTML = `<option value="">-- Chọn phường/xã --</option>`;
             clearShippingInformation();
+            updateShippingAreaInputs();
             if (!pid) return;
             loadDistricts(pid);
         });
@@ -980,21 +1006,53 @@
             wardSelect.disabled = true;
             wardSelect.innerHTML = `<option value="">-- Chọn phường/xã --</option>`;
             clearShippingInformation();
+            updateShippingAreaInputs();
             loadWards(did);
         });
 
         wardSelect.addEventListener("change", () => {
             const did = districtSelect.value;
             const wcode = wardSelect.value;
+            updateShippingAreaInputs();
+            if (shippingAreaError) {
+                shippingAreaError.textContent = "";
+            }
+
             if (!did || !wcode) {
                 clearShippingInformation();
                 return;
             }
             calcFee(did, wcode);
         });
+        if (checkoutForm) {
+            checkoutForm.addEventListener("submit", (event) => {
+                updateShippingAreaInputs();
+
+                const provinceId = provinceSelect.value;
+                const districtId = districtSelect.value;
+                const wardCode = wardSelect.value;
+
+                if (!provinceId || !districtId || !wardCode) {
+                    event.preventDefault();
+
+                    if (shippingAreaError) {
+                        shippingAreaError.textContent = "Vui lòng chọn đầy đủ khu vực giao hàng.";
+                    } else {
+                        alert("Vui lòng chọn đầy đủ khu vực giao hàng.");
+                    }
+
+                    return;
+                }
+                if (shippingAreaError) {
+                    shippingAreaError.textContent = "";
+                }
+            });
+        }
 
         loadProvinces();
     })();
+
+
 </script>
 
 </body>

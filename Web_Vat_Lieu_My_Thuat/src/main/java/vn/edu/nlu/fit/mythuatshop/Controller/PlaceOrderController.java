@@ -44,7 +44,19 @@ public class PlaceOrderController extends HttpServlet {
         String note = req.getParameter("note");
         String paymentName = req.getParameter("payment");
         Integer voucherId = (Integer) session.getAttribute("appliedVoucherId");
+        String provinceId = req.getParameter("provinceId");
+        String districtId = req.getParameter("districtId");
+        String wardCode = req.getParameter("wardCode");
 
+
+
+        if (provinceId == null || provinceId.isBlank()
+                || districtId == null || districtId.isBlank()
+                || wardCode == null || wardCode.isBlank()) {
+            req.setAttribute("error", "Vui lòng chọn đầy đủ khu vực giao hàng.");
+            req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
+            return;
+        }
         Order order = orderService.createOrder(currentUser, cartTemp, fullName, email, phone,
                 address, note, paymentName, voucherId);
 
