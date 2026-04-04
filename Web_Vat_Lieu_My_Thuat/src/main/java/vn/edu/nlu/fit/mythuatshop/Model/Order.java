@@ -26,9 +26,54 @@ public class Order implements Serializable {
     private double shippingFee;
     private String productNames;
     private String paymentStatus;
+    private Integer deliveryProvinceId;
+    private Integer deliveryDistrictId;
+    private String deliveryWardCode;
+    private Long expectedDeliveryTime;
+    private String expectedDeliveryDateText;
 
 
     public Order() {
+    }
+
+    public Integer getDeliveryProvinceId() {
+        return deliveryProvinceId;
+    }
+
+    public void setDeliveryProvinceId(Integer deliveryProvinceId) {
+        this.deliveryProvinceId = deliveryProvinceId;
+    }
+
+    public String getExpectedDeliveryDateText() {
+        return expectedDeliveryDateText;
+    }
+
+    public void setExpectedDeliveryDateText(String expectedDeliveryDateText) {
+        this.expectedDeliveryDateText = expectedDeliveryDateText;
+    }
+
+    public Long getExpectedDeliveryTime() {
+        return expectedDeliveryTime;
+    }
+
+    public void setExpectedDeliveryTime(Long expectedDeliveryTime) {
+        this.expectedDeliveryTime = expectedDeliveryTime;
+    }
+
+    public String getDeliveryWardCode() {
+        return deliveryWardCode;
+    }
+
+    public void setDeliveryWardCode(String deliveryWardCode) {
+        this.deliveryWardCode = deliveryWardCode;
+    }
+
+    public Integer getDeliveryDistrictId() {
+        return deliveryDistrictId;
+    }
+
+    public void setDeliveryDistrictId(Integer deliveryDistrictId) {
+        this.deliveryDistrictId = deliveryDistrictId;
     }
 
     public String getProductNames() {
