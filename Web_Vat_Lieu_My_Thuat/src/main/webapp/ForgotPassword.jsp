@@ -17,7 +17,6 @@
         width: 1200px;
         margin: auto;
     }
-    /* login */
     .main {
         margin: 0;
         padding: 0;
@@ -26,7 +25,6 @@
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        /* background-color: #1E76EF; */
         background: linear-gradient(to left, #2659F3, #09BCE4);
 
 
@@ -77,13 +75,6 @@
 
     .form-email .form-1 input::placeholder {
         color: #ccc5c5;
-    }
-
-
-    .forgot-password {
-        text-align: center;
-        margin-bottom: 20px;
-
     }
 
     .forgot-password a {
@@ -209,9 +200,6 @@
 
             <div class="btn-login-gg">
 
-<%--                <button class="btn-gg"><i--%>
-<%--                        class="fa-brands fa-google"></i>Google--%>
-<%--                </button>--%>
                 <a class="btn-gg" href="${pageContext.request.contextPath}/oauth2/google"
                    style="text-align: center"><i
                         class="fa-brands fa-google"></i>
@@ -227,20 +215,17 @@
 
 <%@ include file="Footer.jsp" %>
 
-<%--check error email--%>
+
 <script>
     const emailInput = document.getElementById("email");
     const emailError = document.getElementById("email-error");
 
-    // Regex đơn giản, đủ dùng cho form đăng ký
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
     emailInput.addEventListener("input", () => {
         const email = emailInput.value.trim();
 
         if (email.length === 0) {
-            // nếu muốn bắt buộc nhập thì để thông báo,
-            // còn không thì có thể để rỗng
             emailError.textContent = "";
             return;
         }

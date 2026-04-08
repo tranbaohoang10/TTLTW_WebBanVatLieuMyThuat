@@ -8,7 +8,6 @@ import vn.edu.nlu.fit.mythuatshop.Dao.EmailVerificationTokenDao;
 import java.time.LocalDateTime;
 
 import java.time.LocalDate;
-import java.util.Random;
 import java.util.UUID;
 
 public class UserService {
@@ -35,28 +34,11 @@ public class UserService {
         if(user.getIsActive()==3){
             return null;
         }
-        LocalDateTime now = LocalDateTime.now();
-        if(user.getLockedUser() != null && user.getLockedUser().isAfter(now)){
+        boolean checkPass = BCrypt.checkpw(password, user.getPassword());
+        if (!checkPass) {
             return null;
         }
-        if(!BCrypt.checkpw(password, user.getPassword())){
-            int failed = user.getFailedLogin() +1;
-            if(failed >= 5){
-                userDao.updateLoginFail(user.getId(), failed, now.plusMinutes(15));
-            }else {
-
-                userDao.updateLoginFail(user.getId(), failed, null);
-            }
-                return null;
-            }
-            userDao.resetLoginFail(user.getId());
-            return user;
-//        }
-//        boolean checkPass = BCrypt.checkpw(password, user.getPassword());
-//        if (!checkPass) {
-//            return null;
-//        }
-//        return user;
+        return user;
     }
 
 
@@ -74,15 +56,15 @@ public class UserService {
                return false;
            }
            if(checkUser.getIsActive()==0){
-               String oldToken = tokenDao.findValidTokenByUserId(checkUser.getId());
+               String oldToken = tokenDao.findValidTokenByUserId(checkUser.getId(), "VERIFY_EMAIL");
                if(oldToken==null){
                    return false;
                }
                String newToken = UUID.randomUUID().toString().replace("-", "");
                LocalDateTime hanXT = LocalDateTime.now().plusHours(24);
 
-               tokenDao.deleteTokensByUserId(checkUser.getId());
-               tokenDao.insert(checkUser.getId(), newToken,  hanXT);
+               tokenDao.deleteTokensByUserId(checkUser.getId(), "VERIFY_EMAIL");
+               tokenDao.insert(checkUser.getId(), newToken,  hanXT, "VERIFY_EMAIL");
 
                String verify = baseUrl + "/verify-email?token=" + newToken;
                String emailTitle = "Xác nhận đăng ký tài khoản";
@@ -110,7 +92,7 @@ public class UserService {
         String token = UUID.randomUUID().toString().replace("-", "");
         LocalDateTime hanXacThuc =  LocalDateTime.now().plusHours(24);
 
-        tokenDao.insert(userId, token, hanXacThuc);
+        tokenDao.insert(userId, token, hanXacThuc, "VERIFY_EMAIL");
 
         String verify = baseUrl + "/verify-email?token=" + token;
         String emailTitle = "Xác nhận đăng ký tài khoản";
@@ -122,7 +104,7 @@ public class UserService {
     public boolean verifyEmailToken(String token) {
         if (token == null || token.isBlank()) return false;
 
-        Integer userId = tokenDao.findUserIdIfValid(token);
+        Integer userId = tokenDao.findUserIdIfValid(token, "VERIFY_EMAIL");
         if (userId == null) return false;
 
         userDao.setActive(userId, 1);
@@ -167,48 +149,57 @@ public class UserService {
         return userDao.findByEmailFp(email);
     }
 
-    public boolean resetAndSendEmail(String email) {
-        if (email == null){
-            return false;
-        }
-        email = email.trim();
-
-        Users user = userDao.findByEmailFp(email);
-        if (user == null) return false;
-
-        String matKhauMoi = generateRandomPassword();
-        String hashed = BCrypt.hashpw(matKhauMoi, BCrypt.gensalt(12));
-
-        int row = userDao.updatePasswordByEmail(email, hashed);
-        if (row <= 0) return false;
-
-        String subject = "Đặt lại mật khẩu cho tài khoản";
-        String nd = "Mật khẩu mới của bạn là: " + matKhauMoi;
-
-        try {
-            EmailUtil.send(email, subject, nd);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private String generateRandomPassword() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder sb = new StringBuilder();
-        Random rnd = new Random();
-        for (int i = 0; i < 8; i++) {
-            sb.append(chars.charAt(rnd.nextInt(chars.length())));
-        }
-        return sb.toString();
-    }
 
     public Users findByEmailForGG(String email) {
         if (email == null) return null;
         return userDao.findByEmail(email.trim());
     }
 
+    public Integer getUserIdByValidResetToken(String token) {
+        if (token == null || token.isBlank()) return null;
+        return tokenDao.findUserIdIfValid(token, "RESET_PASSWORD");
+    }
+
+    public boolean sendResetPasswordLink(String email, String baseUrl) {
+        if (email == null || email.isBlank()) return false;
+        email = email.trim();
+
+        Users user = userDao.findByEmailFp(email);
+        if (user == null) return false;
+
+        String token = UUID.randomUUID().toString().replace("-", "");
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(30);
+
+        tokenDao.deleteTokensByUserId(user.getId(), "RESET_PASSWORD");
+        tokenDao.insert(user.getId(), token, expiresAt, "RESET_PASSWORD");
+
+        String resetLink = baseUrl + "/reset-password?token=" + token;
+
+        String subject = "Yêu cầu đặt lại mật khẩu";
+        String html = ""
+                + "<p>Chào bạn,</p>"
+                + "<p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản MyThuatShop.</p>"
+                + "<p>Vui lòng nhấn vào link bên dưới để đặt lại mật khẩu:</p>"
+                + "<p><a href='" + resetLink + "'>Đặt lại mật khẩu</a></p>"
+                + "<p>Link này sẽ hết hạn sau 30 phút.</p>";
+        EmailUtil.sendHtml(email, subject, html);
+        return true;
+    }
+    public boolean resetPasswordByToken(String token, String newPassword) {
+        if (token == null || token.isBlank()) return false;
+        if (newPassword == null || newPassword.isBlank()) return false;
+
+        Integer userId = tokenDao.findUserIdIfValid(token, "RESET_PASSWORD");
+        if (userId == null) return false;
+
+        String newHash = BCrypt.hashpw(newPassword, BCrypt.gensalt(12));
+        boolean updated = userDao.updatePassword(userId, newHash);
+
+        if (!updated) return false;
+
+        tokenDao.markUsed(token);
+        return true;
+    }
     public Users registerGoogleUser(String name, String email) {
         if (email == null || email.isBlank()) return null;
         email = email.trim();
@@ -252,6 +243,22 @@ public class UserService {
         user.setIsActive(1);
 
         userDao.insertUser(user);
+    }
+    public Users updateIsActiveWhenLoginGG(String email){
+        if (email == null || email.isBlank()) return null;
+
+        Users user = userDao.findByEmail(email.trim());
+        if (user == null) return null;
+
+        if (user.getIsActive() == 3) {
+            return user;
+        }
+        if (user.getIsActive() == 0) {
+            userDao.setActive(user.getId(), 1);
+            user.setIsActive(1);
+        }
+
+        return user;
     }
 
 }
