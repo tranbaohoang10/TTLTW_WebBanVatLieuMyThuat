@@ -377,6 +377,37 @@ public class OrderDao implements DaoInterface<Order> {
         return affected == 1;
     }
 
+    public boolean updateGhnOrderCode(int orderId, String ghnOrderCode) {
+        String sql = "UPDATE Orders SET ghnOrderCode = :ghnOrderCode WHERE id = :orderId";
+
+        int rows = jdbi.withHandle(handle -> handle.createUpdate(sql).bind("ghnOrderCode", ghnOrderCode).bind("orderId", orderId).execute());
+
+        return rows > 0;
+    }
+
+    public String getGhnOrderCodeByOrderId(int orderId) {
+        String sql = "SELECT ghnOrderCode FROM Orders WHERE id = :orderId";
+
+        return jdbi.withHandle(handle -> handle.createQuery(sql).bind("orderId", orderId).mapTo(String.class).findOne().orElse(null));
+    }
+
+    public Order getOrderForShipping(int orderId) {
+        String sql = """
+                SELECT id,
+                       fullName,
+                       phoneNumber,
+                       address,
+                       deliveryDistrictId,
+                       deliveryWardCode,
+                       ghnOrderCode,
+                       ghnStatus
+                FROM Orders
+                WHERE id = :orderId
+                """;
+
+        return jdbi.withHandle(handle -> handle.createQuery(sql).bind("orderId", orderId).mapToBean(Order.class).findOne().orElse(null));
+    }
+
 
     @Override
     public int insert(Order order) {
