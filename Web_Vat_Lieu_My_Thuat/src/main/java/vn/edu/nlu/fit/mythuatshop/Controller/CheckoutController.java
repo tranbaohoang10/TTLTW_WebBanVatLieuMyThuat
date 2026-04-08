@@ -112,7 +112,7 @@ public class CheckoutController extends HttpServlet {
         }
         Cart cartTemp = cart.getCartByIds(productIds);
         List<String> removedNames = cartTemp.removeOutOfStockItems(productService);
-        session.setAttribute("cartTemp", cartTemp);
+
 
         if (!removedNames.isEmpty()) {
             session.setAttribute("cartWarning", "Sản phẩm hiện tại đã hết hàng.");
