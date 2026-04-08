@@ -17,6 +17,8 @@ import java.io.IOException;
 @WebServlet(name = "LoginController", value = "/login")
 public class LoginController extends HttpServlet {
     private UserService userService;
+    private static final String loginFailCount = "login_fail_count";
+
 
     @Override
     public void init() throws ServletException {
@@ -54,15 +56,16 @@ public class LoginController extends HttpServlet {
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
-
+        HttpSession session = req.getSession();
         Users user1 = userService.login(email.trim(), password);
         if (user1 == null) {
+            increaseFail(session);
             req.setAttribute("error", "Sai email hoặc mật khẩu");
             req.setAttribute("email", email);
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
-        HttpSession session = req.getSession();
+        session.removeAttribute(loginFailCount);
         session.setAttribute("currentUser", user1);
         session.setMaxInactiveInterval(30*60);
 
@@ -96,5 +99,13 @@ public class LoginController extends HttpServlet {
 
         req.getRequestDispatcher("/Login.jsp").forward(req, resp);
     }
-
+    public void increaseFail(HttpSession session){
+        Integer failCount = (Integer) session.getAttribute(loginFailCount);
+        if(failCount==null){
+            failCount = 0;
+        }
+        failCount++;
+        session.setAttribute(loginFailCount,failCount);
+        System.out.println("Số lần đăng nhập sai trong session: " + failCount);
+    }
 }
