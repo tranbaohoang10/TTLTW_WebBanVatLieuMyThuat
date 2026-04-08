@@ -6,10 +6,18 @@ import jakarta.servlet.annotation.*;
 import vn.edu.nlu.fit.mythuatshop.Model.Cart;
 import vn.edu.nlu.fit.mythuatshop.Model.CartItem;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Service.ProductService;
 
 import java.io.IOException;
+import java.util.List;
+
 @WebServlet(name = "CartController", value = "/cart")
 public class CartController extends HttpServlet {
+    private ProductService productService;
+    @Override
+    public void init() throws ServletException {
+        productService = new ProductService();
+    }
 
     @Override
 
@@ -25,10 +33,19 @@ public class CartController extends HttpServlet {
              cart = new Cart();
             session.setAttribute("cart", cart);
         }
+        List<String> removedNames = cart.removeOutOfStockItems(productService);
+
+        session.setAttribute("cart", cart);
+        session.setAttribute("cartCount", cart.getTotalQuantity());
+
+        if (!removedNames.isEmpty()) {
+            session.setAttribute("cartWarning",
+                    "Sản phẩm hiện tại đã hết hàng");
+        }
         int totalQuantityProducts = cart.getTotalQuantity();
         double totalAmount = 0;
         for (CartItem item : cart.getCarts().values()){
-            // tổng tiền của 1 cartitem(số lượng và quantity)
+
             totalAmount += item.totalPriceCartItem();
         }
         request.setAttribute("cartItems",cart.getCarts().values());
