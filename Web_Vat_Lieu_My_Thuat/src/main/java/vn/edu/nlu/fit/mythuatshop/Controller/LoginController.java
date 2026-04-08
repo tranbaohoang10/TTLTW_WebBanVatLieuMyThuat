@@ -18,6 +18,9 @@ import java.io.IOException;
 public class LoginController extends HttpServlet {
     private UserService userService;
     private static final String loginFailCount = "login_fail_count";
+    private static final String login_lock = "login_lock";
+    private static final int total_Fail = 5;
+    private static final long time_temp_lock = 1*60*1000L;
 
 
     @Override
@@ -29,6 +32,20 @@ public class LoginController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String email = req.getParameter("email");
         String password = req.getParameter("password");
+        HttpSession session = req.getSession();
+        Long lockUntil =  (Long)session.getAttribute(login_lock);
+        long now = System.currentTimeMillis();
+        if(lockUntil!=null ){
+            if(now < lockUntil){
+                req.setAttribute("email", email);
+                req.getRequestDispatcher("login.jsp").forward(req, resp);
+                return;
+            }
+            else {
+                session.removeAttribute(login_lock);
+                session.removeAttribute(loginFailCount);
+            }
+        }
 
 
         if(email == null || password == null || email.isBlank() || password.isBlank()) {
@@ -56,11 +73,20 @@ public class LoginController extends HttpServlet {
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
         }
-        HttpSession session = req.getSession();
+
         Users user1 = userService.login(email.trim(), password);
         if (user1 == null) {
             increaseFail(session);
-            req.setAttribute("error", "Sai email hoặc mật khẩu");
+            Integer failCount = (Integer) session.getAttribute(loginFailCount);
+            if(failCount!=null && failCount>=total_Fail) {
+                long createLock = System.currentTimeMillis() + time_temp_lock;
+                session.setAttribute(login_lock, createLock);
+                req.setAttribute("error", "Bạn đã nhập sai mật khẩu quá 5 lần. Tài khoản đã bị khóa trong 15 phút");
+            }
+            else {
+                req.setAttribute("error", "Sai email hoặc mật khẩu");
+            }
+
             req.setAttribute("email", email);
             req.getRequestDispatcher("Login.jsp").forward(req, resp);
             return;
