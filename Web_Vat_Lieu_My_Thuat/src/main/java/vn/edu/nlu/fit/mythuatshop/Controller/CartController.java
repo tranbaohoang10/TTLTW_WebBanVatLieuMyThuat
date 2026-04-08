@@ -40,7 +40,7 @@ public class CartController extends HttpServlet {
 
         if (!removedNames.isEmpty()) {
             session.setAttribute("cartWarning",
-                    "Sản phẩm hiện tại đã hết hàng");
+                    "Sản phẩm hiện tại đã ngừng bán hoặc hết hàng.");
         }
         int totalQuantityProducts = cart.getTotalQuantity();
         double totalAmount = 0;

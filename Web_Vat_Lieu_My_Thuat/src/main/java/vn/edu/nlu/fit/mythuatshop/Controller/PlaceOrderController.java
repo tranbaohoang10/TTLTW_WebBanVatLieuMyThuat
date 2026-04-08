@@ -54,7 +54,7 @@ public class PlaceOrderController extends HttpServlet {
             }
 
             session.setAttribute("cartWarning",
-                    "Sản phẩm hiện tại đã hết hàng");
+                    "Sản phẩm hiện tại đã ngừng bán hoặc hết hàng.");
             resp.sendRedirect(req.getContextPath() + "/cart");
             return;
         }

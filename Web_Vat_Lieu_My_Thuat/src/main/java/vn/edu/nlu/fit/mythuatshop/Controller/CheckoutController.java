@@ -35,7 +35,7 @@ public class CheckoutController extends HttpServlet {
             session.setAttribute("cartTemp", cartTemp);
 
             if (!removedNames.isEmpty()) {
-                session.setAttribute("cartWarning", "Sản phẩm hiện tại đã hết hàng");
+                session.setAttribute("cartWarning", "Sản phẩm hiện tại đã ngừng bán hoặc hết hàng.");
             }
         }
         if (cartTemp == null || cartTemp.cartSize() == 0) {
@@ -115,7 +115,7 @@ public class CheckoutController extends HttpServlet {
 
 
         if (!removedNames.isEmpty()) {
-            session.setAttribute("cartWarning", "Sản phẩm hiện tại đã hết hàng.");
+            session.setAttribute("cartWarning", "Sản phẩm hiện tại đã ngừng bán hoặc hết hàng.");
         }
 
         if (cartTemp.cartSize() == 0) {
