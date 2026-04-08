@@ -10,6 +10,7 @@ import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.ProductService;
 
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet(name = "CheckoutController", value = "/checkout")
 public class CheckoutController extends HttpServlet {
@@ -29,6 +30,14 @@ public class CheckoutController extends HttpServlet {
             return;
         }
         Cart cartTemp = (Cart) session.getAttribute("cartTemp");
+        if (cartTemp != null) {
+            List<String> removedNames = cartTemp.removeOutOfStockItems(productService);
+            session.setAttribute("cartTemp", cartTemp);
+
+            if (!removedNames.isEmpty()) {
+                session.setAttribute("cartWarning", "Sản phẩm hiện tại đã hết hàng");
+            }
+        }
         if (cartTemp == null || cartTemp.cartSize() == 0) {
             resp.sendRedirect(req.getContextPath() + "/cart");
             return;
@@ -102,6 +111,13 @@ public class CheckoutController extends HttpServlet {
             return;
         }
         Cart cartTemp = cart.getCartByIds(productIds);
+        List<String> removedNames = cartTemp.removeOutOfStockItems(productService);
+        session.setAttribute("cartTemp", cartTemp);
+
+        if (!removedNames.isEmpty()) {
+            session.setAttribute("cartWarning", "Sản phẩm hiện tại đã hết hàng.");
+        }
+
         if (cartTemp.cartSize() == 0) {
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
