@@ -996,7 +996,32 @@
         opacity: 0.55;
         cursor: not-allowed;
     }
+    .stock-info-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1rem;
+        background: #eff6ff;
+        border: 1px solid rgba(38, 89, 243, 0.15);
+        border-left: 4px solid #2659F3;
+        border-radius: 8px;
+    }
 
+    .stock-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #17479d;
+    }
+
+    .stock-value {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #2659F3;
+    }
+
+    .stock-empty {
+        color: #ef4444;
+    }
 </style>
 
 <body>
@@ -1125,6 +1150,17 @@
                     <div class="product-meta-item">
                         <span class="product-meta-label">Mã sản phẩm:</span>
                         <span class="product-meta-value">${product.id}</span>
+                    </div>
+                    <div class="stock-info-box">
+                        <span class="stock-label">Số lượng còn lại:</span>
+                        <c:choose>
+                            <c:when test="${product.quantityStock > 0}">
+                                <span class="stock-value">Còn ${product.quantityStock} sản phẩm</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="stock-value stock-empty">Hết hàng</span>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
 
