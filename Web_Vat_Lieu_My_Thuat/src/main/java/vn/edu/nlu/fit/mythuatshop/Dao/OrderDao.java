@@ -19,8 +19,10 @@ public class OrderDao implements DaoInterface<Order> {
     public int insert(Order order, boolean updateInventory) {
         return jdbi.inTransaction(handle -> {
             String sql = "INSERT INTO Orders (userID, fullName, email, phoneNumber, address, " +
+                    "deliveryProvinceId, deliveryDistrictId, deliveryWardCode, expectedDeliveryTime, expectedDeliveryDateText, " +
                     " totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note,paymentStatus ) " +
                     "VALUES (:userID, :fullName, :email, :phoneNumber, :address, " +
+                    ":deliveryProvinceId, :deliveryDistrictId, :deliveryWardCode, :expectedDeliveryTime, :expectedDeliveryDateText, " +
                     " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount,:shippingFee, :note, :paymentStatus)";
             int orderId = handle.createUpdate(sql)
                     .bind("userID", order.getUserId())
@@ -28,6 +30,11 @@ public class OrderDao implements DaoInterface<Order> {
                     .bind("email", order.getEmail())
                     .bind("phoneNumber", order.getPhoneNumber())
                     .bind("address", order.getAddress())
+                    .bind("deliveryProvinceId", order.getDeliveryProvinceId())
+                    .bind("deliveryDistrictId", order.getDeliveryDistrictId())
+                    .bind("deliveryWardCode", order.getDeliveryWardCode())
+                    .bind("expectedDeliveryTime", order.getExpectedDeliveryTime())
+                    .bind("expectedDeliveryDateText", order.getExpectedDeliveryDateText())
                     .bind("totalPrice", order.getTotalPrice())
                     .bind("paymentID", order.getPaymentId())
                     .bind("orderStatusID", order.getOrderStatusId())
@@ -167,6 +174,7 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.email         AS email, " +
                         "       o.phoneNumber   AS phoneNumber, " +
                         "       o.address       AS address, " +
+                        "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                         "       o.totalPrice    AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +
@@ -177,6 +185,7 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.createAt      AS createAt, " +
                         "       o.note          AS note, " +
                         "       os.statusName   AS statusName " +
+
                         "FROM Orders o " +
                         "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
                         "WHERE o.userID = :userId ";
@@ -227,6 +236,7 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.email         AS email, " +
                 "       o.phoneNumber   AS phoneNumber, " +
                 "       o.address       AS address, " +
+                "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                 "       o.totalPrice    AS totalPrice, " +
                 "       o.paymentID     AS paymentId, " +
                 "       o.orderStatusID AS orderStatusId, " +

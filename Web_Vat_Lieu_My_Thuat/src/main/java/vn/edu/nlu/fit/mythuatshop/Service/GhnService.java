@@ -8,6 +8,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class GhnService {
     private final GhnConfig cfg = GhnConfig.load();
@@ -16,7 +19,6 @@ public class GhnService {
 
 
     public String getProvincesRawJson() throws Exception {
-        // GHN endpoint dạng: {baseUrl}/shiip/public-api/master-data/province
         String url = cfg.baseUrl + "/shiip/public-api/master-data/province";
 
         HttpRequest req = HttpRequest.newBuilder(URI.create(url))
@@ -27,7 +29,6 @@ public class GhnService {
 
         HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
 
-        // Nếu token sai / baseUrl sai thì resp.statusCode() sẽ không phải 200
         if (resp.statusCode() != 200) {
             throw new RuntimeException("GHN error: HTTP " + resp.statusCode() + " - " + resp.body());
         }
@@ -41,7 +42,6 @@ public class GhnService {
         HttpRequest req = HttpRequest.newBuilder(URI.create(url))
                 .header("Content-Type", "application/json")
                 .header("Token", cfg.token)
-                // GHN yêu cầu GET + body JSON
                 .method("GET", HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
@@ -135,6 +135,52 @@ public class GhnService {
         int fee = data.path("total").asInt(-1);
         if (fee < 0) fee = data.path("total_fee").asInt(0);
         return Math.max(fee, 0);
+    }
+    public Long getExpectedDeliveryTime(int toDistrictId, String toWardCode) throws Exception {
+        int serviceId = getFirstServiceId(toDistrictId);
+        if (serviceId <= 0) {
+            return null;
+        }
+
+        String url = cfg.baseUrl + "/shiip/public-api/v2/shipping-order/leadtime";
+        String body = "{"
+                + "\"from_district_id\":" + cfg.fromDistrictId + ","
+                + "\"from_ward_code\":\"" + cfg.fromWardCode + "\","
+                + "\"to_district_id\":" + toDistrictId + ","
+                + "\"to_ward_code\":\"" + toWardCode + "\","
+                + "\"service_id\":" + serviceId
+                + "}";
+
+        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+                .header("Content-Type", "application/json")
+                .header("Token", cfg.token)
+                .header("ShopId", String.valueOf(cfg.shopId))
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() != 200) {
+            throw new RuntimeException("GHN leadtime error: HTTP " + resp.statusCode() + " - " + resp.body());
+        }
+
+        JsonNode root = om.readTree(resp.body());
+        JsonNode data = root.path("data");
+
+        long expectedDeliveryTime = data.path("leadtime").asLong(0);
+        if (expectedDeliveryTime <= 0) {
+            return null;
+        }
+
+        return expectedDeliveryTime;
+    }
+    public String formatExpectedDeliveryDate(Long expectedDeliveryTime) {
+        if (expectedDeliveryTime == null || expectedDeliveryTime <= 0) {
+            return "";
+        }
+
+        return Instant.ofEpochSecond(expectedDeliveryTime)
+                .atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
+                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
 

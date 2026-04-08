@@ -90,8 +90,12 @@ public class GhnController extends HttpServlet {
             }
 
             int fee = ghnService.calculateFee(districtId, wardCode);
+            Long expectedDeliveryTime = ghnService.getExpectedDeliveryTime(districtId, wardCode);
+            String expectedDeliveryDateText = ghnService.formatExpectedDeliveryDate(expectedDeliveryTime);
 
             cartTemp.setFee(fee);
+            cartTemp.setExpectedDeliveryTime(expectedDeliveryTime);
+            cartTemp.setExpectedDeliveryDateText(expectedDeliveryDateText);
             session.setAttribute("cartTemp", cartTemp);
 
             long totalToPay = Math.round(cartTemp.getTotalPriceToPay());
@@ -99,9 +103,19 @@ public class GhnController extends HttpServlet {
             resp.getWriter().write("{"
                     + "\"success\":true,"
                     + "\"fee\":" + fee + ","
-                    + "\"totalToPay\":" + totalToPay
+                    + "\"totalToPay\":" + totalToPay + ","
+                    + "\"expectedDeliveryTime\":" + (expectedDeliveryTime == null ? "null" : expectedDeliveryTime) + ","
+                    + "\"expectedDeliveryDateText\":\"" + expectedDeliveryDateText + "\""
                     + "}");
         } catch (Exception e) {
+            HttpSession session = req.getSession(false);
+            if (session != null) {
+                Cart cartTemp = (Cart) session.getAttribute("cartTemp");
+                if (cartTemp != null) {
+                    cartTemp.clearShippingInformation();
+                    session.setAttribute("cartTemp", cartTemp);
+                }
+            }
             resp.setStatus(500);
             resp.getWriter().write("{\"success\":false,\"message\":\"" +
                     e.getMessage().replace("\"", "'") + "\"}");

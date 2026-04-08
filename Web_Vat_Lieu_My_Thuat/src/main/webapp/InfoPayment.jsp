@@ -547,6 +547,27 @@
     #voucherMsg.loading {
         color: #6b7280;
     }
+    .delivery-estimate-row {
+        padding: 10px 12px;
+        background-color: #fff8e8;
+        border: 1px solid #f2d38b;
+        border-radius: 6px;
+        gap: 12px;
+    }
+
+    .delivery-estimate-label {
+        color: #555;
+        font-weight: 500;
+    }
+
+    .delivery-estimate-value {
+        color: #d48806;
+        font-weight: 600;
+        text-align: right;
+    }
+    #shippingAreaError {
+        color: red;
+    }
 
 
 </style>
@@ -563,7 +584,7 @@
                 <span>Thông tin giao hàng</span>
             </div>
 
-            <form action="${pageContext.request.contextPath}/place-order" method="post">
+            <form id="checkoutForm" action="${pageContext.request.contextPath}/place-order" method="post">
                 <div class="checkout-container">
 
                     <!-- LEFT -->
@@ -615,6 +636,7 @@
                                 <option value="">-- Chọn phường/xã --</option>
                             </select>
                         </div>
+                        <div id="shippingAreaError" class="text-danger mt-2"></div>
 
                         <div class="input-group">
                             <label for="address">Địa chỉ</label>
@@ -693,7 +715,11 @@
                             </div>
                             <div id="voucherMsg" style="margin-top:6px; font-size:14px;"></div>
                         </div>
-
+                        <input type="hidden" id="baseTotalToPay"
+                               value="${Math.round(sessionScope.cartTemp.totalProductPrice - sessionScope.cartTemp.discount)}">
+                        <input type="hidden" name="provinceId" id="provinceIdInput">
+                        <input type="hidden" name="districtId" id="districtIdInput">
+                        <input type="hidden" name="wardCode" id="wardCodeInput">
                         <div class="price-summary">
                             <div class="price-row">
                                 <span>Tạm tính</span>
@@ -714,6 +740,10 @@
                                 <span id="shippingFeeText">
                                     <fmt:formatNumber value="${sessionScope.cartTemp.fee}" type="number"/>₫
                                 </span>
+                            </div>
+                            <div class="price-row delivery-estimate-row">
+                                <span class="delivery-estimate-label">Dự kiến nhận hàng</span>
+                                <span id="expectedDeliveryText">Chưa có</span>
                             </div>
 
                             <div class="price-row total">
@@ -738,37 +768,57 @@
 
 <script>
     (() => {
-        // ====== CONFIG ======
         const CTX = "<%=request.getContextPath()%>";
 
-        // ====== HELPERS ======
         const $ = (id) => document.getElementById(id);
 
         function vnd(n) {
             n = Math.round(Number(n) || 0);
             return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "₫";
         }
+        function moneyToNumber(text) {
+            return Number(String(text || "").replace(/[^\d]/g, "")) || 0;
+        }
 
-        // ====== ELEMENTS ======
-        // Voucher
+        function clearShippingInformation() {
+            if (shippingFeeText) {
+                shippingFeeText.textContent = vnd(0);
+            }
+
+            if (totalPayText && baseTotalToPay) {
+                totalPayText.textContent = vnd(baseTotalToPay.value);
+            }
+
+            if (expectedDeliveryText) {
+                expectedDeliveryText.textContent = "Vui lòng chọn khu vực giao hàng";
+            }
+        }
+
         const voucherCodeEl = $("voucherCode");
         const btnApplyVoucher = $("btnApplyVoucher");
         const voucherMsg = $("voucherMsg");
-        const discountValue = $("discountValue"); // span hiển thị giảm giá
+        const discountValue = $("discountValue");
         const totalPayText = $("totalPayText");
+        const baseTotalToPay = $("baseTotalToPay");
 
-        // GHN
+
         const provinceSelect = $("provinceSelect");
         const districtSelect = $("districtSelect");
         const wardSelect = $("wardSelect");
         const shippingFeeText = $("shippingFeeText");
+        const expectedDeliveryText = $("expectedDeliveryText");
+
+        const provinceIdInput = $("provinceIdInput");
+        const districtIdInput = $("districtIdInput");
+        const wardCodeInput = $("wardCodeInput");
+        const shippingAreaError = $("shippingAreaError");
+        const checkoutForm = $("checkoutForm");
 
         if (!provinceSelect || !districtSelect || !wardSelect) {
             console.warn("Missing select elements for GHN");
             return;
         }
 
-        // ====== VOUCHER ======
         if (btnApplyVoucher) {
             btnApplyVoucher.addEventListener("click", async () => {
                 try {
@@ -800,14 +850,28 @@
                     voucherMsg.textContent = json.message || "Áp dụng thành công";
                     if (discountValue) discountValue.textContent = vnd(json.discount);
                     if (totalPayText) totalPayText.textContent = vnd(json.totalToPay);
+                    const currentShippingFee = shippingFeeText ? moneyToNumber(shippingFeeText.textContent) : 0;
+                    if (baseTotalToPay) {
+                        baseTotalToPay.value = Math.max(0, Number(json.totalToPay || 0) - currentShippingFee);
+                    }
                 } catch (e) {
                     console.error("Voucher error:", e);
                     voucherMsg.textContent = "Lỗi áp dụng voucher";
                 }
             });
         }
+        function updateShippingAreaInputs() {
+            if (provinceIdInput) {
+                provinceIdInput.value = provinceSelect.value || "";
+            }
+            if (districtIdInput) {
+                districtIdInput.value = districtSelect.value || "";
+            }
+            if (wardCodeInput) {
+                wardCodeInput.value = wardSelect.value || "";
+            }
+        }
 
-        // ====== GHN: LOAD PROVINCES/DISTRICTS/WARDS ======
         async function loadProvinces() {
             try {
                 const res = await fetch(CTX + "/ghn/provinces", { credentials: "same-origin" });
@@ -906,20 +970,32 @@
 
                 const json = await res.json();
                 if (!json.success) {
-                    console.log("GHN fee error:", json.message);
+                    clearShippingInformation()
                     return;
                 }
 
                 if (shippingFeeText) shippingFeeText.textContent = vnd(json.fee);
                 if (totalPayText) totalPayText.textContent = vnd(json.totalToPay);
+                if (expectedDeliveryText) {
+                    if (json.expectedDeliveryDateText && json.expectedDeliveryDateText.trim() !== "") {
+                        expectedDeliveryText.textContent = json.expectedDeliveryDateText;
+                    } else {
+                        expectedDeliveryText.textContent = "Chưa tính được ngày nhận hàng";
+                    }
+                }
             } catch (e) {
                 console.error("Calc fee failed:", e);
             }
         }
 
-        // ====== EVENTS ======
         provinceSelect.addEventListener("change", () => {
             const pid = provinceSelect.value;
+            districtSelect.disabled = true;
+            wardSelect.disabled = true;
+            districtSelect.innerHTML = `<option value="">-- Chọn quận/huyện --</option>`;
+            wardSelect.innerHTML = `<option value="">-- Chọn phường/xã --</option>`;
+            clearShippingInformation();
+            updateShippingAreaInputs();
             if (!pid) return;
             loadDistricts(pid);
         });
@@ -927,19 +1003,56 @@
         districtSelect.addEventListener("change", () => {
             const did = districtSelect.value;
             if (!did) return;
+            wardSelect.disabled = true;
+            wardSelect.innerHTML = `<option value="">-- Chọn phường/xã --</option>`;
+            clearShippingInformation();
+            updateShippingAreaInputs();
             loadWards(did);
         });
 
         wardSelect.addEventListener("change", () => {
             const did = districtSelect.value;
             const wcode = wardSelect.value;
-            if (!did || !wcode) return;
+            updateShippingAreaInputs();
+            if (shippingAreaError) {
+                shippingAreaError.textContent = "";
+            }
+
+            if (!did || !wcode) {
+                clearShippingInformation();
+                return;
+            }
             calcFee(did, wcode);
         });
+        if (checkoutForm) {
+            checkoutForm.addEventListener("submit", (event) => {
+                updateShippingAreaInputs();
 
-        // ====== INIT ======
+                const provinceId = provinceSelect.value;
+                const districtId = districtSelect.value;
+                const wardCode = wardSelect.value;
+
+                if (!provinceId || !districtId || !wardCode) {
+                    event.preventDefault();
+
+                    if (shippingAreaError) {
+                        shippingAreaError.textContent = "Vui lòng chọn đầy đủ khu vực giao hàng.";
+                    } else {
+                        alert("Vui lòng chọn đầy đủ khu vực giao hàng.");
+                    }
+
+                    return;
+                }
+                if (shippingAreaError) {
+                    shippingAreaError.textContent = "";
+                }
+            });
+        }
+
         loadProvinces();
     })();
+
+
 </script>
 
 </body>

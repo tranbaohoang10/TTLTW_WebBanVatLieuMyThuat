@@ -55,10 +55,6 @@ public class Product_ReviewsController extends HttpServlet {
             hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
         }
 
-        if (currentUser != null) {
-            canReview = reviewService.canReviewProduct(currentUser.getId(), productID);
-            hasReviewed = reviewService.hasReviewProduct(currentUser.getId(), productID);
-        }
 
         request.setAttribute("canReview", canReview);
         request.setAttribute("hasReviewed", hasReviewed);
@@ -111,12 +107,13 @@ public class Product_ReviewsController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN,"Chỉ được đánh giá khi đã mua sản phẩm này");
                 return;
             }
-            boolean hasReview = reviewService.hasReviewProduct(currentUser.getId(),productID);
-            if(hasReview){
-                response.sendError(HttpServletResponse.SC_FORBIDDEN,"Bạn đã đánh giá sản phẩm này rồi");
-                return;
+            boolean hasReview = reviewService.hasReviewProduct(currentUser.getId(), productID);
+
+            if (hasReview) {
+                reviewService.updateReview(review);
+            } else {
+                reviewService.addReview(review);
             }
-            reviewService.addReview(review);
 
 
             response.sendRedirect(

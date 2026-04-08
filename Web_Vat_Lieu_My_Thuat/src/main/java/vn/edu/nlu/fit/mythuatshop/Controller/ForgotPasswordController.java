@@ -19,21 +19,28 @@ public class ForgotPasswordController extends HttpServlet {
         userService = new UserService();
     }
 
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("utf-8");
+
         String email = req.getParameter("email");
         if (email == null || email.trim().isEmpty()) {
             req.setAttribute("error", "Vui lòng nhập email!");
             req.getRequestDispatcher("ForgotPassword.jsp").forward(req, resp);
             return;
         }
-        boolean ok = userService.resetAndSendEmail(email);
+
+        String baseUrl = req.getScheme() + "://" + req.getServerName()
+                + ":" + req.getServerPort() + req.getContextPath();
+
+        boolean ok = userService.sendResetPasswordLink(email, baseUrl);
+
         if (!ok) {
             req.setAttribute("error", "Email chưa được đăng ký!");
         } else {
-            req.setAttribute("success", "Kiểm tra email nhận mật khẩu mới.");
+            req.setAttribute("success", "Vui lòng kiểm tra email để nhận link đặt lại mật khẩu.");
         }
+
         req.getRequestDispatcher("ForgotPassword.jsp").forward(req, resp);
     }
 

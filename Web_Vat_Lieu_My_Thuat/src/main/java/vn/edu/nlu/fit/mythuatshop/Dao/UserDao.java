@@ -14,7 +14,7 @@ public class UserDao {
     }
 
     public Users findByEmail(String email) {
-        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, createAt, isActive, failed_login, locked_user " +
+        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, createAt, isActive" +
                 " FROM Users WHERE email = :email ";
         return jdbi.withHandle(handle -> handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
     }
@@ -220,12 +220,5 @@ public class UserDao {
                         .one()
         );
     }
-    public void updateLoginFail(int userId, int failedLogin, LocalDateTime lockUser){
-        String sql = "UPDATE users SET failed_login = ?, locked_user=? WHERE id = ?";
-        JDBIConnector.getJdbi().useHandle(h -> h.createUpdate(sql).bind(0, failedLogin).bind(1, lockUser == null ? null: Timestamp.valueOf(lockUser)).bind(2, userId).execute());
-    }
-    public void resetLoginFail(int userId){
-        String sql = "UPDATE users SET failed_login = 0, locked_user = NULL     WHERE id = ?";
-        JDBIConnector.getJdbi().useHandle(h -> h.createUpdate(sql).bind(0, userId).execute());
-    }
+
 }
