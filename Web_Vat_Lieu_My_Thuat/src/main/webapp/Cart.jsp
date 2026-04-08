@@ -352,6 +352,19 @@
         <div class="card">
             <div class="card-body">
                 <h2 class="card-title">Giỏ hàng của bạn</h2>
+                <c:if test="${not empty sessionScope.cartWarning}">
+                    <div style="
+        margin: 12px 0;
+        padding: 12px 16px;
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        border-radius: 8px;
+    ">
+                            ${sessionScope.cartWarning}
+                    </div>
+                    <c:remove var="cartWarning" scope="session"/>
+                </c:if>
                 <p class="subtle">
                     Bạn đang có <span
                         id="cart-total-quantity">${totalQuantityProducts}</span>
