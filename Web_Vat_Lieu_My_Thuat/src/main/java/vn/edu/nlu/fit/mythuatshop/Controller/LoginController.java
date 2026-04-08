@@ -37,8 +37,11 @@ public class LoginController extends HttpServlet {
         long now = System.currentTimeMillis();
         if(lockUntil!=null ){
             if(now < lockUntil){
+                long remainMs = lockUntil - now;
+                long remainMinute =  remainMs / 60000;
+                    req.setAttribute("error", "Tài khoản bị khóa vì nhập sai mật khẩu quá 5 lần. "+"Vui lòng thử lại sau " + remainMinute +" phút. ");
                 req.setAttribute("email", email);
-                req.getRequestDispatcher("login.jsp").forward(req, resp);
+                req.getRequestDispatcher("Login.jsp").forward(req, resp);
                 return;
             }
             else {
