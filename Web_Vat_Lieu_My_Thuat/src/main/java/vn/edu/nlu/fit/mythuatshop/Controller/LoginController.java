@@ -20,7 +20,7 @@ public class LoginController extends HttpServlet {
     private static final String loginFailCount = "login_fail_count";
     private static final String login_lock = "login_lock";
     private static final int total_Fail = 5;
-    private static final long time_temp_lock = 1*60*1000L;
+    private static final long time_temp_lock = 15*60*1000L;
 
 
     @Override
@@ -87,7 +87,8 @@ public class LoginController extends HttpServlet {
                 req.setAttribute("error", "Bạn đã nhập sai mật khẩu quá 5 lần. Tài khoản đã bị khóa trong 15 phút");
             }
             else {
-                req.setAttribute("error", "Sai email hoặc mật khẩu");
+                int remaining = total_Fail - failCount;
+                req.setAttribute("error", "Sai email hoặc mật khẩu. " + "Bạn còn " + remaining + " lần thử nhập nữa.");
             }
 
             req.setAttribute("email", email);
