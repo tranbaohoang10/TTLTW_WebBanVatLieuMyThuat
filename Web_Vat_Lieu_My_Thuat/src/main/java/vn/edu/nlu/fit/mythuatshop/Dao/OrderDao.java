@@ -379,7 +379,7 @@ public class OrderDao implements DaoInterface<Order> {
 
     public Order findOrderById(int orderId) {
         String sql =
-                "SELECT o.IDAS id, " +
+                "SELECT o.ID AS id, " +
                         "o.userID AS userId, " +
                         "       o.fullName AS fullName, " +
                         "       o.email AS email, " +
