@@ -5,17 +5,17 @@ import java.sql.Timestamp;
 
 public class Contact implements Serializable {
     private int id;
-    private int userId;
+    private Integer userId;
     private String fullName;
     private String email;
     private String phoneNumber;
-    private String message;   // đổi từ text -> message
+    private String message;
     private String status;
     private Timestamp createAt;
 
     public Contact() {}
 
-    public Contact(int id, int userId, String fullName, String email,
+    public Contact(int id, Integer userId, String fullName, String email,
                    String phoneNumber, String message, String status,
                    Timestamp createAt) {
         this.id = id;
@@ -28,29 +28,67 @@ public class Contact implements Serializable {
         this.createAt = createAt;
     }
 
-    // getter / setter
+    public int getId() {
+        return id;
+    }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public int getUserId() { return userId; }
-    public void setUserId(int userId) { this.userId = userId; }
+    public Integer getUserId() {
+        return userId;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public String getPhoneNumber() { return phoneNumber; }
-    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public Timestamp getCreateAt() { return createAt; }
-    public void setCreateAt(Timestamp createAt) { this.createAt = createAt; }
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Timestamp getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Timestamp createAt) {
+        this.createAt = createAt;
+    }
 }

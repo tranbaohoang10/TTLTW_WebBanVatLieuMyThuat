@@ -29,11 +29,35 @@ public class ContactService {
         Contact c = contactDao.findById(contactId);
         if (c == null || c.getEmail() == null || c.getEmail().isBlank()) return false;
 
-        // gửi mail
+
         EmailUtil.sendHtml(c.getEmail(), subject, replyMessage);
 
-        // cập nhật trạng thái
+
         return contactDao.updateStatus(contactId, "Đã phản hồi");
     }
+    public void sendContactToAdmin(Contact contact) {
+        String adminEmail = EmailUtil.getAdminEmail();
 
+        String subject = "Liên hệ mới từ website Mỹ Thuật Shop";
+
+        String html = """
+                <h2>Liên hệ mới từ website</h2>
+                <p><strong>Họ tên:</strong> %s</p>
+                <p><strong>Email:</strong> %s</p>
+                <p><strong>Số điện thoại:</strong> %s</p>
+                <p><strong>Trạng thái tài khoản:</strong> %s</p>
+                <p><strong>Nội dung:</strong></p>
+                <div style="padding:12px;border:1px solid #ddd;border-radius:8px;background:#f9f9f9;">
+                    %s
+                </div>
+                """.formatted(
+                contact.getFullName(),
+                contact.getEmail(),
+                contact.getPhoneNumber(),
+                contact.getUserId() != null ? "Đã đăng nhập" : "Chưa đăng nhập",
+                contact.getMessage().replace("\n", "<br>")
+        );
+
+        EmailUtil.sendHtml(adminEmail, subject, html);
+    }
 }

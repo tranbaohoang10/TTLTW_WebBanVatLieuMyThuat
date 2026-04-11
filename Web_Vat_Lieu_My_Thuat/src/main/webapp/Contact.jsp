@@ -15,7 +15,7 @@
 </head>
 
 <style>
-    /* Lien He */
+
 
     /* header dính trên cùng */
     #header-trang-chu {
@@ -32,12 +32,12 @@
         font-size: 16px;
         padding: 12px 40px;
         border-bottom: 1px solid #e5e7eb;
-        margin-top: 100px; /* đúng bằng chiều cao header */
+        margin-top: 100px;
         margin-bottom: 0;
     }
 
     .page-contact {
-        padding-top: 24px;   /* bớt 140 xuống cho đỡ thừa khoảng trắng */
+        padding-top: 24px;
         padding-bottom: 120px;
     }
 
@@ -141,7 +141,7 @@
         border-radius: 12px;
     }
 
-    /* alert thành công */
+
     .alert-success {
         margin-bottom: 12px;
         padding: 10px 14px;
@@ -191,48 +191,57 @@
 
                 <div class="form-title">LIÊN HỆ VỚI CHÚNG TÔI</div>
 
-                <!-- thông báo thành công -->
+
                 <c:if test="${not empty successMsg}">
                     <div class="alert-success">
                             ${successMsg}
                     </div>
                 </c:if>
 
-                <!-- FORM LIÊN HỆ -->
-                <form action="${pageContext.request.contextPath}/contact"
-                      method="post">
-                    <!-- Họ tên lấy từ session -->
+
+                <c:if test="${not empty errorMsg}">
+                    <div class="alert-success" style="background:#fee2e2;color:#991b1b;">
+                            ${errorMsg}
+                    </div>
+                </c:if>
+
+                <form action="${pageContext.request.contextPath}/contact" method="post">
+
+
                     <div class="form-group">
                         <input class="form-control" type="text"
                                name="fullname"
-                               value="${sessionScope.currentUser.fullName}"
+                               value="${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : inputFullName}"
                                placeholder="Họ tên"
-                               readonly>
+                        ${not empty sessionScope.currentUser ? 'readonly' : ''}
+                               required>
                     </div>
 
-                    <!-- Email lấy từ session -->
+
                     <div class="form-group">
                         <input class="form-control" type="email"
                                name="email"
-                               value="${sessionScope.currentUser.email}"
+                               value="${not empty sessionScope.currentUser ? sessionScope.currentUser.email : inputEmail}"
                                placeholder="Email"
-                               readonly>
+                        ${not empty sessionScope.currentUser ? 'readonly' : ''}
+                               required>
                     </div>
 
-                    <!-- Số điện thoại lấy từ session -->
+
                     <div class="form-group">
                         <input class="form-control" type="tel"
                                name="phone"
-                               value="${sessionScope.currentUser.phoneNumber}"
+                               value="${not empty sessionScope.currentUser ? sessionScope.currentUser.phoneNumber : inputPhone}"
                                placeholder="Số điện thoại"
-                               readonly>
+                        ${not empty sessionScope.currentUser ? 'readonly' : ''}
+                               required>
                     </div>
 
-                    <!-- Nội dung vẫn cho user nhập -->
+
                     <div class="form-group">
-             <textarea class="form-control" name="message"
+        <textarea class="form-control" name="message"
                   placeholder="Nhập nội dung"
-                  required></textarea>
+                  required>${inputMessage}</textarea>
                     </div>
 
                     <button class="btn-lienhe" type="submit">

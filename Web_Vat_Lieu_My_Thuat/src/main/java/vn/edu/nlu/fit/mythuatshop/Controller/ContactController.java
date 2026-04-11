@@ -1,8 +1,9 @@
 package vn.edu.nlu.fit.mythuatshop.Controller;
 
-import jakarta.servlet.*;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
 import vn.edu.nlu.fit.mythuatshop.Model.Contact;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.ContactService;
@@ -13,12 +14,15 @@ import java.io.IOException;
 public class ContactController extends HttpServlet {
 
     private ContactService contactService;
+
     @Override
     public void init() throws ServletException {
         contactService = new ContactService();
     }
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("Contact.jsp");
         requestDispatcher.forward(request, response);
     }
@@ -33,28 +37,58 @@ public class ContactController extends HttpServlet {
         HttpSession session = request.getSession();
         Users currentUser = (Users) session.getAttribute("currentUser");
 
-        if (currentUser == null) {
-            // nếu dùng servlet /login thì sửa lại cho đúng path
-            response.sendRedirect(request.getContextPath() + "/login");
+        String fullName;
+        String email;
+        String phone;
+        String message = request.getParameter("message");
+
+        if (currentUser != null) {
+
+            fullName = currentUser.getFullName();
+            email = currentUser.getEmail();
+            phone = currentUser.getPhoneNumber();
+        } else {
+
+            fullName = request.getParameter("fullname");
+            email = request.getParameter("email");
+            phone = request.getParameter("phone");
+        }
+
+
+        if (fullName != null) fullName = fullName.trim();
+        if (email != null) email = email.trim();
+        if (phone != null) phone = phone.trim();
+        if (message != null) message = message.trim();
+
+
+        if (fullName == null || fullName.isEmpty()
+                || email == null || email.isEmpty()
+                || phone == null || phone.isEmpty()
+                || message == null || message.isEmpty()) {
+
+            request.setAttribute("errorMsg", "Vui lòng nhập đầy đủ thông tin liên hệ.");
+            request.setAttribute("inputFullName", fullName);
+            request.setAttribute("inputEmail", email);
+            request.setAttribute("inputPhone", phone);
+            request.setAttribute("inputMessage", message);
+            request.getRequestDispatcher("Contact.jsp").forward(request, response);
             return;
         }
 
-        // chỉ lấy nội dung từ form
-        String message = request.getParameter("message");
-
         Contact contact = new Contact();
-        contact.setUserId(currentUser.getId());
-        contact.setFullName(currentUser.getFullName());
-        contact.setEmail(currentUser.getEmail());
-        contact.setPhoneNumber(currentUser.getPhoneNumber());
+        contact.setUserId(currentUser != null ? currentUser.getId() : null);
+        contact.setFullName(fullName);
+        contact.setEmail(email);
+        contact.setPhoneNumber(phone);
         contact.setMessage(message);
 
-        // lưu DB
+
         contactService.addContact(contact);
 
-        // báo thành công
+
+        contactService.sendContactToAdmin(contact);
+
         request.setAttribute("successMsg", "Gửi liên hệ thành công!");
-        RequestDispatcher rd = request.getRequestDispatcher("Contact.jsp");
-        rd.forward(request, response);
+        request.getRequestDispatcher("Contact.jsp").forward(request, response);
     }
 }
