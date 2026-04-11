@@ -15,6 +15,9 @@ public class Voucher implements Serializable {
     private int quantity;
     private int quantityUsed;
     private int isActive;
+    private String voucherType;
+    private Double voucherPercent;
+    private Double maxDiscount;
 
     public Voucher() {
     }
@@ -31,6 +34,30 @@ public class Voucher implements Serializable {
         this.quantity = quantity;
         this.quantityUsed = quantityUsed;
         this.isActive = isActive;
+    }
+
+    public String getVoucherType() {
+        return voucherType;
+    }
+
+    public void setVoucherType(String voucherType) {
+        this.voucherType = voucherType;
+    }
+
+    public Double getVoucherPercent() {
+        return voucherPercent;
+    }
+
+    public void setVoucherPercent(Double voucherPercent) {
+        this.voucherPercent = voucherPercent;
+    }
+
+    public Double getMaxDiscount() {
+        return maxDiscount;
+    }
+
+    public void setMaxDiscount(Double maxDiscount) {
+        this.maxDiscount = maxDiscount;
     }
 
     public int getId() {
