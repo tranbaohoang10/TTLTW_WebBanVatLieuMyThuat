@@ -188,6 +188,19 @@
     .success-popup-btn:hover {
         opacity: 0.95;
     }
+    .input-error {
+        display: block;
+        margin-top: 8px;
+        color: #d93025;
+        font-size: 14px;
+    }
+
+    .reset-error {
+        color: #d93025;
+        font-size: 15px;
+        margin-top: -8px;
+        margin-bottom: 16px;
+    }
 
     @keyframes popupFadeIn {
         from {
@@ -216,19 +229,23 @@
 
     <div class="reset-container">
         <div class="reset-form-box">
-            <h2>LẤY LẠI MẬT KHẨU</h2>
+            <h2>ĐẶT LẠI MẬT KHẨU</h2>
 
             <form action="${pageContext.request.contextPath}/reset-password" method="post" class="reset-form">
                 <input type="hidden" name="token" value="${token}">
 
                 <div class="form-group">
                     <label for="newPassword">Mật khẩu <span>*</span></label>
-                    <input type="password" id="newPassword" name="newPassword" required>
+                    <input type="password" id="newPassword" name="newPassword" required minlength="8"
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$"
+                           title="Mật khẩu có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt.">
+                    <span id="newPassword-error" class="input-error"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="confirmPassword">Xác nhận mật khẩu <span>*</span></label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required >
+                    <span id="confirm-error" class="input-error"></span>
                 </div>
                 <c:if test="${not empty error}">
                     <p class="reset-error">${error}</p>
