@@ -197,6 +197,9 @@ public class UserService {
 
         if (!updated) return false;
 
+        int activeUpdate = userDao.setActive(userId, 1);
+        if (activeUpdate <= 0) return false;
+
         tokenDao.markUsed(token);
         return true;
     }
