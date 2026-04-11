@@ -505,6 +505,15 @@
   #Dialog-xoa-km .btn-delete-confirm:hover{
       background-color: #b02a37;
   }
+    .category-box {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    input[readonly] {
+        background: #f1f1f1;
+        color: #777;
+        cursor: not-allowed;
+    }
 </style>
 
 <body>
@@ -652,7 +661,7 @@
 
   <!-- =============Dialog thêm khuyến mãi============= -->
   <div id="Dialog-them-km" class="modal">
-    <div class="modal-content">
+    <div class="modal-content category-box">
       <div class="modal-header">
         <h2>Thêm khuyến mãi</h2>
           <span class="close-modal">&times;</span>
@@ -687,11 +696,28 @@
           <label for="ngàyketthuc">Ngày ngày kết thúc</label>
           <input type="date" id="ngàyketthuc" name="endDate" placeholder="Nhập ngày kết thúc">
         </div>
+          <div class="form-group">
+              <label>Loại voucher</label>
+              <select id="voucherType"  name="voucherType">
+                  <option value="cash">Giảm tiền mặt</option>
+                  <option value="percent">Giảm phần trăm</option>
+                  <option value="ship">Miễn phí vận chuyển</option>
+              </select>
+          </div>
+          <div class="form-group">
+              <label for="giamgia">Giảm giá tiền mặt</label>
+              <input type="number" id="giamgia" name="voucherCash" value="0" placeholder="Nhập số tiền giảm">
+          </div>
 
-        <div class="form-group">
-          <label for="giamgia">Giảm giá</label>
-          <input type="number" id="giamgia" name="voucherCash" placeholder="Nhập số tiền giảm">
-        </div>
+          <div class="form-group">
+              <label for="voucherPercent">Phần trăm giảm</label>
+              <input type="number" id="voucherPercent" name="voucherPercent" value="0" placeholder="Nhập phần trăm giảm">
+          </div>
+
+          <div class="form-group">
+              <label for="maxDiscount">Giảm tối đa</label>
+              <input type="number" id="maxDiscount" name="maxDiscount" value="0" placeholder="Nhập mức giảm tối đa">
+          </div>
 
           <div class="form-group">
               <label for="minOrderValue">Đơn tối thiểu</label>
@@ -1084,8 +1110,41 @@
           e.preventDefault();
           fetchVouchers(vInput.value || "", parseInt(a.dataset.page || "1", 10));
       });
-  </script>
 
+      const voucherType = document.getElementById("voucherType");
+      const voucherCash = document.getElementById("giamgia");
+      const voucherPercent = document.getElementById("voucherPercent");
+      const maxDiscount = document.getElementById("maxDiscount");
+
+      function changeVoucherType() {
+          const type = voucherType.value;
+
+          voucherCash.readOnly = false;
+          voucherPercent.readOnly = false;
+          maxDiscount.readOnly = false;
+
+          if (type === "cash") {
+              voucherPercent.readOnly = true;
+              maxDiscount.readOnly = true;
+              voucherPercent.value = 0;
+              maxDiscount.value = 0;
+          } else if (type === "percent") {
+              voucherCash.readOnly = true;
+              voucherCash.value = 0;
+          } else if (type === "ship") {
+              voucherCash.readOnly = true;
+              voucherPercent.readOnly = true;
+              maxDiscount.readOnly = true;
+
+              voucherCash.value = 0;
+              voucherPercent.value = 0;
+              maxDiscount.value = 0;
+          }
+      }
+
+      voucherType.addEventListener("change", changeVoucherType);
+      changeVoucherType();
+  </script>
 </body>
 
 </html>
