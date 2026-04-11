@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -66,7 +67,6 @@
     .list-admin a.active {
         background-color: #203247;
         border-left: 4px solid #FFD700;
-        /* hoặc màu khác */
         font-weight: bold;
     }
 
@@ -118,7 +118,6 @@
         text-align: center;
     }
 
-    /* sửa margin */
     .order-container {
         width: 95%;
         margin: 10px auto 5px;
@@ -128,7 +127,6 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /*  */
 
     .search {
         display: flex;
@@ -186,7 +184,6 @@
     .btn-Sua:hover {
         background-color: #e0a800;
     }
-    /*modal khóa*/
     .btn-Xoa {
         background-color: #DC3545;
         color: white;
@@ -249,12 +246,6 @@
         color: #222;
     }
 
-    .sub-title {
-        color: #555;
-        font-size: 16px;
-        margin-bottom: 20px;
-    }
-
     .order-table {
         width: 100%;
         border-collapse: collapse;
@@ -283,44 +274,15 @@
         text-align: left;
     }
 
-    /* Trạng thái đơn hàng */
-    .status {
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: bold;
-    }
-
-    .status.pending {
-        background: #FFF3CD;
-        color: #555;
-    }
-
-    .status.success {
-        background: #D1FAE5;
-        color: #0f5132;
-    }
-
-    .status.cancel {
-        background: #ffd6d6;
-        color: #b91c1c;
-    }
-
-    /* ================== MODAL THÊM KHÁCH HÀNG ================== */
     .modal {
         position: fixed;
         inset: 0;
-        /* top:0; right:0; bottom:0; left:0 */
         background: rgba(0, 0, 0, 0.4);
         display: none;
-        /* Ẩn mặc định */
         align-items: center;
-        /* Căn giữa theo chiều dọc */
         justify-content: center;
-        /* Căn giữa theo chiều ngang */
         z-index: 999;
     }
-    /*modal thêm kh*/
     .btn-them-khach-hang {
         background-color: #2659F5;
         border: none;
@@ -455,7 +417,6 @@
         color: #fff;
     }
 
-    /* =========Xem trang trc sau======== */
 
     .pagination {
         display: flex;
@@ -486,8 +447,24 @@
         font-weight: bold;
         border-color: #2659F5;
     }
+    .alert-success-custom {
+        background: #d1e7dd;
+        color: #0f5132;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 1px solid #badbcc;
+    }
 
-    /* Hiệu ứng nhỏ khi mở modal */
+    .alert-fail-custom {
+        background: #f8d7da;
+        color: #842029;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 1px solid #f5c2c7;
+    }
+
     @keyframes fadeInScale {
         from {
             opacity: 0;
@@ -558,6 +535,23 @@
 
             <div class="order-container">
                 <h1>Danh sách người dùng</h1>
+                <c:if test="${msg == 'created_and_sent_mail'}">
+                    <div class="alert-success-custom">
+                        Thêm người dùng thành công và đã gửi email thiết lập mật khẩu.
+                    </div>
+                </c:if>
+
+                <c:if test="${msg == 'success'}">
+                    <div class="alert-success-custom">
+                        Thao tác thành công.
+                    </div>
+                </c:if>
+
+                <c:if test="${msg == 'fail'}">
+                    <div class="alert-fail-custom">
+                        Thao tác thất bại.
+                    </div>
+                </c:if>
                 <form id="userSearchForm" class="search" method="get" action="${pageContext.request.contextPath}/admin/users">
                     <div class="search-input-icon">
                         <input id="userSearchInput" type="text" name="q" value="${q}" placeholder="Tìm kiếm người dùng..." autocomplete="off">
@@ -603,10 +597,8 @@
                                         data-role="${u.role}">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-<%--Khóa --%>
                                 <c:choose>
                                     <c:when test="${u.isActive == 1}">
-                                        <!-- Nút KHÓA -->
                                         <form class="lockForm" method="post" action="${pageContext.request.contextPath}/admin/users" style="display:inline">
                                             <input type="hidden" name="action" value="lock"/>
                                             <input type="hidden" name="id" value="${u.id}"/>
@@ -619,7 +611,6 @@
                                     </c:when>
 
                                     <c:when test="${u.isActive == 3}">
-                                        <!-- Nút MỞ KHÓA -->
                                         <form class="lockForm" method="post" action="${pageContext.request.contextPath}/admin/users" style="display:inline">
                                             <input type="hidden" name="action" value="unlock"/>
                                             <input type="hidden" name="id" value="${u.id}"/>
@@ -632,7 +623,6 @@
                                     </c:when>
 
                                     <c:otherwise>
-                                        <!-- isActive == 0: chưa kích hoạt -->
                                         <span style="font-size:12px; opacity:.7;">Chưa kích hoạt</span>
                                     </c:otherwise>
                                 </c:choose>
@@ -670,7 +660,6 @@
 
 </div>
 
-<!-- Dialog thêm khách hàng -->
 <div id="customerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -690,7 +679,6 @@
                     <input type="text" id="tenKH" name="fullName" placeholder="Nhập họ và tên" required>
                 </div>
 
-                <!-- nếu bạn muốn tạo user đúng chuẩn DB thì cần email -->
                 <div class="form-group">
                     <label for="emailKH">Email</label>
                     <input type="email" id="emailKH" name="email" placeholder="Nhập email" required>
@@ -729,7 +717,6 @@
     </div>
 </div>
 
-<!-- ========== Dialog SỬA khách hàng ========== -->
 <div id="editCustomerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -784,7 +771,6 @@
 
     </div>
 </div>
-<%--Modal chắc chắn khóa--%>
 <div id="lockConfirmModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -805,9 +791,7 @@
 </div>
 
 
-<!-- JS mở / đóng dialog -->
 <script>
-    // ===== MODAL ADD =====
     const btnThemKH = document.querySelector('.btn-them-khach-hang');
     const modalAdd = document.getElementById('customerModal');
     const btnCloseAdd = document.querySelector('.close-modal');
@@ -829,12 +813,10 @@
         if (e.target === modalAdd) modalAdd.style.display = 'none';
     });
 
-    // ===== MODAL EDIT =====
     const modalEdit = document.getElementById("editCustomerModal");
     const btnCloseEdit = document.querySelector(".close-edit-modal");
     const btnEditCancel = document.querySelector(".btn-edit-cancel");
 
-    // Lấy danh sách nút sửa
     document.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-Sua");
         if (!btn) return;
@@ -873,7 +855,6 @@
         if (e.target === modalEdit) modalEdit.style.display = "none";
     });
 </script>
-<%--js khóa/mở người dùng--%>
 <script>
     const lockModal = document.getElementById("lockConfirmModal");
     const btnCloseLock = document.querySelector(".close-lock-modal");
@@ -890,17 +871,16 @@
         if (!btn) return;
 
         formToSubmit = btn.closest("form");
-        const action = formToSubmit.querySelector('input[name="action"]').value; // lock / unlock
+        const action = formToSubmit.querySelector('input[name="action"]').value;
 
-        // đổi nội dung theo action
         if (action === "unlock") {
             lockConfirmText.textContent = "Bạn chắc chắn muốn mở khóa không?";
             lockConfirmOkBtn.textContent = "Mở khóa";
-            lockConfirmOkBtn.style.background = "#2659F5"; // xanh
+            lockConfirmOkBtn.style.background = "#2659F5";
         } else {
             lockConfirmText.textContent = "Bạn chắc chắn muốn khóa không?";
             lockConfirmOkBtn.textContent = "Khóa";
-            lockConfirmOkBtn.style.background = "#DC3545"; // đỏ
+            lockConfirmOkBtn.style.background = "#DC3545";
         }
 
         lockModal.style.display = "flex";
@@ -918,7 +898,6 @@
     });
 </script>
 
-<%--cho ajax--%>
 
 
 

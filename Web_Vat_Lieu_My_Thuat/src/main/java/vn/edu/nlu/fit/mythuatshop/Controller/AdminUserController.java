@@ -156,9 +156,17 @@ public class AdminUserController extends HttpServlet {
             result = adminUserService.unlockUser(id);
         }
 
-        String msg = result ? "success" : "fail";
+        String msg;
+        if (result) {
+            if ("create".equals(action)) {
+                msg = "created_and_sent_mail";
+            } else {
+                msg = "success";
+            }
+        } else {
+            msg = "fail";
+        }
         String qEncoded = URLEncoder.encode(q, StandardCharsets.UTF_8);
-
         response.sendRedirect(
                 request.getContextPath() + "/admin/users?page=" + page + "&q=" + qEncoded + "&msg=" + msg
         );
