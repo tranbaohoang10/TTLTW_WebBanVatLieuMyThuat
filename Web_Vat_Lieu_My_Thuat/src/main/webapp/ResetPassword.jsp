@@ -114,9 +114,8 @@
     }
 
     .btn-reset:hover {
-        opacity: 0.95;
+        background: #a18c0e;
     }
-
     .btn-cancel {
         color: #666;
         font-size: 17px;
@@ -201,6 +200,24 @@
         margin-top: -8px;
         margin-bottom: 16px;
     }
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 20px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 15px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background-color: #5c636a;
+    }
 
     @keyframes popupFadeIn {
         from {
@@ -277,7 +294,31 @@
 <script>
     const newPassword = document.getElementById("newPassword");
     const confirmPassword = document.getElementById("confirmPassword");
+    const newPasswordError = document.getElementById("newPassword-error");
     const confirmError = document.getElementById("confirm-error");
+
+    function checkNewPassword() {
+        const pass = newPassword.value;
+
+        const okLength = pass.length >= 8;
+        const okLower = /[a-z]/.test(pass);
+        const okUpper = /[A-Z]/.test(pass);
+        const okSpecial = /[^A-Za-z0-9]/.test(pass);
+
+        if (pass.length === 0) {
+            newPasswordError.textContent = "";
+            return false;
+        }
+
+        if (okLength && okLower && okUpper && okSpecial) {
+            newPasswordError.textContent = "";
+            return true;
+        } else {
+            newPasswordError.textContent =
+                "Mật khẩu có ít nhất 8 ký tự, có chữ hoa, chữ thường và ký tự đặc biệt.";
+            return false;
+        }
+    }
 
     function checkConfirmPassword() {
         const newPass = newPassword.value.trim();
@@ -285,18 +326,24 @@
 
         if (confirmPass.length === 0) {
             confirmError.textContent = "";
-            return;
+            return false;
         }
 
         if (newPass !== confirmPass) {
             confirmError.textContent = "Xác nhận mật khẩu không khớp";
+            return false;
         } else {
             confirmError.textContent = "";
+            return true;
         }
     }
 
+    newPassword.addEventListener("input", () => {
+        checkNewPassword();
+        checkConfirmPassword();
+    });
+
     confirmPassword.addEventListener("input", checkConfirmPassword);
-    newPassword.addEventListener("input", checkConfirmPassword);
 </script>
 <script>
     function goToLogin() {
