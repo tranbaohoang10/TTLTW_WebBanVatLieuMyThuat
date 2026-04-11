@@ -132,7 +132,10 @@ public class AdminUserController extends HttpServlet {
             String address = request.getParameter("address");
             String role = request.getParameter("role");
 
-            result = adminUserService.createUser(fullName, email, phoneNumber, dob, address, role);
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+                    + request.getContextPath();
+
+            result = adminUserService.createUser(fullName, email, phoneNumber, dob, address, role, baseUrl);
 
         } else if ("update".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));

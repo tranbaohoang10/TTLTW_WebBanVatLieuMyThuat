@@ -3,6 +3,10 @@ package vn.edu.nlu.fit.mythuatshop.Service;
 import org.mindrot.jbcrypt.BCrypt;
 import vn.edu.nlu.fit.mythuatshop.Dao.UserDao;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Dao.EmailVerificationTokenDao;
+import vn.edu.nlu.fit.mythuatshop.Util.EmailUtil;
+
+import java.time.LocalDateTime;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -10,6 +14,7 @@ import java.util.UUID;
 
 public class AdminUserService {
     private final UserDao userDao = new UserDao();
+    private final EmailVerificationTokenDao tokenDao = new EmailVerificationTokenDao();
 
     public List<Users> listUsers(int page, int pageSize, String keyword) {
         if (page < 1) {
@@ -35,7 +40,7 @@ public class AdminUserService {
     }
 
     public boolean createUser(String fullName, String email, String phone,
-                              String dobStr, String address, String role) {
+                              String dobStr, String address, String role, String baseUrl) {
         if (email == null || email.isBlank()) {
             return false;
         }
@@ -58,13 +63,33 @@ public class AdminUserService {
             user.setDob(LocalDate.parse(dobStr));
         }
 
-        String rawPassword = UUID.randomUUID().toString().substring(0, 8);
-        String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt(12));
-        user.setPassword(hashedPassword);
+        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 10) + "@A";
+        user.setPassword(BCrypt.hashpw(tempPassword, BCrypt.gensalt(12)));
 
         user.setIsActive(0);
 
-        return userDao.adminCreateUser(user) > 0;
+        int userId = userDao.adminCreateUser(user);
+        if (userId <= 0) return false;
+
+        String token = UUID.randomUUID().toString().replace("-", "");
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(30);
+
+        tokenDao.deleteTokensByUserId(userId, "RESET_PASSWORD");
+        tokenDao.insert(userId, token, expiresAt, "RESET_PASSWORD");
+
+        String resetLink = baseUrl + "/reset-password?token=" + token;
+
+        String subject = "Đặt mật khẩu tài khoản";
+        String html = ""
+                + "<p>Chào bạn,</p>"
+                + "<p>Tài khoản của bạn đã được admin tạo trên hệ thống.</p>"
+                + "<p>Vui lòng nhấn vào link bên dưới để thiết lập mật khẩu:</p>"
+                + "<p><a href='" + resetLink + "'>Thiết lập mật khẩu</a></p>"
+                + "<p>Link này sẽ hết hạn sau 30 phút.</p>";
+
+        EmailUtil.sendHtml(email, subject, html);
+        return true;
+
     }
 
     public boolean updateUser(int id, String fullName, String phone,

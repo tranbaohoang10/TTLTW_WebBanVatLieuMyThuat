@@ -135,7 +135,9 @@ public class UserDao {
                 .bind("address", user.getAddress())
                 .bind("role", user.getRole())
                 .bind("isActive", user.getIsActive())
-                .execute());
+                .executeAndReturnGeneratedKeys("id")
+                .mapTo(int.class)
+                .one());
     }
 
     public int adminUpdateUser(Users user) {
