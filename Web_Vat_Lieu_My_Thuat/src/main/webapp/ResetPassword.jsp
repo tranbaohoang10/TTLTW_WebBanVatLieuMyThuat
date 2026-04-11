@@ -114,9 +114,8 @@
     }
 
     .btn-reset:hover {
-        opacity: 0.95;
+        background: #a18c0e;
     }
-
     .btn-cancel {
         color: #666;
         font-size: 17px;
@@ -188,6 +187,37 @@
     .success-popup-btn:hover {
         opacity: 0.95;
     }
+    .input-error {
+        display: block;
+        margin-top: 8px;
+        color: #d93025;
+        font-size: 14px;
+    }
+
+    .reset-error {
+        color: #d93025;
+        font-size: 15px;
+        margin-top: -8px;
+        margin-bottom: 16px;
+    }
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 20px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 15px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background-color: #5c636a;
+    }
 
     @keyframes popupFadeIn {
         from {
@@ -216,19 +246,23 @@
 
     <div class="reset-container">
         <div class="reset-form-box">
-            <h2>LẤY LẠI MẬT KHẨU</h2>
+            <h2>ĐẶT LẠI MẬT KHẨU</h2>
 
             <form action="${pageContext.request.contextPath}/reset-password" method="post" class="reset-form">
                 <input type="hidden" name="token" value="${token}">
 
                 <div class="form-group">
                     <label for="newPassword">Mật khẩu <span>*</span></label>
-                    <input type="password" id="newPassword" name="newPassword" required>
+                    <input type="password" id="newPassword" name="newPassword" required minlength="8"
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$"
+                           title="Mật khẩu có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt.">
+                    <span id="newPassword-error" class="input-error"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="confirmPassword">Xác nhận mật khẩu <span>*</span></label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required >
+                    <span id="confirm-error" class="input-error"></span>
                 </div>
                 <c:if test="${not empty error}">
                     <p class="reset-error">${error}</p>
@@ -260,7 +294,31 @@
 <script>
     const newPassword = document.getElementById("newPassword");
     const confirmPassword = document.getElementById("confirmPassword");
+    const newPasswordError = document.getElementById("newPassword-error");
     const confirmError = document.getElementById("confirm-error");
+
+    function checkNewPassword() {
+        const pass = newPassword.value;
+
+        const okLength = pass.length >= 8;
+        const okLower = /[a-z]/.test(pass);
+        const okUpper = /[A-Z]/.test(pass);
+        const okSpecial = /[^A-Za-z0-9]/.test(pass);
+
+        if (pass.length === 0) {
+            newPasswordError.textContent = "";
+            return false;
+        }
+
+        if (okLength && okLower && okUpper && okSpecial) {
+            newPasswordError.textContent = "";
+            return true;
+        } else {
+            newPasswordError.textContent =
+                "Mật khẩu có ít nhất 8 ký tự, có chữ hoa, chữ thường và ký tự đặc biệt.";
+            return false;
+        }
+    }
 
     function checkConfirmPassword() {
         const newPass = newPassword.value.trim();
@@ -268,18 +326,24 @@
 
         if (confirmPass.length === 0) {
             confirmError.textContent = "";
-            return;
+            return false;
         }
 
         if (newPass !== confirmPass) {
             confirmError.textContent = "Xác nhận mật khẩu không khớp";
+            return false;
         } else {
             confirmError.textContent = "";
+            return true;
         }
     }
 
+    newPassword.addEventListener("input", () => {
+        checkNewPassword();
+        checkConfirmPassword();
+    });
+
     confirmPassword.addEventListener("input", checkConfirmPassword);
-    newPassword.addEventListener("input", checkConfirmPassword);
 </script>
 <script>
     function goToLogin() {

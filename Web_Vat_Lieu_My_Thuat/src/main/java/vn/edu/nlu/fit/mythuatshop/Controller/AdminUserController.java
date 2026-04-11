@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.AdminUserService;
 
@@ -17,12 +19,9 @@ import java.util.List;
 @WebServlet(name = "AdminUsersController", value = "/admin/users")
 public class AdminUserController extends HttpServlet {
 
-    private final AdminUserService service = new AdminUserService();
-
-    // Gson có sẵn trong pom của bạn
+    private final AdminUserService adminUserService = new AdminUserService();
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
-    // DTO trả về cho AJAX (tránh serialize LocalDate/LocalDateTime rắc rối)
     static class UserRowDto {
         int id;
         String fullName;
@@ -33,17 +32,17 @@ public class AdminUserController extends HttpServlet {
         String role;
         int isActive;
 
-        static UserRowDto from(Users u) {
-            UserRowDto d = new UserRowDto();
-            d.id = u.getId();
-            d.fullName = u.getFullName();
-            d.phoneNumber = u.getPhoneNumber();
-            d.address = u.getAddress();
-            d.createAt = (u.getCreateAt() == null) ? "" : u.getCreateAt().toString();
-            d.dob = (u.getDob() == null) ? "" : u.getDob().toString(); // yyyy-MM-dd
-            d.role = u.getRole();
-            d.isActive = u.getIsActive();
-            return d;
+        public static UserRowDto fromUser(Users user) {
+            UserRowDto dto = new UserRowDto();
+            dto.id = user.getId();
+            dto.fullName = user.getFullName();
+            dto.phoneNumber = user.getPhoneNumber();
+            dto.address = user.getAddress();
+            dto.createAt = user.getCreateAt() == null ? "" : user.getCreateAt().toString();
+            dto.dob = user.getDob() == null ? "" : user.getDob().toString();
+            dto.role = user.getRole();
+            dto.isActive = user.getIsActive();
+            return dto;
         }
     }
 
@@ -55,94 +54,121 @@ public class AdminUserController extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int page = 1;
         int pageSize = 10;
 
-        String pageStr = req.getParameter("page");
-        if (pageStr != null) {
-            try { page = Integer.parseInt(pageStr); } catch (Exception ignored) {}
+        String pageParam = request.getParameter("page");
+        if (pageParam != null) {
+            try {
+                page = Integer.parseInt(pageParam);
+            } catch (Exception e) {
+                page = 1;
+            }
         }
 
-        String q = req.getParameter("q"); // có thể null
-        String msg = req.getParameter("msg");
+        String q = request.getParameter("q");
+        String msg = request.getParameter("msg");
 
-        boolean isAjax =
-                "1".equals(req.getParameter("ajax")) ||
-                        "XMLHttpRequest".equalsIgnoreCase(req.getHeader("X-Requested-With"));
+        boolean isAjax = false;
+        String ajaxParam = request.getParameter("ajax");
+        String requestedWith = request.getHeader("X-Requested-With");
+
+        if ("1".equals(ajaxParam) || "XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
+            isAjax = true;
+        }
 
         if (isAjax) {
-            List<Users> list = service.listUsers(page, pageSize, q);
-            int totalPages = service.totalPages(pageSize, q);
+            List<Users> userList = adminUserService.listUsers(page, pageSize, q);
+            int totalPages = adminUserService.totalPages(pageSize, q);
 
-            AjaxResponse out = new AjaxResponse();
-            for (Users u : list) out.users.add(UserRowDto.from(u));
-            out.currentPage = page;
-            out.totalPages = totalPages;
-            out.q = (q == null) ? "" : q;
+            AjaxResponse ajaxResponse = new AjaxResponse();
+            for (Users user : userList) {
+                ajaxResponse.users.add(UserRowDto.fromUser(user));
+            }
+            ajaxResponse.currentPage = page;
+            ajaxResponse.totalPages = totalPages;
+            ajaxResponse.q = q == null ? "" : q;
 
-            resp.setCharacterEncoding("UTF-8");
-            resp.setContentType("application/json; charset=UTF-8");
-            resp.getWriter().write(gson.toJson(out));
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write(gson.toJson(ajaxResponse));
             return;
         }
 
-        // bình thường: render JSP như cũ
-        req.setAttribute("users", service.listUsers(page, pageSize, q));
-        req.setAttribute("currentPage", page);
-        req.setAttribute("totalPages", service.totalPages(pageSize, q));
-        req.setAttribute("q", (q == null) ? "" : q);
-        req.setAttribute("msg", msg);
+        List<Users> users = adminUserService.listUsers(page, pageSize, q);
+        int totalPages = adminUserService.totalPages(pageSize, q);
 
-        req.getRequestDispatcher("/admin/User.jsp").forward(req, resp);
+        request.setAttribute("users", users);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("q", q == null ? "" : q);
+        request.setAttribute("msg", msg);
+
+        request.getRequestDispatcher("/admin/User.jsp").forward(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        req.setCharacterEncoding("UTF-8");
-        String action = req.getParameter("action");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        request.setCharacterEncoding("UTF-8");
 
-        // giữ lại page + q sau khi thao tác
-        String page = req.getParameter("page");
-        String q = req.getParameter("q");
-        if (page == null || page.isBlank()) page = "1";
-        if (q == null) q = "";
+        String action = request.getParameter("action");
+        String page = request.getParameter("page");
+        String q = request.getParameter("q");
 
-        boolean ok = false;
+        if (page == null || page.isBlank()) {
+            page = "1";
+        }
+        if (q == null) {
+            q = "";
+        }
+        boolean result = false;
 
         if ("create".equals(action)) {
-            ok = service.createUser(
-                    req.getParameter("fullName"),
-                    req.getParameter("email"),
-                    req.getParameter("phoneNumber"),
-                    req.getParameter("dob"),
-                    req.getParameter("address"),
-                    req.getParameter("role")
-            );
+            String fullName = request.getParameter("fullName");
+            String email = request.getParameter("email");
+            String phoneNumber = request.getParameter("phoneNumber");
+            String dob = request.getParameter("dob");
+            String address = request.getParameter("address");
+            String role = request.getParameter("role");
+
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+                    + request.getContextPath();
+
+            result = adminUserService.createUser(fullName, email, phoneNumber, dob, address, role, baseUrl);
 
         } else if ("update".equals(action)) {
-            int id = Integer.parseInt(req.getParameter("id"));
-            ok = service.updateUser(
-                    id,
-                    req.getParameter("fullName"),
-                    req.getParameter("phoneNumber"),
-                    req.getParameter("dob"),
-                    req.getParameter("address"),
-                    req.getParameter("role")
-            );
+            int id = Integer.parseInt(request.getParameter("id"));
+            String fullName = request.getParameter("fullName");
+            String phoneNumber = request.getParameter("phoneNumber");
+            String dob = request.getParameter("dob");
+            String address = request.getParameter("address");
+            String role = request.getParameter("role");
+
+            result = adminUserService.updateUser(id, fullName, phoneNumber, dob, address, role);
 
         } else if ("lock".equals(action)) {
-            int id = Integer.parseInt(req.getParameter("id"));
-            ok = service.lockUser(id);
+            int id = Integer.parseInt(request.getParameter("id"));
+            result = adminUserService.lockUser(id);
 
         } else if ("unlock".equals(action)) {
-            int id = Integer.parseInt(req.getParameter("id"));
-            ok = service.unlockUser(id);
+            int id = Integer.parseInt(request.getParameter("id"));
+            result = adminUserService.unlockUser(id);
         }
 
-        String msg = ok ? "success" : "fail";
+        String msg;
+        if (result) {
+            if ("create".equals(action)) {
+                msg = "created_and_sent_mail";
+            } else {
+                msg = "success";
+            }
+        } else {
+            msg = "fail";
+        }
         String qEncoded = URLEncoder.encode(q, StandardCharsets.UTF_8);
-
-        resp.sendRedirect(req.getContextPath() + "/admin/users?page=" + page + "&q=" + qEncoded + "&msg=" + msg);
+        response.sendRedirect(
+                request.getContextPath() + "/admin/users?page=" + page + "&q=" + qEncoded + "&msg=" + msg
+        );
     }
 }
