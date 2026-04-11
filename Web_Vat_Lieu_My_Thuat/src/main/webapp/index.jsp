@@ -502,7 +502,7 @@
                                     <span class="price-product-discount">-${p.discountDefault}%</span>
 
                                     <div class="button">
-                                        <form action="${pageContext.request.contextPath}/AddToCart?action=add" method="post">
+                                        <form action="${pageContext.request.contextPath}/AddToCart?action=add" method="post" class="form-add-cart">
                                             <input type="hidden" name="productId" value="${p.id}">
                                             <input type="hidden" name="quantity" value="1">
                                             <button type="submit" class="btn-xemchitiet">
@@ -531,6 +531,42 @@
 
 <!-- End section -->
 <%@ include file="Footer.jsp" %>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const forms = document.querySelectorAll(".form-add-cart");
+
+        forms.forEach(function (form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const data = new FormData(form);
+                const body = new URLSearchParams(data).toString();
+
+                fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: body
+                })
+                    .then(function (res) {
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        if (data.success) {
+                            alert("Đã thêm vào giỏ hàng");
+                        } else {
+                            alert("Thêm vào giỏ hàng thất bại");
+                        }
+                    })
+                    .catch(function () {
+                        alert("lỗi");
+                    });
+            });
+        });
+    });
+</script>
 </body>
 
 </html>
