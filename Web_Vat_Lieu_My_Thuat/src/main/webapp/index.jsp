@@ -551,10 +551,19 @@
                     body: body
                 })
                     .then(function (res) {
+                        if (res.status === 401) {
+                            window.location.href = "${pageContext.request.contextPath}/login";
+                            return null;
+                        }
                         return res.json();
                     })
+
                     .then(function (data) {
                         if (data.success) {
+                            const cartIcon = document.getElementById("cartIcon");
+                            if (cartIcon) {
+                                cartIcon.setAttribute("data-count", data.cartCount);
+                            }
                             alert("Đã thêm vào giỏ hàng");
                         } else {
                             alert("Thêm vào giỏ hàng thất bại");
