@@ -1,6 +1,10 @@
 package vn.edu.nlu.fit.mythuatshop.Model;
 
+import vn.edu.nlu.fit.mythuatshop.Service.ProductService;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Cart {
@@ -156,5 +160,27 @@ public class Cart {
         for (Integer id : cartTemp.getCarts().keySet()) {
             carts.remove(id);
         }
+    }
+    public List<String> removeOutOfStockItems(ProductService productService) {
+        List<String> removedNames = new ArrayList<>(); // de thong bao
+        List<Integer> idsToRemove = new ArrayList<>();
+
+        for (Map.Entry<Integer, CartItem> entry : carts.entrySet()) {
+            CartItem item = entry.getValue();
+            Product product = productService.getProductByIdActive(item.getProductId());
+
+            if (product == null || product.getQuantityStock() <= 0) {
+                removedNames.add(item.getName());
+                idsToRemove.add(entry.getKey());
+            } else {
+                item.setStockQuantity(product.getQuantityStock());
+            }
+        }
+
+        for (Integer id : idsToRemove) {
+            carts.remove(id);
+        }
+
+        return removedNames;
     }
 }

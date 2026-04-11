@@ -27,8 +27,13 @@ public class EmailUtil {
         }
     }
 
-    private static final String email =config.getProperty("mail.username");
+    private static final String email = config.getProperty("mail.username");
     private static final String password = config.getProperty("mail.password");
+
+    public static String getAdminEmail() {
+        String adminEmail = config.getProperty("mail.admin");
+        return (adminEmail != null && !adminEmail.isBlank()) ? adminEmail : email;
+    }
 
     public static void send(String to, String subject, String content) {
         try {
@@ -53,10 +58,8 @@ public class EmailUtil {
             message.setFrom(new InternetAddress(email, "MyThuatShop", StandardCharsets.UTF_8.name()));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to, false));
             message.setSubject(subject, StandardCharsets.UTF_8.name());
-
             message.setText(content, StandardCharsets.UTF_8.name());
 
-            //  Gửi email
             Transport.send(message);
 
         } catch (Exception e) {
