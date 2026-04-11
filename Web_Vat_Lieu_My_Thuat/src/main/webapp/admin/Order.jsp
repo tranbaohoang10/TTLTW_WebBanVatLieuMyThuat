@@ -480,6 +480,11 @@
     .order-table tbody tr:hover td {
         background: rgba(38, 89, 245, 0.06);
     }
+    .actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
 
 </style>
 
@@ -583,6 +588,11 @@
                             </td>
                             <td class="action-col">
                                 <div class="actions">
+                                    <a href="${pageContext.request.contextPath}/admin/order-detail?id=${o.id}"
+                                       class="btn btn-info btn-sm"
+                                       title="Xem chi tiết đơn hàng">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
 
                                     <c:if test="${o.statusName == 'Đang xử lý'}">
                                         <form action="${pageContext.request.contextPath}/admin/orders/status"

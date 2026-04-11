@@ -377,6 +377,38 @@ public class OrderDao implements DaoInterface<Order> {
         return affected == 1;
     }
 
+    public Order findOrderById(int orderId) {
+        String sql =
+                "SELECT o.ID AS id, " +
+                        "o.userID AS userId, " +
+                        "       o.fullName AS fullName, " +
+                        "       o.email AS email, " +
+                        "       o.phoneNumber   AS phoneNumber, " +
+                        "       o.address AS address, " +
+                        "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
+                        "       o.totalPrice   AS totalPrice, " +
+                        "       o.paymentStatus AS paymentStatus, " +
+                        "       o.paymentID     AS paymentId, " +
+                        "       o.orderStatusID AS orderStatusId, " +
+                        "       o.voucherID     AS voucherId, " +
+                        "       o.discount  AS discount, " +
+                        "       o.shippingFee   AS shippingFee, " +
+                        "       o.createAt      AS createAt, " +
+                        "       o.note   AS note, " +
+                        "       os.statusName   AS statusName " +
+                        "FROM Orders o " +
+                        "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
+                        "WHERE o.ID = :orderId";
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .bind("orderId", orderId)
+                        .mapToBean(Order.class)
+                        .findOne()
+                        .orElse(null)
+        );
+    }
+
 
     @Override
     public int insert(Order order) {

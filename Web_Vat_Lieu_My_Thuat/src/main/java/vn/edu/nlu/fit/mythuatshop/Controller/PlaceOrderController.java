@@ -10,12 +10,18 @@ import vn.edu.nlu.fit.mythuatshop.Model.Cart;
 import vn.edu.nlu.fit.mythuatshop.Model.Order;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.OrderService;
+import vn.edu.nlu.fit.mythuatshop.Service.ProductService;
 import vn.edu.nlu.fit.mythuatshop.Service.VnpayService;
 
 import java.io.IOException;
 
 @WebServlet(name = "PlaceOrderController", value = "/place-order")
 public class PlaceOrderController extends HttpServlet {
+    private ProductService productService;
+    @Override
+    public void init() throws ServletException {
+        productService = new ProductService();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -34,7 +40,22 @@ public class PlaceOrderController extends HttpServlet {
         }
         Cart cartTemp = (Cart) session.getAttribute("cartTemp");
         if (cartTemp == null || cartTemp.cartSize() == 0) {
-            resp.sendRedirect("Cart.jsp");
+            resp.sendRedirect(req.getContextPath() + "/cart");
+            return;
+        }
+        if (!cartTemp.removeOutOfStockItems(productService).isEmpty()) {
+            session.setAttribute("cartTemp", cartTemp);
+
+            Cart cart = (Cart) session.getAttribute("cart");
+            if (cart != null) {
+                cart.removeOutOfStockItems(productService);
+                session.setAttribute("cart", cart);
+                session.setAttribute("cartCount", cart.getTotalQuantity());
+            }
+
+            session.setAttribute("cartWarning",
+                    "Sản phẩm hiện tại đã ngừng bán hoặc hết hàng.");
+            resp.sendRedirect(req.getContextPath() + "/cart");
             return;
         }
         String fullName = req.getParameter("fullName");

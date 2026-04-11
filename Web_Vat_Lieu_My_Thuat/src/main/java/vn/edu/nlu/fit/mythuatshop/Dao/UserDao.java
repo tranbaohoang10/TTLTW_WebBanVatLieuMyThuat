@@ -60,23 +60,7 @@ public class UserDao {
                         .orElse(null)
         );
     }
-    public int updateInforUser(Users user) {
-        String sql = "UPDATE users " +
-                "SET fullName = :fullName, " +
-                "    phoneNumber = :phoneNumber, " +
-                "    dob = :dob, " +
-                "    address = :address " +
-                "WHERE id = :id";
-        return jdbi.withHandle(handle ->
-                handle.createUpdate(sql)
-                        .bind("fullName", user.getFullName())
-                        .bind("phoneNumber", user.getPhoneNumber())
-                        .bind("dob", user.getDob())
-                        .bind("address", user.getAddress())
-                        .bind("id", user.getId())
-                        .execute()
-        );
-    }
+
     public boolean updatePassword(int userId, String newHash) {
         String sql = "UPDATE users SET password = :matkhaumoi WHERE id = :id";
         int row = jdbi.withHandle(handle ->handle.createUpdate(sql)
@@ -90,16 +74,6 @@ public class UserDao {
                 " FROM users WHERE email = :email ";
         return jdbi.withHandle(handle ->handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
     }
-    public int updatePasswordByEmail(String email, String matkhaumoi) {
-        String sql = "UPDATE Users SET password = :password WHERE email = :email";
-        return jdbi.withHandle(handle ->
-                handle.createUpdate(sql)
-                        .bind("password", matkhaumoi)
-                        .bind("email", email)
-                        .execute()
-        );    }
-
-
 
     public List<Users> findUsers(String keyword, int offset, int limit) {
 
@@ -161,7 +135,9 @@ public class UserDao {
                 .bind("address", user.getAddress())
                 .bind("role", user.getRole())
                 .bind("isActive", user.getIsActive())
-                .execute());
+                .executeAndReturnGeneratedKeys("id")
+                .mapTo(int.class)
+                .one());
     }
 
     public int adminUpdateUser(Users user) {
@@ -185,13 +161,6 @@ public class UserDao {
                 .execute());
     }
 
-    public int deleteUserById(int id) {
-        String sql = "DELETE FROM users WHERE id = :id";
-        return jdbi.withHandle(h ->
-                h.createUpdate(sql)
-                        .bind("id", id)
-                        .execute());
-    }
 
     public int setActive(int userId, int isActive) {
         String sql = "UPDATE users SET isActive = :isActive WHERE ID = :id";

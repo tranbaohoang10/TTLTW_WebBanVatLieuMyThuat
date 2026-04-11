@@ -192,13 +192,15 @@ public class AdminVoucherController extends HttpServlet {
         v.setCode(req.getParameter("code"));
         v.setName(req.getParameter("name"));
         v.setDescription(req.getParameter("description"));
+        v.setVoucherType(req.getParameter("voucherType"));
         v.setVoucherCash(Double.parseDouble(req.getParameter("voucherCash")));
+        v.setVoucherPercent(Double.parseDouble(req.getParameter("voucherPercent")));
+        v.setMaxDiscount(Double.parseDouble(req.getParameter("maxDiscount")));
         v.setMinOrderValue(Double.parseDouble(req.getParameter("minOrderValue")));
         v.setQuantity(Integer.parseInt(req.getParameter("quantity")));
-        v.setQuantityUsed(Integer.parseInt(req.getParameter("quantityUsed"))); // hoặc 0 khi tạo mới
-        v.setIsActive(Integer.parseInt(req.getParameter("isActive"))); // 1/0
+        v.setQuantityUsed(Integer.parseInt(req.getParameter("quantityUsed")));
+        v.setIsActive(Integer.parseInt(req.getParameter("isActive")));
 
-        // input type="datetime-local" trả về dạng yyyy-MM-ddTHH:mm
         String start = req.getParameter("startDate");
         String end = req.getParameter("endDate");
         if (start != null && !start.isEmpty()) {

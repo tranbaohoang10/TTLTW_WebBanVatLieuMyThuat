@@ -13,7 +13,7 @@ public class VoucherDao {
     }
 
     public Voucher findByCode(String code) {
-        String sql = "SELECT ID, code, name, description, voucherCash, minOrderValue, " +
+        String sql = "SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
                 "FROM Vouchers " +
                 "WHERE code = :code LIMIT 1";
@@ -42,7 +42,7 @@ public class VoucherDao {
     }
 
     public List<Voucher> findAll() {
-        String sql = "SELECT ID, code, name, description, voucherCash, minOrderValue, " +
+        String sql = "SELECT ID, code, name,  voucherType, voucherCash, voucherPercent, maxDiscount, voucherCash, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
                 "FROM Vouchers " +
                 "ORDER BY ID DESC";
@@ -56,7 +56,7 @@ public class VoucherDao {
 
     public Voucher findById(int id) {
         String sql = """
-                SELECT ID, code, name, description, voucherCash, minOrderValue,
+                SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue,
                        startDate, endDate, quantity, quantityUsed, isActive
                 FROM Vouchers
                 WHERE ID = :id
@@ -74,8 +74,8 @@ public class VoucherDao {
     public int insert(Voucher v) {
         String sql = """
                 INSERT INTO Vouchers
-                    (code, name, description, voucherCash, minOrderValue, startDate, endDate, quantity, quantityUsed, isActive)
-                    VALUES (:code, :name, :description, :voucherCash, :minOrderValue, :startDate, :endDate, :quantity, :quantityUsed, :isActive)
+                    (code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue, startDate, endDate, quantity, quantityUsed, isActive)
+                    VALUES (:code, :name, :description, :voucherType, :voucherCash, :voucherPercent,:maxDiscount, :minOrderValue, :startDate, :endDate, :quantity, :quantityUsed, :isActive)
                 """;
 
         return jdbi.withHandle(h ->
@@ -91,7 +91,10 @@ public class VoucherDao {
                                 code = :code,
                                 name = :name,
                                 description = :description,
-                                voucherCash = :voucherCash,
+                                voucherType = :voucherType,                                               
+                                voucherCash = :voucherCash,                                           
+                                voucherPercent = :voucherPercent,
+                                maxDiscount = :maxDiscount,
                                 minOrderValue = :minOrderValue,
                                 startDate = :startDate,
                                 endDate = :endDate,
@@ -123,7 +126,7 @@ public class VoucherDao {
 
     public List<Voucher> findPage(int offset, int limit) {
         String sql = """
-                SELECT ID, code, name, description, voucherCash, minOrderValue,
+                SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue,
                        startDate, endDate, quantity, quantityUsed, isActive
                 FROM Vouchers
                 ORDER BY ID DESC
@@ -156,7 +159,7 @@ public class VoucherDao {
 
     public List<Voucher> searchPage(String keyword, int offset, int limit) {
         String sql = """
-                SELECT ID, code, name, description, voucherCash, minOrderValue,
+                SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue,
                        startDate, endDate, quantity, quantityUsed, isActive
                 FROM Vouchers
                 WHERE code LIKE :kw OR name LIKE :kw

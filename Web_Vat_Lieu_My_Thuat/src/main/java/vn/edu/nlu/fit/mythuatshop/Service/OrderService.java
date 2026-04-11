@@ -331,6 +331,17 @@ public class OrderService {
     public boolean adminUpdateOrderInfo(int orderId, String fullName, String phone, String address) {
         return orderDao.updateInfoIfProcessing(orderId, fullName, phone, address);
     }
+    public Order getOrderDetailForAdmin(int orderId) {
+        Order order = orderDao.findOrderById(orderId);
+        if (order == null) {
+            return null;
+        }
+
+        List<OrderItem> items = orderDao.findOrderItemsView(orderId);
+        order.setViewItems(items);
+
+        return order;
+    }
 
 
 }
