@@ -128,7 +128,10 @@
         }
 
         .od-review-wrap {
-            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .od-price {
@@ -174,11 +177,19 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 10px 14px;
+            height: 40px;
+            padding: 0 18px;
             border-radius: 10px;
-            font-weight: 650;
+            font-size: 16px;
+            font-weight: 600;
             text-decoration: none;
             border: 1px solid transparent;
+            cursor: pointer;
+            box-sizing: border-box;
+            line-height: 1;
+            appearance: none;
+            -webkit-appearance: none;
+            background: none;
         }
 
         .od-btn-back {
@@ -230,6 +241,17 @@
             .od-price {
                 min-width: 120px;
             }
+        }
+        .od-btn-reorder {
+            border-color: #16a34a;
+            color: #fff;
+            background: #16a34a;
+
+        }
+
+        .od-btn-reorder:hover {
+            background: #15803d;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -322,6 +344,16 @@
                                    href="${pageContext.request.contextPath}/Product_ReviewsController?id=${item.productId}">
                                     Đánh giá
                                 </a>
+                                <form action="${pageContext.request.contextPath}/AddToCart"
+                                      method="post"
+                                      style="margin: 0" class="">
+                                    <input type="hidden" name="productId" value="${item.productId}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <input type="hidden" name="redirectTo" value="cart">
+                                    <button type="submit" class="od-btn od-btn-reorder">
+                                        Đặt lại
+                                    </button>
+                                </form>
                             </div>
                         </c:if>
                     </div>
