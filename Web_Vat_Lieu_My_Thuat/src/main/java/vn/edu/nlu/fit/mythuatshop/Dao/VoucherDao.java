@@ -40,7 +40,24 @@ public class VoucherDao {
         );
         return updated > 0;
     }
+    public boolean decreaseUsed(int voucherId) {
+        String sql = """
+        UPDATE Vouchers
+        SET quantityUsed = CASE
+            WHEN quantityUsed > 0 THEN quantityUsed - 1
+            ELSE 0
+        END
+        WHERE ID = :id
+        """;
 
+        int updated = jdbi.withHandle(handle ->
+                handle.createUpdate(sql)
+                        .bind("id", voucherId)
+                        .execute()
+        );
+
+        return updated > 0;
+    }
     public List<Voucher> findAll() {
         String sql = "SELECT ID, code, name,  voucherType, voucherCash, voucherPercent, maxDiscount, voucherCash, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
