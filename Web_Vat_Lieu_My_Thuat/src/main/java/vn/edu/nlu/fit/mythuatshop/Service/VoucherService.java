@@ -48,7 +48,8 @@ public class VoucherService {
         }
 
         String voucherType = v.getVoucherType();
-        double discount = 0;
+        double productDiscount = 0;
+        double shippingDiscount = 0;
 
         if (voucherType == null || voucherType.trim().isEmpty()) {
             return VoucherApplyResult.fail("Loại voucher không hợp lệ");
@@ -57,7 +58,7 @@ public class VoucherService {
         voucherType = voucherType.trim().toLowerCase();
 
         if (voucherType.equals("cash")) {
-            discount = Math.min(v.getVoucherCash(), subtotal);
+            productDiscount = Math.min(v.getVoucherCash(), subtotal);
         } else if (voucherType.equals("percent")) {
             double percentValue = v.getVoucherPercent() == null ? 0 : v.getVoucherPercent();
             double calculatedDiscount = subtotal * percentValue / 100.0;
@@ -66,18 +67,18 @@ public class VoucherService {
                 calculatedDiscount = Math.min(calculatedDiscount, v.getMaxDiscount());
             }
 
-            discount = Math.min(calculatedDiscount, subtotal);
+            productDiscount = Math.min(calculatedDiscount, subtotal);
         } else if (voucherType.equals("ship")) {
             double shippingFee = cart.getFee();
-            discount = Math.max(shippingFee, 0);
+            shippingDiscount = Math.max(shippingFee, 0);
         } else {
             return VoucherApplyResult.fail("Loại voucher không được hỗ trợ");
         }
+        double totalDiscount = productDiscount + shippingDiscount;
 
-        cart.setDiscount(discount);
+        cart.setDiscount(totalDiscount);
         cart.setVoucherId(v.getId());
-        return VoucherApplyResult.ok(discount);
-    }
+        return VoucherApplyResult.ok(voucherType, productDiscount, shippingDiscount);    }
 
     public void clear(Cart cart) {
         if (cart == null) return;
