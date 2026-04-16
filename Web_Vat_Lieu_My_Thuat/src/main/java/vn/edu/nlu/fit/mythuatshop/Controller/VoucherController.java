@@ -52,16 +52,30 @@ public class VoucherController extends HttpServlet {
                 if (vid != null) {
                     session.setAttribute("appliedVoucherId", vid);
                 }
+                String voucherType = result.getVoucherType();
+                double productDiscount = result.getProductDiscount();
+                double shippingDiscount = result.getShippingDiscount();
+                double totalDiscount = result.getTotalDiscount();
                 double fee = cartTemp.getFee();
                 double totalToPay = cartTemp.getTotalPriceToPay();
+                double finalFee = fee - shippingDiscount;
 
+                if (finalFee < 0) {
+                    finalFee = 0;
+                }
                 resp.getWriter().write("{"
                         + "\"success\":true,"
                         + "\"message\":\"" + escape(result.getMessage()) + "\","
-                        + "\"discount\":" + (long) result.getDiscount() + ","
+                        + "\"voucherType\":\"" + escape(voucherType) + "\","
+                        + "\"productDiscount\":" + (long) productDiscount + ","
+                        + "\"shippingDiscount\":" + (long) shippingDiscount + ","
+                        + "\"totalDiscount\":" + (long) totalDiscount + ","
+                        + "\"discount\":" + (long) totalDiscount + ","
                         + "\"fee\":" + (long) fee + ","
+                        + "\"finalFee\":" + (long) finalFee + ","
                         + "\"totalToPay\":" + (long) totalToPay
                         + "}");
+
             } else {
                 resp.getWriter().write("{"
                         + "\"success\":false,"
