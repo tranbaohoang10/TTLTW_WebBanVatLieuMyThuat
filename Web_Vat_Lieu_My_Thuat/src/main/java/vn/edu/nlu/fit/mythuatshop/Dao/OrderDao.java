@@ -262,53 +262,59 @@ public class OrderDao implements DaoInterface<Order> {
         );
     }
 
-    public boolean cancelOrder(int userId, int orderId) {
+    public boolean cancelOrder(int userId, int orderId, String cancelReason) {
         return jdbi.inTransaction(handle -> {
             Integer voucherId = handle.createQuery("""
-                SELECT voucherID
-                FROM Orders
-                WHERE ID = :oid
-                  AND userID = :uid
-                  AND orderStatusID = 1
-                """)
+            SELECT voucherID
+            FROM Orders
+            WHERE ID = :oid
+              AND userID = :uid
+              AND orderStatusID = 1
+        """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
                     .mapTo(Integer.class)
                     .findOne()
                     .orElse(null);
+
             int updated = handle.createUpdate("""
-                UPDATE Orders
-                SET orderStatusID = 4
-                WHERE ID = :oid
-                  AND userID = :uid
-                  AND orderStatusID = 1
-            """)
+            UPDATE Orders
+            SET orderStatusID = 4,
+                cancelReason = :cancelReason
+            WHERE ID = :oid
+              AND userID = :uid
+              AND orderStatusID = 1
+        """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
+                    .bind("cancelReason", cancelReason)
                     .execute();
 
             if (updated != 1) return false;
 
-            handle.createUpdate("    UPDATE Products p\n" +
-                                "    JOIN Order_Details od ON od.productID = p.id\n" +
-                                "    SET p.quantityStock = p.quantityStock + od.quantity,\n" +
-                                "        p.soldQuantity = GREATEST(p.soldQuantity - od.quantity, 0)\n" +
-                                "    WHERE od.orderID = :oid\n")
+            handle.createUpdate("""
+            UPDATE Products p
+            JOIN Order_Details od ON od.productID = p.id
+            SET p.quantityStock = p.quantityStock + od.quantity,
+                p.soldQuantity = GREATEST(p.soldQuantity - od.quantity, 0)
+            WHERE od.orderID = :oid
+        """)
                     .bind("oid", orderId)
                     .execute();
+
             if (voucherId != null) {
                 handle.createUpdate("""
-                    UPDATE Vouchers
-                    SET quantityUsed = CASE
-                        WHEN quantityUsed > 0 THEN quantityUsed - 1
-                        ELSE 0
-                    END,
-                    quantity = quantity + 1
-                    WHERE ID = :vid
-                    """)
+                UPDATE Vouchers
+                SET quantityUsed = CASE
+                    WHEN quantityUsed > 0 THEN quantityUsed - 1
+                    ELSE 0
+                END
+                WHERE ID = :vid
+            """)
                         .bind("vid", voucherId)
                         .execute();
             }
+
             return true;
         });
     }

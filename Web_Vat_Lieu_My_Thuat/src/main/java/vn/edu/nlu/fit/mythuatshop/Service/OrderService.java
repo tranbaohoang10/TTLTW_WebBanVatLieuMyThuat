@@ -179,8 +179,8 @@ public class OrderService {
         return order;
     }
 
-    public boolean cancelOrder(int userId, int orderId) {
-        return orderDao.cancelOrder(userId,orderId);
+    public boolean cancelOrder(int userId, int orderId, String cancelReason) {
+        return orderDao.cancelOrder(userId, orderId, cancelReason);
     }
 
 
