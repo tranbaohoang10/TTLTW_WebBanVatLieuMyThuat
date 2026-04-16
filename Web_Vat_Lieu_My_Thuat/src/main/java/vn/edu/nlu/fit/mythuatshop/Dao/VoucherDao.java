@@ -29,18 +29,38 @@ public class VoucherDao {
 
     public boolean increaseUsed(int voucherId) {
         String sql = "UPDATE Vouchers " +
-                "SET quantityUsed = quantityUsed + 1 " +
+                "SET quantityUsed = quantityUsed + 1, " +
+                "    quantity = quantity - 1 " +
                 "WHERE ID = :id " +
                 "  AND isActive = 1 " +
-                "  AND quantityUsed < quantity " +
-                "  AND NOW() BETWEEN startDate AND endDate";
+                "  AND quantity > 0";
 
         int updated = jdbi.withHandle(h ->
-                h.createUpdate(sql).bind("id", voucherId).execute()
+                h.createUpdate(sql)
+                        .bind("id", voucherId)
+                        .execute()
         );
         return updated > 0;
     }
+    public boolean decreaseUsed(int voucherId) {
+        String sql = """
+        UPDATE Vouchers
+        SET quantityUsed = CASE
+                WHEN quantityUsed > 0 THEN quantityUsed - 1
+                ELSE 0
+            END,
+            quantity = quantity + 1
+        WHERE ID = :id
+        """;
 
+        int updated = jdbi.withHandle(handle ->
+                handle.createUpdate(sql)
+                        .bind("id", voucherId)
+                        .execute()
+        );
+
+        return updated > 0;
+    }
     public List<Voucher> findAll() {
         String sql = "SELECT ID, code, name,  voucherType, voucherPercent, maxDiscount, voucherCash, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
