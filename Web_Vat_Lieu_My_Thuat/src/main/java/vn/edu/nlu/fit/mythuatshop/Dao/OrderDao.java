@@ -264,7 +264,18 @@ public class OrderDao implements DaoInterface<Order> {
 
     public boolean cancelOrder(int userId, int orderId) {
         return jdbi.inTransaction(handle -> {
-
+            Integer voucherId = handle.createQuery("""
+                SELECT voucherID
+                FROM Orders
+                WHERE ID = :oid
+                  AND userID = :uid
+                  AND orderStatusID = 1
+                """)
+                    .bind("oid", orderId)
+                    .bind("uid", userId)
+                    .mapTo(Integer.class)
+                    .findOne()
+                    .orElse(null);
             int updated = handle.createUpdate("""
                 UPDATE Orders
                 SET orderStatusID = 4
@@ -285,7 +296,19 @@ public class OrderDao implements DaoInterface<Order> {
                                 "    WHERE od.orderID = :oid\n")
                     .bind("oid", orderId)
                     .execute();
-
+            if (voucherId != null) {
+                handle.createUpdate("""
+                    UPDATE Vouchers
+                    SET quantityUsed = CASE
+                        WHEN quantityUsed > 0 THEN quantityUsed - 1
+                        ELSE 0
+                    END,
+                    quantity = quantity + 1
+                    WHERE ID = :vid
+                    """)
+                        .bind("vid", voucherId)
+                        .execute();
+            }
             return true;
         });
     }
