@@ -74,9 +74,8 @@ public class VoucherService {
         } else {
             return VoucherApplyResult.fail("Loại voucher không được hỗ trợ");
         }
-        double totalDiscount = productDiscount + shippingDiscount;
-
-        cart.setDiscount(totalDiscount);
+        cart.setProductDiscount(productDiscount);
+        cart.setShippingDiscount(shippingDiscount);
         cart.setVoucherId(v.getId());
         return VoucherApplyResult.ok(voucherType, productDiscount, shippingDiscount);    }
 
