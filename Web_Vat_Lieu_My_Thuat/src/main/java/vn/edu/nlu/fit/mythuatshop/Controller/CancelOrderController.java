@@ -16,31 +16,43 @@ public class CancelOrderController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        OrderService orderService = new OrderService();
-        HttpSession session = req.getSession();
-        Users currentUser = (Users) session.getAttribute("currentUser");
-        if (currentUser == null) {
-            resp.sendRedirect("login");
-            return;
-        }
-
-        String idRaw = req.getParameter("id");
-        int orderId;
-
-        try {
-            orderId = Integer.parseInt(idRaw);
-        } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/order-history?status=all&msg=cancel_fail");
-            return;
-        }
-
-        boolean ok = orderService.cancelOrder(currentUser.getId(), orderId);
-        resp.sendRedirect(req.getContextPath()
-                + "/order-history?status=all&msg=" + (ok ? "cancel_ok" : "cancel_fail"));
+        resp.sendRedirect(req.getContextPath() + "/order-history?status=all");
     }
 
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        OrderService orderService = new OrderService();
+        HttpSession session = request.getSession();
+        Users currentUser = (Users) session.getAttribute("currentUser");
+
+        if (currentUser == null) {
+            response.sendRedirect("login");
+            return;
+        }
+
+        String idRaw = request.getParameter("orderId");
+        String cancelReason = request.getParameter("cancelReason");
+
+        int orderId;
+        try {
+            orderId = Integer.parseInt(idRaw);
+        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath()
+                    + "/order-history?status=all&msg=cancel_fail");
+            return;
+        }
+
+
+        if (cancelReason == null || cancelReason.isBlank()) {
+            cancelReason = "Khách hàng không muốn mua nữa";
+        }
+
+        boolean ok = orderService.cancelOrder(currentUser.getId(), orderId, cancelReason);
+
+        response.sendRedirect(request.getContextPath()
+                + "/order-history?status=all&msg=" + (ok ? "cancel_ok" : "cancel_fail"));
     }
 }

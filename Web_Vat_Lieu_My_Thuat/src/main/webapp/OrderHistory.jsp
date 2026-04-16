@@ -336,7 +336,71 @@
         padding-right: 24px;
         margin-bottom: 22px;
     }
+    .cancel-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
 
+    .cancel-modal-content {
+        width: 420px;
+        max-width: 92%;
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    .cancel-modal-content h3 {
+        margin: 0 0 16px;
+        font-size: 20px;
+        color: #17479D;
+    }
+
+    .cancel-reason-select,
+    .cancel-other-input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #d9e2f2;
+        border-radius: 10px;
+        font-size: 15px;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .cancel-other-wrap {
+        margin-top: 12px;
+        display: none;
+    }
+
+    .cancel-modal-actions {
+        margin-top: 18px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .cancel-modal-actions button {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .cancel-modal-actions button[type="button"] {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .cancel-modal-actions button[type="submit"] {
+        background: #dc2626;
+        color: #fff;
+    }
     /* ENd section-main-ca-nhan */
 </style>
 <%@ include file="Header.jsp" %>
@@ -473,11 +537,11 @@
                                            class="btn-review">Xem chi tiết</a>
 
                                         <c:if test="${order.orderStatusId == 1}">
-                                            <a href="${pageContext.request.contextPath}/cancel-order?id=${order.id}"
-                                               class="btn-cancel"
-                                               onclick="return confirm('Bạn có chắc muốn hủy đơn #DH0${order.id} không?');">
+                                            <button type="button"
+                                                    class="btn-cancel"
+                                                    onclick="openCancelModal(${order.id})">
                                                 Hủy đơn
-                                            </a>
+                                            </button>
                                         </c:if>
 
                                     </div>
@@ -497,7 +561,97 @@
 <!-- End section main -->
 
 <%@ include file="Footer.jsp" %>
+<div id="cancelModal" class="cancel-modal" style="display:none;">
+    <div class="cancel-modal-content">
+        <h3>Chọn lý do hủy đơn</h3>
 
+        <form action="${pageContext.request.contextPath}/cancel-order" method="post" onsubmit="return prepareCancelReason()">
+            <input type="hidden" name="orderId" id="cancelOrderId">
+            <input type="hidden" name="cancelReason" id="finalCancelReason">
+
+            <select id="cancelReasonSelect" class="cancel-reason-select" required onchange="toggleOtherReason()">
+                <option value="">-- Chọn lý do --</option>
+                <option value="Tôi muốn thay đổi sản phẩm">Tôi muốn thay đổi sản phẩm</option>
+                <option value="Tôi muốn thay đổi địa chỉ nhận hàng">Tôi muốn thay đổi địa chỉ nhận hàng</option>
+                <option value="Tôi tìm được giá tốt hơn">Tôi tìm được giá tốt hơn</option>
+                <option value="Tôi không còn nhu cầu mua nữa">Tôi không còn nhu cầu mua nữa</option>
+                <option value="Đặt nhầm đơn hàng">Đặt nhầm đơn hàng</option>
+                <option value="Lý do khác">Lý do khác</option>
+            </select>
+
+            <div id="otherReasonWrap" class="cancel-other-wrap">
+                <input type="text"
+                       id="otherReasonInput"
+                       class="cancel-other-input"
+                       placeholder="Nhập lý do khác">
+            </div>
+
+            <div class="cancel-modal-actions">
+                <button type="button" onclick="closeCancelModal()">Đóng</button>
+                <button type="submit">Xác nhận hủy</button>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
+<script>
+    function openCancelModal(orderId) {
+        document.getElementById("cancelOrderId").value = orderId;
+        document.getElementById("cancelModal").style.display = "flex";
 
+        document.getElementById("cancelReasonSelect").value = "";
+        document.getElementById("otherReasonInput").value = "";
+        document.getElementById("finalCancelReason").value = "";
+        document.getElementById("otherReasonWrap").style.display = "none";
+    }
+
+    function closeCancelModal() {
+        document.getElementById("cancelModal").style.display = "none";
+    }
+
+    function toggleOtherReason() {
+        const select = document.getElementById("cancelReasonSelect").value;
+        const otherWrap = document.getElementById("otherReasonWrap");
+        const otherInput = document.getElementById("otherReasonInput");
+
+        if (select === "Lý do khác") {
+            otherWrap.style.display = "block";
+            otherInput.required = true;
+        } else {
+            otherWrap.style.display = "none";
+            otherInput.required = false;
+            otherInput.value = "";
+        }
+    }
+
+    function prepareCancelReason() {
+        const select = document.getElementById("cancelReasonSelect").value;
+        const otherInput = document.getElementById("otherReasonInput").value.trim();
+        const finalReason = document.getElementById("finalCancelReason");
+
+        if (!select) {
+            alert("Vui lòng chọn lý do hủy đơn");
+            return false;
+        }
+
+        if (select === "Lý do khác") {
+            if (!otherInput) {
+                alert("Vui lòng nhập lý do khác");
+                return false;
+            }
+            finalReason.value = otherInput;
+        } else {
+            finalReason.value = select;
+        }
+
+        return true;
+    }
+
+    window.onclick = function (event) {
+        const modal = document.getElementById("cancelModal");
+        if (event.target === modal) {
+            closeCancelModal();
+        }
+    }
+</script>
 </html>
