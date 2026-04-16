@@ -42,7 +42,7 @@ public class VoucherDao {
     }
 
     public List<Voucher> findAll() {
-        String sql = "SELECT ID, code, name,  voucherType, voucherCash, voucherPercent, maxDiscount, voucherCash, minOrderValue, " +
+        String sql = "SELECT ID, code, name,  voucherType, voucherPercent, maxDiscount, voucherCash, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
                 "FROM Vouchers " +
                 "ORDER BY ID DESC";

@@ -47,7 +47,33 @@ public class VoucherService {
             return VoucherApplyResult.fail("Đơn hàng chưa đạt giá trị tối thiểu để áp dụng");
         }
 
-        double discount = Math.min(v.getVoucherCash(), subtotal);
+        String voucherType = v.getVoucherType();
+        double discount = 0;
+
+        if (voucherType == null || voucherType.trim().isEmpty()) {
+            return VoucherApplyResult.fail("Loại voucher không hợp lệ");
+        }
+
+        voucherType = voucherType.trim().toLowerCase();
+
+        if (voucherType.equals("cash")) {
+            discount = Math.min(v.getVoucherCash(), subtotal);
+        } else if (voucherType.equals("percent")) {
+            double percentValue = v.getVoucherPercent() == null ? 0 : v.getVoucherPercent();
+            double calculatedDiscount = subtotal * percentValue / 100.0;
+
+            if (v.getMaxDiscount() != null && v.getMaxDiscount() > 0) {
+                calculatedDiscount = Math.min(calculatedDiscount, v.getMaxDiscount());
+            }
+
+            discount = Math.min(calculatedDiscount, subtotal);
+        } else if (voucherType.equals("ship")) {
+            double shippingFee = cart.getFee();
+            discount = Math.max(shippingFee, 0);
+        } else {
+            return VoucherApplyResult.fail("Loại voucher không được hỗ trợ");
+        }
+
         cart.setDiscount(discount);
         cart.setVoucherId(v.getId());
         return VoucherApplyResult.ok(discount);
