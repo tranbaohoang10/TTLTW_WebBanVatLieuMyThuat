@@ -197,6 +197,17 @@ public class VoucherDao {
                         .list()
         );
     }
+    public int lock(int id) {
+        String sql = "UPDATE Vouchers SET isActive = 0 WHERE ID = :id";
+        return jdbi.withHandle(h -> h.createUpdate(sql).bind("id", id).execute()
+        );
+    }
+
+    public int unlock(int id) {
+        String sql = "UPDATE Vouchers SET isActive = 1 WHERE ID = :id";
+        return jdbi.withHandle(h -> h.createUpdate(sql).bind("id", id).execute()
+        );
+    }
 }
 
 

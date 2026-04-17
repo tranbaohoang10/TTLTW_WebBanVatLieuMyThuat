@@ -42,7 +42,7 @@ public class VoucherService {
             return VoucherApplyResult.fail("Mã giảm giá đã hết lượt sử dụng");
         }
 
-        double subtotal = cart.getTotalProductPrice(); // tiền hàng
+        double subtotal = cart.getTotalProductPrice();
         if (subtotal < v.getMinOrderValue()) {
             return VoucherApplyResult.fail("Đơn hàng chưa đạt giá trị tối thiểu để áp dụng");
         }
@@ -82,6 +82,12 @@ public class VoucherService {
     public void clear(Cart cart) {
         if (cart == null) return;
         cart.clearVoucher();
+    }
+    public boolean lock(int id) {
+        return voucherDao.lock(id) > 0;
+    }
+    public boolean unlock(int id) {
+        return voucherDao.unlock(id) > 0;
     }
     public List<Voucher> getAll() {
         return voucherDao.findAll();
