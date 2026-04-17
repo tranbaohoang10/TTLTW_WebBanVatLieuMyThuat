@@ -57,6 +57,12 @@ public class VoucherService {
         if (cart == null) return;
         cart.clearVoucher();
     }
+    public boolean lock(int id) {
+        return voucherDao.lock(id) > 0;
+    }
+    public boolean unlock(int id) {
+        return voucherDao.unlock(id) > 0;
+    }
     public List<Voucher> getAll() {
         return voucherDao.findAll();
     }

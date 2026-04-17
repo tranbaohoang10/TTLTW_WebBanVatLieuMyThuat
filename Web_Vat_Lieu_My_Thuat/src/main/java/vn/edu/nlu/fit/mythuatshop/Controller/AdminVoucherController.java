@@ -57,6 +57,10 @@ public class AdminVoucherController extends HttpServlet {
                 updateVoucher(request);
             } else if ("delete".equals(action)) {
                 deleteVoucher(request);
+            }else if ("lock".equals(action)) {
+                lockVoucher(request);
+            }else if ("unlock".equals(action)) {
+                unlockVoucher(request);
             }
 
             response.sendRedirect(request.getContextPath() + "/admin/vouchers");
@@ -97,7 +101,14 @@ public class AdminVoucherController extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         voucherService.delete(id);
     }
-
+    private void lockVoucher(HttpServletRequest request) {
+        int id = Integer.parseInt(request.getParameter("id"));
+        voucherService.lock(id);
+    }
+    private void unlockVoucher(HttpServletRequest request) {
+        int id = Integer.parseInt(request.getParameter("id"));
+        voucherService.unlock(id);
+    }
     private Voucher getVoucherFromRequest(HttpServletRequest request, boolean isUpdate) {
         Voucher voucher = new Voucher();
 

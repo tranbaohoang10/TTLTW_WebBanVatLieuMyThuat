@@ -142,13 +142,6 @@
         color: #222;
     }
 
-    .search {
-    display: flex;
-    align-items: center;
-    justify-content: end;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
 
   .btn-Sua {
     background-color: #FFC107;
@@ -180,7 +173,36 @@
   .btn-Xoa:hover {
     background-color: #b02a37;
   }
+    .btn-Khoa {
+        background-color: #DC3545;
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 4px;
+        transition: 0.2s;
+        margin-left: 5px;
+    }
 
+    .btn-Khoa:hover {
+        background-color: #b02a37;
+    }
+    .btn-MoKhoa {
+        background-color: #FFC107;
+        color: black;
+        border: none;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 4px;
+        transition: 0.2s;
+        margin-left: 5px;
+    }
+
+    .btn-MoKhoa:hover {
+        background-color:#e0a800;
+    }
   .btn-them-km {
     background-color: #2659F5;
     border: none;
@@ -663,6 +685,25 @@
                                   <i class="fa-solid fa-trash"></i>
                               </button>
                           </form>
+                          <c:if test="${v.isActive == 1}">
+                              <form action="${pageContext.request.contextPath}/admin/vouchers" method="post" style="display:inline">
+                                  <input type="hidden" name="action" value="lock">
+                                  <input type="hidden" name="id" value="${v.id}">
+                                  <button class="btn-Khoa" type="submit" title="Khóa voucher">
+                                      <i class="fa-solid fa-lock"></i>
+                                  </button>
+                              </form>
+                          </c:if>
+
+                          <c:if test="${v.isActive == 0}">
+                              <form action="${pageContext.request.contextPath}/admin/vouchers" method="post" style="display:inline">
+                                  <input type="hidden" name="action" value="unlock">
+                                  <input type="hidden" name="id" value="${v.id}">
+                                  <button class="btn-MoKhoa" type="submit" title="Mở khóa voucher">
+                                      <i class="fa-solid fa-lock-open"></i>
+                                  </button>
+                              </form>
+                          </c:if>
                       </td>
                   </tr>
               </c:forEach>
