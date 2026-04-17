@@ -141,8 +141,30 @@
         margin: 0 0 15px;
         color: #222;
     }
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
 
+    .action-buttons form {
+        margin: 0;
+    }
 
+    .action-buttons button {
+        margin: 0;
+    }
+    .btn-Sua,
+    .btn-Xoa,
+    .btn-Khoa,
+    .btn-MoKhoa {
+        min-width: 42px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
   .btn-Sua {
     background-color: #FFC107;
     color: black;
@@ -167,7 +189,6 @@
     font-size: 14px;
     border-radius: 4px;
     transition: 0.2s;
-    margin-top: 5px;
   }
 
   .btn-Xoa:hover {
@@ -639,6 +660,26 @@
     .dataTables_wrapper .dataTables_length {
         display: none;
     }
+
+    .status-active,
+    .status-locked {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 400;
+        font-family: inherit;
+        line-height: 1.4;
+    }
+    .status-active {
+        background-color: #d1f7d6;
+        color: #198754;
+    }
+
+    .status-locked {
+        background-color: #f8d7da;
+        color: #dc3545;
+    }
 </style>
 
 <body>
@@ -689,6 +730,7 @@
                 <th>Ngày bắt đầu</th>
                 <th>Ngày kết thúc</th>
                 <th>Giảm giá</th>
+                  <th>Trạng thái</th>
                 <th>Tùy chọn</th>
               </tr>
             </thead>
@@ -696,7 +738,7 @@
               <tbody>
               <c:if test="${empty vouchers}">
                   <tr>
-                      <td colspan="8">Không có khuyến mãi nào.</td>
+                      <td colspan="9">Không có khuyến mãi nào.</td>
                   </tr>
               </c:if>
 
@@ -718,6 +760,15 @@
                       </td>
                       <td class="col-cash" data-value="${v.voucherCash}">${v.voucherCash}đ</td>
                       <td>
+                          <c:if test="${v.isActive == 1}">
+                              <span class="status-active">Đang hoạt động</span>
+                          </c:if>
+                          <c:if test="${v.isActive == 0}">
+                              <span class="status-locked">Đã khóa</span>
+                          </c:if>
+                      </td>
+                      <td>
+                          <div class="action-buttons">
                           <button class="btn-Sua" type="button">
                               <i class="fa-solid fa-pen-to-square"></i>
                           </button>
@@ -749,6 +800,7 @@
                                   </button>
                               </form>
                           </c:if>
+                          </div>
                       </td>
                   </tr>
               </c:forEach>
@@ -1157,7 +1209,7 @@
               },
               columnDefs: [
                   { orderable: false, targets: 0 },
-                  { orderable: false, targets: 7 }
+                  { orderable: false, targets: 8 }
               ],
               dom: 'f<"bottom"rtp>'
           });
