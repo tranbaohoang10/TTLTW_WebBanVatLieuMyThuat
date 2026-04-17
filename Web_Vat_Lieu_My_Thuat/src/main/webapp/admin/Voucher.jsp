@@ -426,6 +426,51 @@
   #Dialog-xoa-km .btn-delete-confirm:hover{
       background-color: #b02a37;
   }
+
+    #Dialog-lock-voucher .modal-body {
+        text-align: center;
+    }
+
+    #Dialog-lock-voucher .modal-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+    }
+
+    #Dialog-lock-voucher .modal-header h2 {
+        margin: 0;
+        flex: 1;
+        text-align: center;
+    }
+
+    #Dialog-lock-voucher .close-lock-voucher-modal {
+        cursor: pointer;
+        font-size: 20px;
+        padding: 0 5px;
+    }
+
+    #Dialog-lock-voucher .btn-lock-cancel {
+        border: none;
+        background: #e0e0e0;
+        border-radius: 5px;
+        cursor: pointer;
+        padding: 8px 14px;
+    }
+
+    #Dialog-lock-voucher .btn-lock-confirm {
+        background-color: #DC3545;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 5px;
+        transition: 0.2s;
+    }
+
+    #Dialog-lock-voucher .btn-lock-confirm:hover {
+        background-color: #b02a37;
+    }
     .category-box {
         max-height: 90vh;
         overflow-y: auto;
@@ -686,20 +731,20 @@
                               </button>
                           </form>
                           <c:if test="${v.isActive == 1}">
-                              <form action="${pageContext.request.contextPath}/admin/vouchers" method="post" style="display:inline">
+                              <form class="lockVoucherForm" action="${pageContext.request.contextPath}/admin/vouchers" method="post" style="display:inline">
                                   <input type="hidden" name="action" value="lock">
                                   <input type="hidden" name="id" value="${v.id}">
-                                  <button class="btn-Khoa" type="submit" title="Khóa voucher">
+                                  <button class="btn-Khoa btn-open-lock-voucher" type="button" title="Khóa voucher">
                                       <i class="fa-solid fa-lock"></i>
                                   </button>
                               </form>
                           </c:if>
 
                           <c:if test="${v.isActive == 0}">
-                              <form action="${pageContext.request.contextPath}/admin/vouchers" method="post" style="display:inline">
+                              <form class="lockVoucherForm" action="${pageContext.request.contextPath}/admin/vouchers" method="post" style="display:inline">
                                   <input type="hidden" name="action" value="unlock">
                                   <input type="hidden" name="id" value="${v.id}">
-                                  <button class="btn-MoKhoa" type="submit" title="Mở khóa voucher">
+                                  <button class="btn-MoKhoa btn-open-lock-voucher" type="button" title="Mở khóa voucher">
                                       <i class="fa-solid fa-lock-open"></i>
                                   </button>
                               </form>
@@ -873,7 +918,23 @@
           </div>
       </div>
   </div>
+  <div id="Dialog-lock-voucher" class="modal">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2>Xác nhận</h2>
+              <span class="close-lock-voucher-modal">&times;</span>
+          </div>
 
+          <div class="modal-body">
+              <p id="lockVoucherMessage">Bạn chắc chắn muốn khóa voucher này?</p>
+          </div>
+
+          <div class="modal-footer">
+              <button type="button" class="btn-lock-cancel">Hủy</button>
+              <button type="button" class="btn-lock-confirm">Đồng ý</button>
+          </div>
+      </div>
+  </div>
   <script>
       const btnThemKM = document.querySelector('.btn-them-km');
       const modalAdd = document.getElementById('Dialog-them-km');
@@ -980,6 +1041,64 @@
           if (e.target === deleteModal) {
               deleteModal.style.display = "none";
               deleteForm = null;
+          }
+      });
+  </script>
+  <script>
+      const lockVoucherModal = document.getElementById("Dialog-lock-voucher");
+      const btnCloseLockVoucher = document.querySelector(".close-lock-voucher-modal");
+      const btnLockCancel = document.querySelector(".btn-lock-cancel");
+      const btnLockConfirm = document.querySelector(".btn-lock-confirm");
+      const lockVoucherMessage = document.getElementById("lockVoucherMessage");
+
+      let lockVoucherForm = null;
+
+      document.addEventListener("click", function (e) {
+          const lockBtn = e.target.closest(".btn-open-lock-voucher");
+          if (!lockBtn) return;
+
+          lockVoucherForm = lockBtn.closest("form");
+          const action = lockVoucherForm.querySelector('input[name="action"]').value;
+
+          if (action === "lock") {
+              lockVoucherMessage.innerText = "Bạn chắc chắn muốn khóa voucher này?";
+              btnLockConfirm.innerText = "Khóa";
+              btnLockConfirm.style.backgroundColor = "#DC3545";
+          } else {
+              lockVoucherMessage.innerText = "Bạn chắc chắn muốn mở khóa voucher này?";
+              btnLockConfirm.innerText = "Mở khóa";
+              btnLockConfirm.style.backgroundColor = "#2659F5";
+          }
+
+          lockVoucherModal.style.display = "flex";
+      });
+
+      if (btnCloseLockVoucher) {
+          btnCloseLockVoucher.onclick = function () {
+              lockVoucherModal.style.display = "none";
+              lockVoucherForm = null;
+          };
+      }
+
+      if (btnLockCancel) {
+          btnLockCancel.onclick = function () {
+              lockVoucherModal.style.display = "none";
+              lockVoucherForm = null;
+          };
+      }
+
+      if (btnLockConfirm) {
+          btnLockConfirm.onclick = function () {
+              if (lockVoucherForm) {
+                  lockVoucherForm.submit();
+              }
+          };
+      }
+
+      window.addEventListener("click", function (e) {
+          if (e.target === lockVoucherModal) {
+              lockVoucherModal.style.display = "none";
+              lockVoucherForm = null;
           }
       });
   </script>
