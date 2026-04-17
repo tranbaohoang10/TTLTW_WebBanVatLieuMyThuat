@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 
 <!DOCTYPE html>
@@ -767,7 +768,22 @@
                       <td class="col-end" data-value="${v.endDate}">
                               ${v.endDate.toString().substring(0, 10)}
                       </td>
-                      <td class="col-cash" data-value="${v.voucherCash}">${v.voucherCash}đ</td>
+                      <td class="col-discount">
+                          <c:choose>
+                              <c:when test="${v.voucherType == 'cash'}">
+                                  <fmt:formatNumber value="${v.voucherCash}" type="number"/>đ
+                              </c:when>
+                              <c:when test="${v.voucherType == 'percent'}">
+                                  ${v.voucherPercent}%
+                              </c:when>
+                              <c:when test="${v.voucherType == 'ship'}">
+                                      Free ship
+                              </c:when>
+                              <c:otherwise>
+                                  Không xác định
+                              </c:otherwise>
+                          </c:choose>
+                      </td>
                       <td>
                           <c:if test="${v.isActive == 1}">
                               <span class="status-active">Đang hoạt động</span>
