@@ -31,7 +31,7 @@ public class Order implements Serializable {
     private String deliveryWardCode;
     private Long expectedDeliveryTime;
     private String expectedDeliveryDateText;
-
+    private String cancelReason;
 
     public Order() {
     }
@@ -235,5 +235,13 @@ public class Order implements Serializable {
 
     public void setItems(List<OrderDetail> items) {
         this.items = items;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
     }
 }

@@ -58,6 +58,7 @@ public class AddToCartController extends HttpServlet {
 
         String pidStr = request.getParameter("productId");
         String qtyStr = request.getParameter("quantity");
+        String redirectTo = request.getParameter("redirectTo");
 
         if (pidStr == null || qtyStr == null || pidStr.isBlank() || qtyStr.isBlank()) {
             response.sendRedirect(request.getContextPath() + "/home");
@@ -101,8 +102,12 @@ public class AddToCartController extends HttpServlet {
             response.setContentType("application/json; charset=UTF-8");
             response.getWriter().write("{\"success\":true,\"cartCount\":" + cart.getTotalQuantity() + "}");
         } else {
-            String referer = request.getHeader("referer");
-            response.sendRedirect(referer != null ? referer : (request.getContextPath() + "/cart"));
+            if ("cart".equals(redirectTo)) {
+                response.sendRedirect(request.getContextPath() + "/cart");
+            } else {
+                String referer = request.getHeader("referer");
+                response.sendRedirect(referer != null ? referer : (request.getContextPath() + "/cart"));
+            }
         }
     }
 

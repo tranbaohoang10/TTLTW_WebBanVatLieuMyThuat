@@ -727,11 +727,16 @@
                                     <fmt:formatNumber value="${sessionScope.cartTemp.totalProductPrice}" type="number"/>₫
                                 </span>
                             </div>
-
                             <div class="price-row">
-                                <span>Giảm giá</span>
-                                <span id="discountValue">
-                                    <fmt:formatNumber value="${sessionScope.cartTemp.discount}" type="number"/>₫
+                                <span>Giảm giá sản phẩm</span>
+                                <span id="productDiscountValue">
+                                    <fmt:formatNumber value="${sessionScope.cartTemp.productDiscount}" type="number"/>₫
+                                </span>
+                            </div>
+                            <div class="price-row">
+                                <span>Giảm phí vận chuyển</span>
+                                <span id="shippingDiscountValue">
+                                    <fmt:formatNumber value="${sessionScope.cartTemp.shippingDiscount}" type="number"/>₫
                                 </span>
                             </div>
 
@@ -848,11 +853,27 @@
                     }
                     voucherMsg.classList.add("success");
                     voucherMsg.textContent = json.message || "Áp dụng thành công";
-                    if (discountValue) discountValue.textContent = vnd(json.discount);
-                    if (totalPayText) totalPayText.textContent = vnd(json.totalToPay);
-                    const currentShippingFee = shippingFeeText ? moneyToNumber(shippingFeeText.textContent) : 0;
-                    if (baseTotalToPay) {
-                        baseTotalToPay.value = Math.max(0, Number(json.totalToPay || 0) - currentShippingFee);
+                    const productDiscountValue = document.getElementById("productDiscountValue");
+                    const shippingDiscountValue = document.getElementById("shippingDiscountValue");
+
+                    if (productDiscountValue) {
+                        productDiscountValue.textContent = vnd(json.productDiscount || 0);
+                    }
+
+                    if (shippingDiscountValue) {
+                        shippingDiscountValue.textContent = vnd(json.shippingDiscount || 0);
+                    }
+
+                    if (shippingFeeText) {
+                        if (json.finalFee != null) {
+                            shippingFeeText.textContent = vnd(json.finalFee);
+                        } else {
+                            shippingFeeText.textContent = vnd(json.fee || 0);
+                        }
+                    }
+
+                    if (totalPayText) {
+                        totalPayText.textContent = vnd(json.totalToPay || 0);
                     }
                 } catch (e) {
                     console.error("Voucher error:", e);

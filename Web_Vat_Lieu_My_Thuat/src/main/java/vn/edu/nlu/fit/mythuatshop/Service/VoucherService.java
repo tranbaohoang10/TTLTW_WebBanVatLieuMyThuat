@@ -42,20 +42,52 @@ public class VoucherService {
             return VoucherApplyResult.fail("Mã giảm giá đã hết lượt sử dụng");
         }
 
-        double subtotal = cart.getTotalProductPrice(); // tiền hàng
+        double subtotal = cart.getTotalProductPrice();
         if (subtotal < v.getMinOrderValue()) {
             return VoucherApplyResult.fail("Đơn hàng chưa đạt giá trị tối thiểu để áp dụng");
         }
 
-        double discount = Math.min(v.getVoucherCash(), subtotal);
-        cart.setDiscount(discount);
+        String voucherType = v.getVoucherType();
+        double productDiscount = 0;
+        double shippingDiscount = 0;
+
+        if (voucherType == null || voucherType.trim().isEmpty()) {
+            return VoucherApplyResult.fail("Loại voucher không hợp lệ");
+        }
+
+        voucherType = voucherType.trim().toLowerCase();
+
+        if (voucherType.equals("cash")) {
+            productDiscount = Math.min(v.getVoucherCash(), subtotal);
+        } else if (voucherType.equals("percent")) {
+            double percentValue = v.getVoucherPercent() == null ? 0 : v.getVoucherPercent();
+            double calculatedDiscount = subtotal * percentValue / 100.0;
+
+            if (v.getMaxDiscount() != null && v.getMaxDiscount() > 0) {
+                calculatedDiscount = Math.min(calculatedDiscount, v.getMaxDiscount());
+            }
+
+            productDiscount = Math.min(calculatedDiscount, subtotal);
+        } else if (voucherType.equals("ship")) {
+            double shippingFee = cart.getFee();
+            shippingDiscount = Math.max(shippingFee, 0);
+        } else {
+            return VoucherApplyResult.fail("Loại voucher không được hỗ trợ");
+        }
+        cart.setProductDiscount(productDiscount);
+        cart.setShippingDiscount(shippingDiscount);
         cart.setVoucherId(v.getId());
-        return VoucherApplyResult.ok(discount);
-    }
+        return VoucherApplyResult.ok(voucherType, productDiscount, shippingDiscount);    }
 
     public void clear(Cart cart) {
         if (cart == null) return;
         cart.clearVoucher();
+    }
+    public boolean lock(int id) {
+        return voucherDao.lock(id) > 0;
+    }
+    public boolean unlock(int id) {
+        return voucherDao.unlock(id) > 0;
     }
     public List<Voucher> getAll() {
         return voucherDao.findAll();

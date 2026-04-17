@@ -14,6 +14,8 @@ public class Cart {
     private Integer voucherId;
     private Long expectedDeliveryTime;
     private String expectedDeliveryDateText;
+    private double productDiscount;
+    private double shippingDiscount;
 
     public Cart() {
         carts = new HashMap<>();
@@ -30,6 +32,21 @@ public class Cart {
     public int getFee() {
         return fee;
     }
+    public double getProductDiscount() {
+        return productDiscount;
+    }
+
+    public void setProductDiscount(double productDiscount) {
+        this.productDiscount = productDiscount;
+    }
+
+    public double getShippingDiscount() {
+        return shippingDiscount;
+    }
+
+    public void setShippingDiscount(double shippingDiscount) {
+        this.shippingDiscount = shippingDiscount;
+    }
 
     public void setFee(int fee) {
         this.fee = fee;
@@ -40,7 +57,8 @@ public class Cart {
     }
 
     public void setDiscount(double discount) {
-        this.discount = discount;
+        this.productDiscount = discount;
+        this.shippingDiscount = 0;
     }
     public Long getExpectedDeliveryTime() {
         return expectedDeliveryTime;
@@ -123,11 +141,19 @@ public class Cart {
     public void setVoucherId(Integer voucherId) { this.voucherId = voucherId; }
 
     public void clearVoucher() {
-        this.voucherId = null;
+        this.productDiscount = 0;
+        this.shippingDiscount = 0;
         this.discount = 0;
     }
     public double getTotalPriceToPay() {
-        return getTotalProductPrice() - discount + fee;
+        double totalProductPrice = getTotalProductPrice();
+        double totalToPay = totalProductPrice - productDiscount + fee - shippingDiscount;
+
+        if (totalToPay < 0) {
+            totalToPay = 0;
+        }
+
+        return totalToPay;
     }
     public Cart getCartByIds(String[] productIds) {
         Cart cartTemp = new Cart();

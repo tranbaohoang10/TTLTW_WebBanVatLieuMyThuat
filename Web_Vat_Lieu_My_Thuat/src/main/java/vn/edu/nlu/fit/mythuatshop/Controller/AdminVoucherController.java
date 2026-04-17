@@ -11,205 +11,152 @@ import vn.edu.nlu.fit.mythuatshop.Service.VoucherService;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-
 
 @WebServlet(name = "AdminVoucherController", urlPatterns = {"/admin/vouchers"})
 public class AdminVoucherController extends HttpServlet {
 
     private final VoucherService voucherService = new VoucherService();
-    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final VoucherDao voucherDao = new VoucherDao();
-    private static final int PAGE_SIZE = 10;
-    private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    static class VoucherRowDto {
-        int id;
-        String code;
-        String name;
-        String description;
-        String startDate; // yyyy-MM-dd
-        String endDate;   // yyyy-MM-dd
-        double voucherCash;
-        double minOrderValue;
-        int quantity;
-        int quantityUsed;
-        int isActive;
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
 
-        static VoucherRowDto from(Voucher v) {
-            VoucherRowDto d = new VoucherRowDto();
-            d.id = v.getId();
-            d.code = v.getCode();
-            d.name = v.getName();
-            d.description = v.getDescription();
-            d.voucherCash = v.getVoucherCash();
-            d.minOrderValue = v.getMinOrderValue();
-            d.quantity = v.getQuantity();
-            d.quantityUsed = v.getQuantityUsed();
-            d.isActive = v.getIsActive();
-            d.startDate = (v.getStartDate() == null) ? "" : v.getStartDate().toLocalDate().toString();
-            d.endDate   = (v.getEndDate() == null) ? "" : v.getEndDate().toLocalDate().toString();
-            return d;
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "";
+        }
+
+        if ("edit".equals(action)) {
+            showEditForm(request, response);
+        } else if ("create".equals(action)) {
+            showCreateForm(request, response);
+        } else {
+            showVoucherList(request, response);
         }
     }
 
-    static class AjaxResponse {
-        List<VoucherRowDto> vouchers = new ArrayList<>();
-        int currentPage;
-        int totalPages;
-        String keyword;
-    }
-
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
 
-        req.setCharacterEncoding("UTF-8");
-        resp.setCharacterEncoding("UTF-8");
-
-        String action = req.getParameter("action");
-        if (action == null) action = "";
-
-        switch (action) {
-            case "edit" -> {
-                int id = Integer.parseInt(req.getParameter("id"));
-                Voucher v = voucherService.getById(id);
-                req.setAttribute("voucher", v);
-                req.getRequestDispatcher("/admin/VoucherForm.jsp").forward(req, resp);
-            }
-            case "create" -> {
-                req.getRequestDispatcher("/admin/VoucherForm.jsp").forward(req, resp);
-            }
-            default -> {
-                // ====== TÌM KIẾM + PHÂN TRANG ======
-                String keyword = req.getParameter("keyword");
-                if (keyword == null) keyword = "";
-
-                String pageParam = req.getParameter("page");
-                int page = 1;
-                try {
-                    if (pageParam != null) {
-                        page = Integer.parseInt(pageParam);
-                        if (page < 1) page = 1;
-                    }
-                } catch (NumberFormatException ignored) {
-                }
-
-                int offset = (page - 1) * PAGE_SIZE;
-
-                int totalRecords;
-                List<Voucher> vouchers;
-                if (!keyword.isBlank()) {
-                    totalRecords = voucherDao.countByKeyword(keyword);
-                    vouchers = voucherDao.searchPage(keyword, offset, PAGE_SIZE);
-                } else {
-                    totalRecords = voucherDao.countAll();
-                    vouchers = voucherDao.findPage(offset, PAGE_SIZE);
-                }
-
-                int totalPages = (int) Math.ceil(totalRecords * 1.0 / PAGE_SIZE);
-                if (totalPages == 0) totalPages = 1;
-                if (page > totalPages) page = totalPages;
-                boolean isAjax =
-                        "1".equals(req.getParameter("ajax")) ||
-                                "XMLHttpRequest".equalsIgnoreCase(req.getHeader("X-Requested-With"));
-
-                if (isAjax) {
-                    AjaxResponse out = new AjaxResponse();
-                    for (Voucher v : vouchers) out.vouchers.add(VoucherRowDto.from(v));
-                    out.currentPage = page;
-                    out.totalPages = totalPages;
-                    out.keyword = keyword;
-
-                    resp.setContentType("application/json; charset=UTF-8");
-                    resp.getWriter().write(gson.toJson(out));
-                    return;
-                }
-
-                req.setAttribute("vouchers", vouchers);
-                req.setAttribute("currentPage", page);
-                req.setAttribute("totalPages", totalPages);
-                req.setAttribute("keyword", keyword);
-
-                req.getRequestDispatcher("/admin/Voucher.jsp").forward(req, resp);
-            }
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "";
         }
-    }
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-
-        req.setCharacterEncoding("UTF-8");
-        resp.setCharacterEncoding("UTF-8");
-
-        String action = req.getParameter("action");
-        if (action == null) action = "";
 
         try {
-            switch (action) {
-                case "create" -> handleCreate(req);
-                case "update" -> handleUpdate(req);
-                case "delete" -> handleDelete(req);
-                default -> { /* ignore */ }
+            if ("create".equals(action)) {
+                createVoucher(request);
+            } else if ("update".equals(action)) {
+                updateVoucher(request);
+            } else if ("delete".equals(action)) {
+                deleteVoucher(request);
+            }else if ("lock".equals(action)) {
+                lockVoucher(request);
+            }else if ("unlock".equals(action)) {
+                unlockVoucher(request);
             }
+
+            response.sendRedirect(request.getContextPath() + "/admin/vouchers");
         } catch (Exception e) {
             e.printStackTrace();
+            throw new ServletException(e);
         }
-
-        resp.sendRedirect(req.getContextPath() + "/admin/vouchers");
     }
 
-    private void handleCreate(HttpServletRequest req) {
-        Voucher v = buildVoucherFromRequest(req, false);
-        voucherService.create(v);
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.getRequestDispatcher("/admin/VoucherForm.jsp").forward(request, response);
     }
 
-    private void handleUpdate(HttpServletRequest req) {
-        Voucher v = buildVoucherFromRequest(req, true);
-        voucherService.update(v);
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Voucher voucher = voucherService.getById(id);
+        request.setAttribute("voucher", voucher);
+        request.getRequestDispatcher("/admin/VoucherForm.jsp").forward(request, response);
     }
 
-    private void handleDelete(HttpServletRequest req) {
-        int id = Integer.parseInt(req.getParameter("id"));
+    private void showVoucherList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        List<Voucher> vouchers = voucherDao.findAll();
+        request.setAttribute("vouchers", vouchers);
+        request.getRequestDispatcher("/admin/Voucher.jsp").forward(request, response);
+    }
+
+    private void createVoucher(HttpServletRequest request) {
+        Voucher voucher = getVoucherFromRequest(request, false);
+        voucherService.create(voucher);
+    }
+
+    private void updateVoucher(HttpServletRequest request) {
+        Voucher voucher = getVoucherFromRequest(request, true);
+        voucherService.update(voucher);
+    }
+
+    private void deleteVoucher(HttpServletRequest request) {
+        int id = Integer.parseInt(request.getParameter("id"));
         voucherService.delete(id);
     }
+    private void lockVoucher(HttpServletRequest request) {
+        int id = Integer.parseInt(request.getParameter("id"));
+        voucherService.lock(id);
+    }
+    private void unlockVoucher(HttpServletRequest request) {
+        int id = Integer.parseInt(request.getParameter("id"));
+        voucherService.unlock(id);
+    }
+    private Voucher getVoucherFromRequest(HttpServletRequest request, boolean isUpdate) {
+        Voucher voucher = new Voucher();
 
-    // đọc dữ liệu từ form (input name=...)
-    private Voucher buildVoucherFromRequest(HttpServletRequest req, boolean hasId) {
-        Voucher v = new Voucher();
-        if (hasId) {
-            v.setId(Integer.parseInt(req.getParameter("id")));
+        if (isUpdate) {
+            voucher.setId(Integer.parseInt(request.getParameter("id")));
         }
 
-        v.setCode(req.getParameter("code"));
-        v.setName(req.getParameter("name"));
-        v.setDescription(req.getParameter("description"));
-        v.setVoucherType(req.getParameter("voucherType"));
-        v.setVoucherCash(Double.parseDouble(req.getParameter("voucherCash")));
-        v.setVoucherPercent(Double.parseDouble(req.getParameter("voucherPercent")));
-        v.setMaxDiscount(Double.parseDouble(req.getParameter("maxDiscount")));
-        v.setMinOrderValue(Double.parseDouble(req.getParameter("minOrderValue")));
-        v.setQuantity(Integer.parseInt(req.getParameter("quantity")));
-        v.setQuantityUsed(Integer.parseInt(req.getParameter("quantityUsed")));
-        v.setIsActive(Integer.parseInt(req.getParameter("isActive")));
+        voucher.setCode(request.getParameter("code"));
+        voucher.setName(request.getParameter("name"));
+        voucher.setDescription(request.getParameter("description"));
+        voucher.setVoucherType(request.getParameter("voucherType"));
+        voucher.setVoucherCash(parseDoubleOrDefault(request.getParameter("voucherCash"), 0));
+        voucher.setVoucherPercent(parseDoubleOrDefault(request.getParameter("voucherPercent"), 0));
+        voucher.setMaxDiscount(parseDoubleOrDefault(request.getParameter("maxDiscount"), 0));
+        voucher.setMinOrderValue(parseDoubleOrDefault(request.getParameter("minOrderValue"), 0));
+        voucher.setQuantity(parseIntOrDefault(request.getParameter("quantity"), 0));
+        voucher.setQuantityUsed(parseIntOrDefault(request.getParameter("quantityUsed"), 0));
+        voucher.setIsActive(parseIntOrDefault(request.getParameter("isActive"), 1));
 
-        String start = req.getParameter("startDate");
-        String end = req.getParameter("endDate");
-        if (start != null && !start.isEmpty()) {
-            v.setStartDate(LocalDate.parse(start, dtf).atStartOfDay());
-        }
-        if (end != null && !end.isEmpty()) {
-            v.setEndDate(LocalDate.parse(end, dtf).atStartOfDay());
+        String startDate = request.getParameter("startDate");
+        String endDate = request.getParameter("endDate");
+
+        if (startDate != null && !startDate.isEmpty()) {
+            voucher.setStartDate(LocalDate.parse(startDate, dtf).atStartOfDay());
         }
 
-        return v;
+        if (endDate != null && !endDate.isEmpty()) {
+            voucher.setEndDate(LocalDate.parse(endDate, dtf).atStartOfDay());
+        }
+
+
+        if (voucher.getStartDate() != null && voucher.getEndDate() != null
+                && voucher.getEndDate().isBefore(voucher.getStartDate())) {
+            throw new IllegalArgumentException("Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu");
+        }
+        return voucher;
+    }
+    private int parseIntOrDefault(String value, int defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return Integer.parseInt(value.trim());
+    }
+
+    private double parseDoubleOrDefault(String value, double defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return Double.parseDouble(value.trim());
     }
 }
