@@ -891,7 +891,22 @@
       const modalEdit = document.getElementById("Dialog-sua-km");
       const btnCloseEdit = document.querySelector(".close-edit-modal");
       const btnEditCancel = document.querySelector(".btn-edit-cancel");
+      if (btnThemKM) btnThemKM.onclick = () => modalAdd.style.display = 'flex';
+      if (btnCloseAdd) btnCloseAdd.onclick = () => modalAdd.style.display = 'none';
+      if (btnCancelAdd) btnCancelAdd.onclick = () => modalAdd.style.display = 'none';
+      if (btnCloseEdit) {
+          btnCloseEdit.onclick = () => {
+              modalEdit.style.display = "none";
+          };
+      }
+
+      if (btnEditCancel) {
+          btnEditCancel.onclick = () => {
+              modalEdit.style.display = "none";
+          };
+      }
       let deleteForm = null;
+
 
       document.addEventListener("click", (e) => {
           const editBtn = e.target.closest(".btn-Sua");
