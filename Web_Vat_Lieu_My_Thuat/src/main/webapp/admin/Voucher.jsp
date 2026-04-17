@@ -680,6 +680,10 @@
         background-color: #f8d7da;
         color: #dc3545;
     }
+    #Dialog-sua-km .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
 </style>
 
 <body>
