@@ -747,7 +747,12 @@
                       data-min="${v.minOrderValue}"
                       data-used="${v.quantityUsed}"
                       data-active="${v.isActive}"
-                      data-qty="${v.quantity}">
+                      data-qty="${v.quantity}"
+                      data-type="${v.voucherType}"
+                      data-percent="${v.voucherPercent}"
+                      data-max-discount="${v.maxDiscount}"
+                      data-cash="${v.voucherCash}">
+
                       <td>${st.index + 1}</td>
                       <td class="col-code">${v.code}</td>
                       <td class="col-name">${v.name}</td>
@@ -905,7 +910,6 @@
               <div class="modal-body">
                   <input type="hidden" name="action" value="update">
                   <input type="hidden" name="id" id="editId">
-                  <input type="hidden" name="minOrderValue" id="editMinOrderValue">
                   <input type="hidden" name="quantityUsed" id="editQuantityUsed">
                   <input type="hidden" name="isActive" id="editIsActive" value="1">
 
@@ -935,8 +939,32 @@
                   </div>
 
                   <div class="form-group">
-                      <label for="editCash">Giảm giá</label>
-                      <input type="number" id="editCash" name="voucherCash" required>
+                      <label for="editVoucherType">Loại voucher</label>
+                      <select id="editVoucherType" name="voucherType">
+                          <option value="cash">Giảm tiền mặt</option>
+                          <option value="percent">Giảm phần trăm</option>
+                          <option value="ship">Miễn phí vận chuyển</option>
+                      </select>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="editVoucherCash">Giảm giá tiền mặt</label>
+                      <input type="number" id="editVoucherCash" name="voucherCash" value="0" placeholder="Nhập số tiền giảm">
+                  </div>
+
+                  <div class="form-group">
+                      <label for="editVoucherPercent">Phần trăm giảm</label>
+                      <input type="number" id="editVoucherPercent" name="voucherPercent" value="0" placeholder="Nhập phần trăm giảm">
+                  </div>
+
+                  <div class="form-group">
+                      <label for="editMaxDiscount">Giảm tối đa</label>
+                      <input type="number" id="editMaxDiscount" name="maxDiscount" value="0" placeholder="Nhập mức giảm tối đa">
+                  </div>
+
+                  <div class="form-group">
+                      <label for="editMinOrderValueInput">Đơn tối thiểu</label>
+                      <input type="number" id="editMinOrderValueInput" name="minOrderValue" value="0" placeholder="Nhập đơn tối thiểu">
                   </div>
 
                   <div class="form-group">
@@ -1033,12 +1061,14 @@
 
               const start = row.querySelector(".col-start").getAttribute("data-value") || "";
               const end   = row.querySelector(".col-end").getAttribute("data-value") || "";
-              const cash  = row.querySelector(".col-cash").getAttribute("data-value") || "0";
-
-              const min = row.dataset.min || "0";
-              const used = row.dataset.used || "0";
-              const active = row.dataset.active || "1";
-              const qty = row.dataset.qty || "";
+              const voucherType = row.dataset.type || "cash";
+              const voucherCash = row.dataset.cash || "0";
+              const voucherPercent = row.dataset.percent || "0";
+              const maxDiscount = row.dataset.maxDiscount || "0";
+              const minOrderValue = row.dataset.min || "0";
+              const quantityUsed = row.dataset.used || "0";
+              const isActive = row.dataset.active || "1";
+              const quantity = row.dataset.qty || "";
 
               document.getElementById("editId").value = id;
               document.getElementById("editCode").value = code;
@@ -1046,13 +1076,17 @@
               document.getElementById("editDesc").value = desc;
               document.getElementById("editStartDate").value = start.substring(0, 10);
               document.getElementById("editEndDate").value   = end.substring(0, 10);
-              document.getElementById("editCash").value = cash;
 
-              document.getElementById("editQuantity").value = qty;
-              document.getElementById("editMinOrderValue").value = min;
-              document.getElementById("editQuantityUsed").value = used;
-              document.getElementById("editIsActive").value = active;
+              document.getElementById("editVoucherType").value = voucherType;
+              document.getElementById("editVoucherCash").value = voucherCash;
+              document.getElementById("editVoucherPercent").value = voucherPercent;
+              document.getElementById("editMaxDiscount").value = maxDiscount;
+              document.getElementById("editMinOrderValueInput").value = minOrderValue;
+              document.getElementById("editQuantity").value = quantity;
+              document.getElementById("editQuantityUsed").value = quantityUsed;
+              document.getElementById("editIsActive").value = isActive;
 
+              changeEditVoucherType();
               modalEdit.style.display = "flex";
               return;
           }
@@ -1153,6 +1187,35 @@
               lockVoucherForm = null;
           }
       });
+      function changeEditVoucherType() {
+          const type = editVoucherType.value;
+
+          editVoucherCash.readOnly = false;
+          editVoucherPercent.readOnly = false;
+          editMaxDiscount.readOnly = false;
+
+          if (type === "cash") {
+              editVoucherPercent.readOnly = true;
+              editMaxDiscount.readOnly = true;
+              editVoucherPercent.value = 0;
+              editMaxDiscount.value = 0;
+          } else if (type === "percent") {
+              editVoucherCash.readOnly = true;
+              editVoucherCash.value = 0;
+          } else if (type === "ship") {
+              editVoucherCash.readOnly = true;
+              editVoucherPercent.readOnly = true;
+              editMaxDiscount.readOnly = true;
+
+              editVoucherCash.value = 0;
+              editVoucherPercent.value = 0;
+              editMaxDiscount.value = 0;
+          }
+      }
+
+      if (editVoucherType) {
+          editVoucherType.addEventListener("change", changeEditVoucherType);
+      }
   </script>
   <script>
 
