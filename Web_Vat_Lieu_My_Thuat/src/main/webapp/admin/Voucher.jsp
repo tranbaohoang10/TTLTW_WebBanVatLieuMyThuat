@@ -831,12 +831,12 @@
 
           <div class="form-group">
           <label for="maKM">Mã khuyến mãi</label>
-          <input type="text" id="maKM" name="code" placeholder="Nhập mã khuyến mãi">
+          <input type="text" id="maKM" name="code" placeholder="Nhập mã khuyến mãi" required>
         </div>
 
         <div class="form-group">
           <label for="tenKM">Tên khuyến mãi</label>
-          <input type="text" id="tenKM" name="name" placeholder="Nhập tên khuyến mãi">
+          <input type="text" id="tenKM" name="name" placeholder="Nhập tên khuyến mãi" required>
         </div>
 
         <div class="form-group">
@@ -846,12 +846,12 @@
 
         <div class="form-group">
           <label for="ngaybatdau">Ngày bắt đầu</label>
-          <input type="date" id="ngaybatdau" name="startDate" placeholder="Nhập ngày bắt đầu">
+          <input type="date" id="ngaybatdau" name="startDate" placeholder="Nhập ngày bắt đầu" required>
         </div>
 
         <div class="form-group">
           <label for="ngàyketthuc">Ngày ngày kết thúc</label>
-          <input type="date" id="ngàyketthuc" name="endDate" placeholder="Nhập ngày kết thúc">
+          <input type="date" id="ngàyketthuc" name="endDate" placeholder="Nhập ngày kết thúc" required>
         </div>
           <div class="form-group">
               <label>Loại voucher</label>
@@ -883,7 +883,7 @@
 
         <div class="form-group">
           <label for="sl">Số lượng</label>
-          <input type="number" id="sl" name="quantity" placeholder="Nhập số lượng">
+          <input type="number" id="sl" name="quantity" min="1" placeholder="Nhập số lượng" required>
         </div>
       </div>
 
@@ -1229,6 +1229,48 @@
           }).draw();
       });
   </script>
+  <script>
+      const addVoucherForm = document.querySelector('#Dialog-them-km form');
+      const editVoucherFormCheck = document.getElementById('editVoucherForm');
+
+      function checkVoucherDates(startInput, endInput) {
+          if (!startInput || !endInput) return true;
+
+          const startDate = startInput.value;
+          const endDate = endInput.value;
+
+          if (startDate && endDate && endDate < startDate) {
+              alert("Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu");
+              endInput.focus();
+              return false;
+          }
+
+          return true;
+      }
+
+      if (addVoucherForm) {
+          addVoucherForm.addEventListener("submit", function (e) {
+              const startInput = document.getElementById("ngaybatdau");
+              const endInput = document.getElementById("ngàyketthuc");
+
+              if (!checkVoucherDates(startInput, endInput)) {
+                  e.preventDefault();
+              }
+          });
+      }
+
+      if (editVoucherFormCheck) {
+          editVoucherFormCheck.addEventListener("submit", function (e) {
+              const startInput = document.getElementById("editStartDate");
+              const endInput = document.getElementById("editEndDate");
+
+              if (!checkVoucherDates(startInput, endInput)) {
+                  e.preventDefault();
+              }
+          });
+      }
+  </script>
+
 </body>
 
 </html>

@@ -139,6 +139,11 @@ public class AdminVoucherController extends HttpServlet {
             voucher.setEndDate(LocalDate.parse(endDate, dtf).atStartOfDay());
         }
 
+
+        if (voucher.getStartDate() != null && voucher.getEndDate() != null
+                && voucher.getEndDate().isBefore(voucher.getStartDate())) {
+            throw new IllegalArgumentException("Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu");
+        }
         return voucher;
     }
     private int parseIntOrDefault(String value, int defaultValue) {
