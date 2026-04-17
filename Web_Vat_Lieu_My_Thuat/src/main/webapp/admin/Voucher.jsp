@@ -13,7 +13,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
     integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
-
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 </head>
 <style>
     html, body { height: 100%; }
@@ -71,13 +73,11 @@
     border-left: none;
   }
 
-  .list-admin a.active {
-    background-color: #203247;
-    border-left: 4px solid #FFD700;
-    /* hoặc màu khác */
-    font-weight: bold;
-  }
-
+    .list-admin a.active {
+        background: #203247;
+        border-left: 4px solid #FFD700;
+        font-weight: bold;
+    }
   #main .right .container {
     display: flex;
     flex-direction: column;
@@ -92,7 +92,19 @@
         flex: 1;
         background-color: #F9F9F9;
     }
+    #main .right .container {
+        width: calc(100% - 100px);
+        margin: 20px auto 0;
+    }
 
+    .order-container {
+        width: 95%;
+        margin: 10px auto 5px;
+        padding: 25px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
   #main .right .container .dashboard {
     display: flex;
     justify-content: space-between;
@@ -125,59 +137,17 @@
     padding: 10px 20px;
     text-align: center;
   }
+    h1 {
+        margin: 0 0 15px;
+        color: #222;
+    }
 
-  /* sửa margin */
-  .order-container {
-    width: 95%;
-    margin: 10px auto 5px;
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  /*  */
-
-  .search {
+    .search {
     display: flex;
     align-items: center;
     justify-content: end;
     gap: 10px;
-    width: 100%;
-    margin: 0 auto;
     margin-bottom: 15px;
-  }
-
-  .search-input-icon {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #fff;
-  }
-
-  .search-input-icon input {
-    padding: 10px 15px;
-    border: none;
-    outline: none;
-    width: 250px;
-    font-size: 14px;
-  }
-
-  .icon {
-    background: #f1f1f1;
-    padding: 10px 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-      border: none;
-  }
-
-  .icon i {
-    font-size: 16px;
-    color: #333;
   }
 
   .btn-Sua {
@@ -222,20 +192,9 @@
     margin-left: 0;
   }
 
-  /*  */
 
 
-  h1 {
-    margin: 0;
-    margin-bottom: 10px;
-    color: #222;
-  }
 
-  .sub-title {
-    color: #555;
-    font-size: 16px;
-    margin-bottom: 20px;
-  }
 
   .order-table {
     width: 100%;
@@ -265,41 +224,14 @@
     text-align: left;
   }
 
-  /* Trạng thái đơn hàng */
-  .status {
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: bold;
-  }
 
-  .status.pending {
-    background: #FFF3CD;
-    color: #555;
-  }
-
-  .status.success {
-    background: #D1FAE5;
-    color: #0f5132;
-  }
-
-  .status.cancel {
-    background: #ffd6d6;
-    color: #b91c1c;
-  }
-
-  /* ================== MODAL THÊM KHÁCH HÀNG ================== */
   .modal {
     position: fixed;
     inset: 0;
-    /* top:0; right:0; bottom:0; left:0 */
     background: rgba(0, 0, 0, 0.4);
     display: none;
-    /* Ẩn mặc định */
     align-items: center;
-    /* Căn giữa theo chiều dọc */
     justify-content: center;
-    /* Căn giữa theo chiều ngang */
     z-index: 999;
   }
 
@@ -426,39 +358,7 @@
     color: #fff;
   }
 
-  /* =========Xem trang trc sau======== */
 
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 25px 0;
-    gap: 5px;
-  }
-
-  .page-link {
-    padding: 6px 12px;
-    border: 1px solid #d0d7de;
-    border-radius: 4px;
-    color: #0d6efd;
-    background-color: white;
-    text-decoration: none;
-    font-size: 14px;
-    transition: 0.2s;
-  }
-
-  .page-link:hover {
-    background-color: #e9ecef;
-  }
-
-  .page-link.active {
-    background-color: #2659F5;
-    color: white;
-    font-weight: bold;
-    border-color: #2659F5;
-  }
-
-  /* Hiệu ứng nhỏ khi mở modal */
   @keyframes fadeInScale {
     from {
       opacity: 0;
@@ -470,7 +370,6 @@
       transform: scale(1);
     }
   }
-/*  style cho modal xóa km*/
   #Dialog-xoa-km .modal-body {
       text-align: center;
   }
@@ -514,6 +413,165 @@
         color: #777;
         cursor: not-allowed;
     }
+
+    .table-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    #customSearchWrap {
+        display: flex;
+        align-items: center;
+    }
+
+
+    .dataTables_filter label {
+        display: flex;
+        align-items: center;
+        border: 1px solid #dcdcdc;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        height: 48px;
+        min-width: 415px;
+        margin: 0;
+    }
+
+    .dataTables_filter label span,
+    .dataTables_filter label small {
+        display: none;
+    }
+
+    .dataTables_filter input {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        width: 350px !important;
+        height: 48px;
+        padding: 0 18px !important;
+        font-size: 15px;
+        margin-left: 0 !important;
+        color: #333;
+        background: #fff;
+    }
+
+    #customSearchWrap {
+        display: flex;
+        align-items: center;
+    }
+
+    .dataTables_filter label {
+        display: flex;
+        align-items: center;
+        margin: 0;
+    }
+
+    .dataTables_filter label span,
+    .dataTables_filter label small {
+        display: none;
+    }
+
+    .dataTables_filter input {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        width: 360px !important;
+        height: 48px;
+        padding: 0 18px !important;
+        font-size: 15px;
+        margin-left: 0 !important;
+        color: #333;
+        background: #fff;
+    }
+
+    .search-dt-box {
+        display: flex;
+        align-items: center;
+        border: 1px solid #dcdcdc;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        height: 48px;
+    }
+
+    .search-dt-icon {
+        width: 64px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f3f3;
+        border-left: 1px solid #e5e5e5;
+        color: #222;
+        font-size: 16px;
+    }
+
+    .btn-them-km {
+        background: #2f5cf5;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 22px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .btn-them-km:hover {
+        background: #234be0;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        float: none !important;
+        text-align: center !important;
+        margin-top: 24px;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        min-width: 42px;
+        height: 42px;
+        line-height: 42px !important;
+        padding: 0 14px !important;
+        margin: 0 4px !important;
+        border: 1px solid #d9d9d9 !important;
+        border-radius: 8px !important;
+        background: #fff !important;
+        color: #2f5cf5 !important;
+        font-size: 15px;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: #f5f7ff !important;
+        color: #2f5cf5 !important;
+        border-color: #cfd8ff !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+        background: #2f5cf5 !important;
+        color: #fff !important;
+        border: 1px solid #2f5cf5 !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+        color: #9fb3ff !important;
+        background: #fff !important;
+        border: 1px solid #d9d9d9 !important;
+        opacity: 1;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        display: none;
+    }
+
+    .dataTables_wrapper .dataTables_length {
+        display: none;
+    }
 </style>
 
 <body>
@@ -548,23 +606,13 @@
 
         <div class="order-container">
           <h1>Danh sách khuyến mãi</h1>
-            <div class="search">
-                <div class="search-input-icon">
-                    <form id="voucherSearchForm" action="${pageContext.request.contextPath}/admin/vouchers" method="get" style="display:flex;">
-                        <input id="voucherSearchInput" type="text" name="keyword" placeholder="Tìm kiếm khuyến mãi..." value="${keyword}" autocomplete="off">
-                        <button type="submit" class="icon">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                        </button>
-                    </form>
-                    <div id="voucherSearchStatus" style="margin:6px 0; font-size:13px; color:#666;"></div>
-
-                </div>
-
+            <div class="table-toolbar">
+                <div id="customSearchWrap"></div>
                 <button type="button" class="btn-them-km">Thêm khuyến mãi</button>
             </div>
 
 
-            <table class="order-table">
+            <table id="voucherTable" class="order-table">
             <thead>
               <tr>
                 <th>STT</th>
@@ -578,7 +626,7 @@
               </tr>
             </thead>
 
-              <tbody id="voucherTbody">
+              <tbody>
               <c:if test="${empty vouchers}">
                   <tr>
                       <td colspan="8">Không có khuyến mãi nào.</td>
@@ -591,7 +639,7 @@
                       data-used="${v.quantityUsed}"
                       data-active="${v.isActive}"
                       data-qty="${v.quantity}">
-                      <td>${(currentPage - 1) * 10 + st.index + 1}</td>
+                      <td>${st.index + 1}</td>
                       <td class="col-code">${v.code}</td>
                       <td class="col-name">${v.name}</td>
                       <td class="col-desc">${v.description}</td>
@@ -603,17 +651,14 @@
                       </td>
                       <td class="col-cash" data-value="${v.voucherCash}">${v.voucherCash}đ</td>
                       <td>
-                          <!-- nút Sửa: mở modal, không cần submit -->
                           <button class="btn-Sua" type="button">
                               <i class="fa-solid fa-pen-to-square"></i>
                           </button>
 
-                          <!-- nút Xóa: form POST -->
                           <form action="${pageContext.request.contextPath}/admin/vouchers" method="post"
                                 style="display:inline">
                               <input type="hidden" name="action" value="delete">
                               <input type="hidden" name="id" value="${v.id}">
-                              <!-- ĐỂ type="button" ĐỂ KHÔNG SUBMIT NGAY -->
                               <button class="btn-Xoa" type="button">
                                   <i class="fa-solid fa-trash"></i>
                               </button>
@@ -625,31 +670,6 @@
 
 
           </table>
-            <div id="voucherPagination" class="pagination">
-                <!-- Nút Trước -->
-                <c:if test="${currentPage > 1}">
-                    <a class="page-link"
-                       href="${pageContext.request.contextPath}/admin/vouchers?page=${currentPage - 1}&keyword=${keyword}">
-                        Trước
-                    </a>
-                </c:if>
-
-                <!-- Các số trang -->
-                <c:forEach var="i" begin="1" end="${totalPages}">
-                    <a class="page-link ${i == currentPage ? 'active' : ''}"
-                       href="${pageContext.request.contextPath}/admin/vouchers?page=${i}&keyword=${keyword}">
-                            ${i}
-                    </a>
-                </c:forEach>
-
-                <!-- Nút Sau -->
-                <c:if test="${currentPage < totalPages}">
-                    <a class="page-link"
-                       href="${pageContext.request.contextPath}/admin/vouchers?page=${currentPage + 1}&keyword=${keyword}">
-                        Sau
-                    </a>
-                </c:if>
-            </div>
 
         </div>
       </div>
@@ -659,7 +679,6 @@
 
   </div>
 
-  <!-- =============Dialog thêm khuyến mãi============= -->
   <div id="Dialog-them-km" class="modal">
     <div class="modal-content category-box">
       <div class="modal-header">
@@ -737,7 +756,6 @@
         </form>
     </div>
   </div>
-  <!-- ========== Dialog chỉnh sửa khuyến mãi ========== -->
   <div id="Dialog-sua-km" class="modal">
       <div class="modal-content">
           <div class="modal-header">
@@ -797,7 +815,6 @@
       </div>
   </div>
 
-  <!-- ========== Dialog XÓA khuyến mãi ========== -->
   <div id="Dialog-xoa-km" class="modal">
       <div class="modal-content">
           <div class="modal-header">
@@ -817,7 +834,6 @@
   </div>
 
   <script>
-      // mở modal thêm
       const btnThemKM = document.querySelector('.btn-them-km');
       const modalAdd = document.getElementById('Dialog-them-km');
       const btnCloseAdd = document.querySelector('.close-modal');
@@ -827,18 +843,16 @@
       if (btnCloseAdd) btnCloseAdd.onclick = () => modalAdd.style.display = 'none';
       if (btnCancelAdd) btnCancelAdd.onclick = () => modalAdd.style.display = 'none';
 
-      // click ngoài đóng modal thêm
       window.addEventListener('click', e => {
           if (e.target === modalAdd) modalAdd.style.display = 'none';
       });
 
-      // modal sửa
       const modalEdit = document.getElementById("Dialog-sua-km");
       const btnCloseEdit = document.querySelector(".close-edit-modal");
       const btnEditCancel = document.querySelector(".btn-edit-cancel");
+      let deleteForm = null;
 
       document.addEventListener("click", (e) => {
-          // ===== SỬA =====
           const editBtn = e.target.closest(".btn-Sua");
           if (editBtn) {
               const row = editBtn.closest("tr");
@@ -874,7 +888,6 @@
               return;
           }
 
-          // ===== XÓA =====
           const delBtn = e.target.closest(".btn-Xoa");
           if (delBtn) {
               deleteForm = delBtn.closest("form");
@@ -882,14 +895,12 @@
           }
       });
 
-      // // ===== Modal XÓA khuyến mãi =====
       const deleteModal = document.getElementById("Dialog-xoa-km");
       const btnCloseDelete = document.querySelector(".close-delete-modal");
       const btnDeleteCancel = document.querySelector(".btn-delete-cancel");
       const btnDeleteConfirm = document.querySelector(".btn-delete-confirm");
 
 
-      // Bấm "Xóa" trong modal => submit form
       if (btnDeleteConfirm) {
           btnDeleteConfirm.onclick = () => {
               if (deleteForm) {
@@ -900,7 +911,6 @@
           };
       }
 
-      // Bấm Hủy hoặc dấu X => đóng modal
       if (btnCloseDelete) btnCloseDelete.onclick = () => {
           deleteModal.style.display = "none";
           deleteForm = null;
@@ -910,7 +920,6 @@
           deleteForm = null;
       };
 
-      // Click ra ngoài modal => đóng
       window.addEventListener("click", e => {
           if (e.target === deleteModal) {
               deleteModal.style.display = "none";
@@ -919,197 +928,6 @@
       });
   </script>
   <script>
-      const ctxVoucher = "${pageContext.request.contextPath}";
-      const PAGE_SIZE = 10;
-
-      const vForm = document.getElementById("voucherSearchForm");
-      const vInput = document.getElementById("voucherSearchInput");
-      const vTbody = document.getElementById("voucherTbody");
-      const vPaging = document.getElementById("voucherPagination");
-      const vStatus = document.getElementById("voucherSearchStatus");
-
-      let vTimer = null;
-      let vAbort = null;
-
-      function text(s){ return (s == null) ? "" : String(s); }
-
-      function renderVoucherRows(list, currentPage) {
-          if (!vTbody) return;
-          vTbody.innerHTML = "";
-
-          if (!list || list.length === 0) {
-              const tr = document.createElement("tr");
-              const td = document.createElement("td");
-              td.colSpan = 8;
-              td.innerText = "Không có khuyến mãi nào.";
-              tr.appendChild(td);
-              vTbody.appendChild(tr);
-              return;
-          }
-
-          list.forEach((v, idx) => {
-              const tr = document.createElement("tr");
-              tr.setAttribute("data-id", v.id);
-              tr.dataset.min = v.minOrderValue ?? 0;
-              tr.dataset.used = v.quantityUsed ?? 0;
-              tr.dataset.active = v.isActive ?? 1;
-              tr.dataset.qty = v.quantity ?? 0;
-
-              // STT
-              const tdStt = document.createElement("td");
-              tdStt.innerText = (currentPage - 1) * PAGE_SIZE + idx + 1;
-
-              const tdCode = document.createElement("td");
-              tdCode.className = "col-code";
-              tdCode.innerText = text(v.code);
-
-              const tdName = document.createElement("td");
-              tdName.className = "col-name";
-              tdName.innerText = text(v.name);
-
-              const tdDesc = document.createElement("td");
-              tdDesc.className = "col-desc";
-              tdDesc.innerText = text(v.description);
-
-              const tdStart = document.createElement("td");
-              tdStart.className = "col-start";
-              tdStart.setAttribute("data-value", text(v.startDate));
-              tdStart.innerText = text(v.startDate);
-
-              const tdEnd = document.createElement("td");
-              tdEnd.className = "col-end";
-              tdEnd.setAttribute("data-value", text(v.endDate));
-              tdEnd.innerText = text(v.endDate);
-
-              const tdCash = document.createElement("td");
-              tdCash.className = "col-cash";
-              tdCash.setAttribute("data-value", text(v.voucherCash));
-              tdCash.innerText = text(v.voucherCash) + "đ";
-
-              const tdOpt = document.createElement("td");
-
-              const btnEdit = document.createElement("button");
-              btnEdit.type = "button";
-              btnEdit.className = "btn-Sua";
-              btnEdit.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
-
-              const formDel = document.createElement("form");
-              formDel.action = ctxVoucher + "/admin/vouchers";
-              formDel.method = "post";
-              formDel.style.display = "inline";
-
-              const inAction = document.createElement("input");
-              inAction.type = "hidden";
-              inAction.name = "action";
-              inAction.value = "delete";
-
-              const inId = document.createElement("input");
-              inId.type = "hidden";
-              inId.name = "id";
-              inId.value = v.id;
-
-              const btnDel = document.createElement("button");
-              btnDel.type = "button";
-              btnDel.className = "btn-Xoa";
-              btnDel.innerHTML = '<i class="fa-solid fa-trash"></i>';
-
-              formDel.appendChild(inAction);
-              formDel.appendChild(inId);
-              formDel.appendChild(btnDel);
-
-              tdOpt.appendChild(btnEdit);
-              tdOpt.appendChild(formDel);
-
-              tr.appendChild(tdStt);
-              tr.appendChild(tdCode);
-              tr.appendChild(tdName);
-              tr.appendChild(tdDesc);
-              tr.appendChild(tdStart);
-              tr.appendChild(tdEnd);
-              tr.appendChild(tdCash);
-              tr.appendChild(tdOpt);
-
-              vTbody.appendChild(tr);
-          });
-      }
-
-      function renderVoucherPaging(totalPages, currentPage) {
-          if (!vPaging) return;
-          vPaging.innerHTML = "";
-
-          function addLink(label, page, active) {
-              const a = document.createElement("a");
-              a.href = "#";
-              a.className = "page-link" + (active ? " active" : "");
-              a.dataset.page = page;
-              a.innerText = label;
-              vPaging.appendChild(a);
-          }
-
-          if (currentPage > 1) addLink("Trước", currentPage - 1, false);
-
-          for (let p = 1; p <= totalPages; p++) {
-              addLink(String(p), p, p === currentPage);
-          }
-
-          if (currentPage < totalPages) addLink("Sau", currentPage + 1, false);
-      }
-
-      async function fetchVouchers(keyword, page) {
-          if (vAbort) vAbort.abort();
-          vAbort = new AbortController();
-
-          if (vStatus) vStatus.innerText = "Đang tìm...";
-
-          const url = new URL(ctxVoucher + "/admin/vouchers", window.location.origin);
-          url.searchParams.set("ajax", "1");
-          url.searchParams.set("keyword", keyword || "");
-          url.searchParams.set("page", String(page || 1));
-
-          const res = await fetch(url.toString(), {
-              signal: vAbort.signal,
-              headers: { "X-Requested-With": "XMLHttpRequest" }
-          });
-
-          const ct = res.headers.get("content-type") || "";
-          if (!ct.includes("application/json")) {
-              window.location.href = ctxVoucher + "/login";
-              return;
-          }
-
-          const data = await res.json();
-
-          renderVoucherRows(data.vouchers, data.currentPage);
-          renderVoucherPaging(data.totalPages, data.currentPage);
-
-          if (vStatus) vStatus.innerText = "";
-
-          // update URL không reload
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.set("keyword", data.keyword || "");
-          newUrl.searchParams.set("page", String(data.currentPage || 1));
-          window.history.replaceState({}, "", newUrl);
-      }
-
-      // gõ tới đâu tìm tới đó
-      vInput && vInput.addEventListener("input", () => {
-          clearTimeout(vTimer);
-          vTimer = setTimeout(() => fetchVouchers(vInput.value || "", 1), 300);
-      });
-
-      // chặn submit
-      vForm && vForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          fetchVouchers(vInput.value || "", 1);
-      });
-
-      // phân trang ajax
-      vPaging && vPaging.addEventListener("click", (e) => {
-          const a = e.target.closest("a.page-link");
-          if (!a) return;
-          e.preventDefault();
-          fetchVouchers(vInput.value || "", parseInt(a.dataset.page || "1", 10));
-      });
 
       const voucherType = document.getElementById("voucherType");
       const voucherCash = document.getElementById("giamgia");
@@ -1144,6 +962,45 @@
 
       voucherType.addEventListener("change", changeVoucherType);
       changeVoucherType();
+  </script>
+
+  <script>
+      $(document).ready(function () {
+          let table = $('#voucherTable').DataTable({
+              pageLength: 10,
+              lengthChange: false,
+              info: false,
+              language: {
+                  search: "",
+                  searchPlaceholder: "Tìm kiếm khuyến mãi...",
+                  paginate: {
+                      previous: "Trước",
+                      next: "Sau"
+                  },
+                  zeroRecords: "Không tìm thấy khuyến mãi nào",
+                  emptyTable: "Không có dữ liệu"
+              },
+              columnDefs: [
+                  { orderable: false, targets: 0 },
+                  { orderable: false, targets: 7 }
+              ],
+              dom: 'f<"bottom"rtp>'
+          });
+
+          $('.dataTables_filter').appendTo('#customSearchWrap');
+
+          const searchInput = $('.dataTables_filter input');
+          searchInput.wrap('<div class="search-dt-box"></div>');
+          $('.search-dt-box').append('<div class="search-dt-icon"><i class="fa-solid fa-magnifying-glass"></i></div>');
+
+          table.on('order.dt search.dt draw.dt', function () {
+              table.column(0, { search: 'applied', order: 'applied', page: 'current' })
+                  .nodes()
+                  .each(function (cell, i) {
+                      cell.innerHTML = i + 1;
+                  });
+          }).draw();
+      });
   </script>
 </body>
 

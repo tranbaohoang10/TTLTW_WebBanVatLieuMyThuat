@@ -41,8 +41,10 @@ public class VoucherDao {
         return updated > 0;
     }
 
+
+
     public List<Voucher> findAll() {
-        String sql = "SELECT ID, code, name,  voucherType, voucherCash, voucherPercent, maxDiscount, voucherCash, minOrderValue, " +
+        String sql = "SELECT ID, code, name, description, voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
                 "FROM Vouchers " +
                 "ORDER BY ID DESC";
