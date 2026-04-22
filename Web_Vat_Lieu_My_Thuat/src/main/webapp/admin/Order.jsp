@@ -485,6 +485,15 @@
         gap: 6px;
         align-items: center;
     }
+    .btn-update-status.btn-danger {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: #fff !important;
+    }
+
+    .btn-update-status.btn-danger i {
+        color: #fff !important;
+    }
 
 </style>
 
@@ -632,7 +641,7 @@
                                                 data-id="${o.id}"
                                                 data-status="Đã hủy"
                                                 title="Hủy đơn hàng">
-                                            <i class="fa-solid fa-xmark"></i>
+                                            <i class="fa-solid fa-ban"></i>
                                         </button>
                                     </c:if>
 
@@ -743,5 +752,104 @@
             toast.remove();
         }, 2600);
     })();
+
+    function getStatusHtml(status) {
+        if (status === "Đang xử lý") {
+            return '<span class="status pending">Đang xử lý</span>';
+        }
+        if (status === "Đang vận chuyển") {
+            return '<span class="status delivery">Đang vận chuyển</span>';
+        }
+        if (status === "Hoàn thành") {
+            return '<span class="status success">Hoàn thành</span>';
+        }
+        return '<span class="status cancel">Đã hủy</span>';
+    }
+
+    function getActionHtml(orderId, status) {
+        let html = '';
+
+        html += '<a href="${pageContext.request.contextPath}/admin/order-detail?id=' + orderId + '" ' +
+            'class="btn btn-info btn-sm" title="Xem chi tiết đơn hàng">' +
+            '<i class="fa-solid fa-eye"></i>' +
+            '</a>';
+
+        if (status === "Đang xử lý") {
+            html += '<button class="btn btn-success btn-sm btn-update-status" type="button" ' +
+                'data-id="' + orderId + '" data-status="Đang vận chuyển" title="Chuyển sang đang vận chuyển">' +
+                '<i class="fa-solid fa-truck"></i>' +
+                '</button>';
+
+            html += '<button class="btn btn-danger btn-sm btn-update-status" type="button" ' +
+                'data-id="' + orderId + '" data-status="Đã hủy" title="Hủy đơn hàng">' +
+                '<i class="fa-solid fa-ban"></i>' +
+                '</button>';
+        }
+
+        if (status === "Đang vận chuyển") {
+            html += '<button class="btn btn-success btn-sm btn-update-status" type="button" ' +
+                'data-id="' + orderId + '" data-status="Hoàn thành" title="Hoàn thành đơn">' +
+                '<i class="fa-solid fa-check"></i>' +
+                '</button>';
+        }
+
+        return html;
+    }
+
+    document.addEventListener("click", async function (e) {
+        const btn = e.target.closest(".btn-update-status");
+        if (!btn) return;
+
+        const orderId = btn.dataset.id;
+        const statusName = btn.dataset.status;
+
+        if (statusName === "Đã hủy" && !confirm("Bạn chắc chắn muốn hủy đơn hàng này?")) {
+            return;
+        }
+
+        btn.disabled = true;
+
+        try {
+            const body = new URLSearchParams();
+            body.append("orderId", orderId);
+            body.append("statusName", statusName);
+
+            const res = await fetch("${pageContext.request.contextPath}/admin/orders/status", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                },
+                body: body.toString(),
+                credentials: "same-origin"
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.message);
+                btn.disabled = false;
+                return;
+            }
+
+            const row = document.querySelector('tr[data-order-id="' + orderId + '"]');
+            if (!row) return;
+
+            const statusCol = row.querySelector(".status-col");
+            const actionsBox = row.querySelector(".action-col .actions");
+
+            if (statusCol) {
+                statusCol.innerHTML = getStatusHtml(data.newStatus);
+            }
+
+            if (actionsBox) {
+                actionsBox.innerHTML = getActionHtml(orderId, data.newStatus);
+            }
+
+            alert(data.message);
+        } catch (e) {
+            alert("Có lỗi xảy ra khi cập nhật trạng thái");
+            btn.disabled = false;
+        }
+    });
 </script>
 </html>
