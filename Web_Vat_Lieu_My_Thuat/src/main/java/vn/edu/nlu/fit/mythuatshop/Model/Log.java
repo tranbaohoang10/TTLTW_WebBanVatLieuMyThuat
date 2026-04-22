@@ -10,7 +10,7 @@ public class Log {
     private String beforeData;
     private String afterData;
 
-    public Log() {
+    public Log(String label, int userId, java.sql.Timestamp timestamp, String location, String beforeDta, String afterDta) {
     }
 
     public Log(int id, String label, Timestamp time, String location, String beforeData, String afterData) {
