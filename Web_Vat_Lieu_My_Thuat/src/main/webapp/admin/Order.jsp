@@ -554,7 +554,7 @@
                     </thead>
                     <tbody>
                     <c:forEach var="o" items="${orders}" varStatus="st">
-                        <tr>
+                        <tr data-order-id="${o.id}">
                             <td>DH<fmt:formatNumber value="${o.id}" pattern="00"/></td>
                             <td><c:out value="${o.fullName}" default="-"/></td>
                             <td><c:out value="${o.phoneNumber}" default="-"/></td>
@@ -570,7 +570,7 @@
                             <td><c:out value="${o.productNames}" default="-"/></td>
                             <td><fmt:formatNumber value="${o.totalPrice}" type="number"/> VND</td>
 
-                            <td>
+                            <td class="status-col">
                                 <c:choose>
                                     <c:when test="${o.statusName == 'Đang xử lý'}">
                                         <span class="status pending">${o.statusName}</span>
@@ -595,26 +595,23 @@
                                     </a>
 
                                     <c:if test="${o.statusName == 'Đang xử lý'}">
-                                        <form action="${pageContext.request.contextPath}/admin/orders/status"
-                                              method="post" style="display:inline;">
-                                            <input type="hidden" name="orderId" value="${o.id}">
-                                            <input type="hidden" name="statusName" value="Đang vận chuyển">
-                                            <button class="btn btn-success btn-sm" type="submit"
-                                                    title="Chuyển sang đang vận chuyển">
-                                                <i class="fa-solid fa-truck"></i>
-                                            </button>
-                                        </form>
+                                        <button class="btn btn-success btn-sm btn-update-status"
+                                                type="button"
+                                                data-id="${o.id}"
+                                                data-status="Đang vận chuyển"
+                                                title="Chuyển sang đang vận chuyển">
+                                            <i class="fa-solid fa-truck"></i>
+                                        </button>
                                     </c:if>
 
                                     <c:if test="${o.statusName == 'Đang vận chuyển'}">
-                                        <form action="${pageContext.request.contextPath}/admin/orders/status"
-                                              method="post" style="display:inline;">
-                                            <input type="hidden" name="orderId" value="${o.id}">
-                                            <input type="hidden" name="statusName" value="Hoàn thành">
-                                            <button class="btn btn-success btn-sm" type="submit" title="Hoàn thành đơn">
-                                                <i class="fa-solid fa-check"></i>
-                                            </button>
-                                        </form>
+                                        <button class="btn btn-success btn-sm btn-update-status"
+                                                type="button"
+                                                data-id="${o.id}"
+                                                data-status="Hoàn thành"
+                                                title="Hoàn thành đơn">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
                                     </c:if>
 
                                     <c:if test="${o.statusName == 'Đang xử lý'}">
@@ -630,16 +627,13 @@
 
 
                                     <c:if test="${o.statusName == 'Đang xử lý'}">
-                                        <form action="${pageContext.request.contextPath}/admin/orders/status"
-                                              method="post" style="display:inline;"
-                                              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
-                                            <input type="hidden" name="orderId" value="${o.id}">
-                                            <input type="hidden" name="statusName" value="Đã hủy">
-                                            <button class="btn btn-danger btn-sm btn-delete" type="submit"
-                                                    title="Hủy đơn">
-                                                <i class="fa-solid fa-ban"></i>
-                                            </button>
-                                        </form>
+                                        <button class="btn btn-danger btn-sm btn-update-status"
+                                                type="button"
+                                                data-id="${o.id}"
+                                                data-status="Đã hủy"
+                                                title="Hủy đơn hàng">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
                                     </c:if>
 
                                 </div>
@@ -750,5 +744,4 @@
         }, 2600);
     })();
 </script>
-
 </html>
