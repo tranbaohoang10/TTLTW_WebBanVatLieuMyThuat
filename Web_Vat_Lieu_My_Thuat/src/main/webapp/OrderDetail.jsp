@@ -352,7 +352,7 @@
                                       method="post"
                                       style="margin:0;">
                                     <input type="hidden" name="productId" value="${item.productId}">
-                                    <input type="hidden" name="quantity" value="${item.quantity}">
+                                    <input type="hidden" name="quantity" value="1">
                                     <input type="hidden" name="redirectTo" value="cart">
                                     <button type="submit" class="od-btn od-btn-reorder">
                                         Đặt lại

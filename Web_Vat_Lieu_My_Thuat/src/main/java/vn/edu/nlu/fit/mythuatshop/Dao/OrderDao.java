@@ -264,30 +264,39 @@ public class OrderDao implements DaoInterface<Order> {
 
     public boolean cancelOrder(int userId, int orderId, String cancelReason) {
         return jdbi.inTransaction(handle -> {
-            Integer voucherId = handle.createQuery("""
-            SELECT voucherID
-            FROM Orders
-            WHERE ID = :oid
-              AND userID = :uid
-              AND orderStatusID = 1
+            var row = handle.createQuery("""
+            SELECT o.voucherID, o.paymentStatus, p.paymentName
+            FROM Orders o
+            JOIN Payments p ON p.ID = o.paymentID
+            WHERE o.ID = :oid
+              AND o.userID = :uid
+              AND o.orderStatusID = 1
         """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
-                    .mapTo(Integer.class)
+                    .map((rs, ctx) -> new Object[]{
+                            rs.getObject("voucherID"),
+                            rs.getString("paymentStatus"),
+                            rs.getString("paymentName")
+                    })
                     .findOne()
                     .orElse(null);
 
+            if (row == null) return false;
+
+            Integer voucherId = (Integer) row[0];
+            String paymentStatus = (String) row[1];
+            String paymentName = (String) row[2];
+
             int updated = handle.createUpdate("""
             UPDATE Orders
-            SET orderStatusID = 4,
-                cancelReason = :cancelReason
+            SET orderStatusID = 4
             WHERE ID = :oid
               AND userID = :uid
               AND orderStatusID = 1
         """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
-                    .bind("cancelReason", cancelReason)
                     .execute();
 
             if (updated != 1) return false;
@@ -302,15 +311,27 @@ public class OrderDao implements DaoInterface<Order> {
                     .bind("oid", orderId)
                     .execute();
 
+            boolean shouldReturnVoucher = false;
+
             if (voucherId != null) {
+                if ("COD".equalsIgnoreCase(paymentName)) {
+                    shouldReturnVoucher = true;
+                } else if ("VNPAY".equalsIgnoreCase(paymentName)
+                        && "Đã thanh toán".equalsIgnoreCase(paymentStatus)) {
+                    shouldReturnVoucher = true;
+                }
+            }
+
+            if (shouldReturnVoucher) {
                 handle.createUpdate("""
-                UPDATE Vouchers
-                SET quantityUsed = CASE
-                    WHEN quantityUsed > 0 THEN quantityUsed - 1
-                    ELSE 0
-                END
-                WHERE ID = :vid
-            """)
+        UPDATE Vouchers
+        SET quantityUsed = CASE
+                WHEN quantityUsed > 0 THEN quantityUsed - 1
+                ELSE 0
+            END,
+            quantity = quantity + 1
+        WHERE ID = :vid
+    """)
                         .bind("vid", voucherId)
                         .execute();
             }

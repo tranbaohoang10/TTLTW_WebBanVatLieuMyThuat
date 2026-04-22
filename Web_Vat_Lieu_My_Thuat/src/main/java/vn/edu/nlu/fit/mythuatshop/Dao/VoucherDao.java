@@ -28,12 +28,17 @@ public class VoucherDao {
     }
 
     public boolean increaseUsed(int voucherId) {
-        String sql = "UPDATE Vouchers " +
-                "SET quantityUsed = quantityUsed + 1, " +
-                "    quantity = quantity - 1 " +
-                "WHERE ID = :id " +
-                "  AND isActive = 1 " +
-                "  AND quantity > 0";
+        String sql = """
+        UPDATE Vouchers
+        SET quantityUsed = quantityUsed + 1,
+            quantity = CASE
+                WHEN quantity > 0 THEN quantity - 1
+                ELSE 0
+            END
+        WHERE ID = :id
+          AND isActive = 1
+          AND quantity > 0
+        """;
 
         int updated = jdbi.withHandle(h ->
                 h.createUpdate(sql)
