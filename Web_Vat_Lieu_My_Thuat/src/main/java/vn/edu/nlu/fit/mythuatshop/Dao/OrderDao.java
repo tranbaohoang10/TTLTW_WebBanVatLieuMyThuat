@@ -174,6 +174,11 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.email         AS email, " +
                         "       o.phoneNumber   AS phoneNumber, " +
                         "       o.address       AS address, " +
+                        "       o.deliveryDistrictId AS deliveryDistrictId, " +
+                        "       o.deliveryWardCode   AS deliveryWardCode, " +
+                        "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
+                        "       o.ghnOrderCode  AS ghnOrderCode, " +
+                        "       o.ghnStatus     AS ghnStatus, " +
                         "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                         "       o.totalPrice    AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
@@ -236,6 +241,11 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.email         AS email, " +
                 "       o.phoneNumber   AS phoneNumber, " +
                 "       o.address       AS address, " +
+                "       o.deliveryDistrictId AS deliveryDistrictId, " +
+                "       o.deliveryWardCode   AS deliveryWardCode, " +
+                "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
+                "       o.ghnOrderCode  AS ghnOrderCode, " +
+                "       o.ghnStatus     AS ghnStatus, " +
                 "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                 "       o.totalPrice    AS totalPrice, " +
                 "       o.paymentID     AS paymentId, " +
@@ -331,13 +341,15 @@ public class OrderDao implements DaoInterface<Order> {
                         o.address       AS address,
                         o.totalPrice    AS totalPrice,
                         o.paymentStatus AS paymentStatus,
+                         o.ghnOrderCode  AS ghnOrderCode,
+                        o.ghnStatus     AS ghnStatus,
                         os.statusName   AS statusName,
                         GROUP_CONCAT(p.name ORDER BY p.name SEPARATOR ', ') AS productNames
                     FROM Orders o
                     JOIN Order_Statuses os ON os.ID = o.orderStatusID
                     LEFT JOIN Order_Details od ON od.orderID = o.ID
                     LEFT JOIN Products p ON p.ID = od.productID
-                    GROUP BY o.ID, o.fullName, o.phoneNumber, o.createAt, o.address, o.totalPrice,o.paymentStatus, os.statusName
+                    GROUP BY o.ID, o.fullName, o.phoneNumber, o.createAt, o.address, o.totalPrice,o.paymentStatus, o.ghnOrderCode, o.ghnStatus, os.statusName
                     ORDER BY o.createAt DESC
                 """;
 
@@ -349,7 +361,9 @@ public class OrderDao implements DaoInterface<Order> {
                     SELECT o.ID AS id,
                            os.statusName AS statusName,
                            p.paymentName AS paymentName,
-                           o.paymentStatus AS paymentStatus
+                           o.paymentStatus AS paymentStatus,
+                                   o.ghnOrderCode AS ghnOrderCode,
+                                   o.ghnStatus AS ghnStatus
                     FROM Orders o
                     JOIN Order_Statuses os ON os.ID = o.orderStatusID
                     JOIN Payments p ON p.ID = o.paymentID
@@ -414,7 +428,13 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.email AS email, " +
                         "       o.phoneNumber   AS phoneNumber, " +
                         "       o.address AS address, " +
+                        "       o.deliveryProvinceId AS deliveryProvinceId, " +
+                        "       o.deliveryDistrictId AS deliveryDistrictId, " +
+                        "       o.deliveryWardCode AS deliveryWardCode, " +
+                        "       o.expectedDeliveryTime AS expectedDeliveryTime, " +
                         "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
+                        "       o.ghnOrderCode AS ghnOrderCode, " +
+                        "       o.ghnStatus AS ghnStatus, " +
                         "       o.totalPrice   AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +
@@ -436,6 +456,32 @@ public class OrderDao implements DaoInterface<Order> {
                         .findOne()
                         .orElse(null)
         );
+    }
+    public boolean updateGhnInfo(int orderId, String ghnOrderCode, String ghnStatus) {
+        String sql = """
+            UPDATE Orders
+            SET ghnOrderCode = :ghnOrderCode,
+                ghnStatus = :ghnStatus
+            WHERE ID = :id
+            """;
+
+        int n = jdbi.withHandle(h -> h.createUpdate(sql)
+                .bind("id", orderId)
+                .bind("ghnOrderCode", ghnOrderCode)
+                .bind("ghnStatus", ghnStatus)
+                .execute());
+
+        return n == 1;
+    }
+    public boolean updateGhnStatus(int orderId, String ghnStatus) {
+        String sql = "UPDATE Orders SET ghnStatus = :ghnStatus WHERE ID = :id";
+
+        int n = jdbi.withHandle(h -> h.createUpdate(sql)
+                .bind("id", orderId)
+                .bind("ghnStatus", ghnStatus)
+                .execute());
+
+        return n == 1;
     }
 
 
