@@ -334,8 +334,7 @@ public class GhnService {
         info.setClientOrderCode(orderNode.path("client_order_code").asText(""));
         info.setStatus(orderNode.path("status").asText(""));
 
-        info.setLeadtime(orderNode.path("expected_delivery_time").asText(""));
-
+        info.setLeadtime(orderNode.path("leadtime").asText(""));
         info.setToName(orderNode.path("to_name").asText(""));
         info.setToPhone(orderNode.path("to_phone").asText(""));
         info.setToAddress(orderNode.path("to_address").asText(""));
@@ -350,7 +349,7 @@ public class GhnService {
             for (JsonNode logNode : logArray) {
                 GhnTrackingLog log = new GhnTrackingLog();
 
-                log.setStatus(logNode.path("status_name").asText(""));
+                log.setStatus(logNode.path("status").asText(""));
 
                 log.setUpdatedDate(logNode.path("updated_date").asText(""));
 
