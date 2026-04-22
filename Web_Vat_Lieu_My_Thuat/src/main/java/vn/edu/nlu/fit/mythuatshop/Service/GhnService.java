@@ -2,6 +2,11 @@ package vn.edu.nlu.fit.mythuatshop.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import vn.edu.nlu.fit.mythuatshop.Model.GhnCreateResult;
+import vn.edu.nlu.fit.mythuatshop.Model.Order;
+import vn.edu.nlu.fit.mythuatshop.Model.OrderItem;
 import vn.edu.nlu.fit.mythuatshop.Util.GhnConfig;
 
 import java.net.URI;
@@ -11,6 +16,7 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class GhnService {
     private final GhnConfig cfg = GhnConfig.load();
@@ -181,6 +187,112 @@ public class GhnService {
         return Instant.ofEpochSecond(expectedDeliveryTime)
                 .atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+    public GhnCreateResult createShippingOrder(Order order, List<OrderItem> items) throws Exception {
+        if (order == null) {
+            throw new IllegalArgumentException("Order không được null");
+        }
+        if (order.getDeliveryDistrictId() == null || order.getDeliveryWardCode() == null || order.getDeliveryWardCode().isBlank()) {
+            throw new IllegalArgumentException("Thiếu thông tin khu vực giao hàng");
+        }
+        if (items == null || items.isEmpty()) {
+            throw new IllegalArgumentException("Đơn hàng không có sản phẩm");
+        }
+
+        int serviceId = getFirstServiceId(order.getDeliveryDistrictId());
+        if (serviceId <= 0) {
+            throw new RuntimeException("Không lấy được service_id từ GHN");
+        }
+
+        String url = cfg.baseUrl + "/shiip/public-api/v2/shipping-order/create";
+
+        ObjectNode body = om.createObjectNode();
+        body.put("payment_type_id", 1);
+        body.put("note", safe(order.getNote()));
+        body.put("required_note", "KHONGCHOXEMHANG");
+        body.put("to_name", safe(order.getFullName()));
+        body.put("to_phone", safe(order.getPhoneNumber()));
+        body.put("to_address", safe(order.getAddress()));
+        body.put("to_ward_code", safe(order.getDeliveryWardCode()));
+        body.put("to_district_id", order.getDeliveryDistrictId());
+        body.put("cod_amount", getCodAmount(order));
+        body.put("content", buildContent(items));
+        body.put("weight", cfg.weight);
+        body.put("length", cfg.length);
+        body.put("width", cfg.width);
+        body.put("height", cfg.height);
+        body.put("insurance_value", (int) Math.round(order.getTotalPrice()));
+        body.put("service_id", serviceId);
+        body.put("client_order_code", "DH" + order.getId());
+
+        ArrayNode itemArray = body.putArray("items");
+        for (OrderItem item : items) {
+            ObjectNode itemNode = itemArray.addObject();
+            itemNode.put("name", safe(item.getName()));
+            itemNode.put("quantity", item.getQuantity());
+            itemNode.put("price", (int) Math.round(item.getPrice()));
+            itemNode.put("length", cfg.length);
+            itemNode.put("width", cfg.width);
+            itemNode.put("height", cfg.height);
+            itemNode.put("weight", cfg.weight);
+        }
+
+        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+                .header("Content-Type", "application/json")
+                .header("Token", cfg.token)
+                .header("ShopId", String.valueOf(cfg.shopId))
+                .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
+                .build();
+
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        if (resp.statusCode() != 200) {
+            throw new RuntimeException("GHN create error: HTTP " + resp.statusCode() + " - " + resp.body());
+        }
+
+        JsonNode root = om.readTree(resp.body());
+        int code = root.path("code").asInt(-1);
+        if (code != 200) {
+            throw new RuntimeException("GHN create error: " + resp.body());
+        }
+
+        JsonNode data = root.path("data");
+
+        GhnCreateResult result = new GhnCreateResult();
+        result.setOrderCode(data.path("order_code").asText(""));
+        result.setClientOrderCode(data.path("client_order_code").asText(""));
+        long expectedTime = data.path("expected_delivery_time").asLong(0);
+        if (expectedTime > 0) {
+            result.setExpectedDeliveryTime(expectedTime);
+            result.setExpectedDeliveryDateText(formatExpectedDeliveryDate(expectedTime));
+        }
+
+        return result;
+    }
+
+    private int getCodAmount(Order order) {
+        if (order == null) return 0;
+        if ("Đã thanh toán".equalsIgnoreCase(order.getPaymentStatus())) {
+            return 0;
+        }
+        return (int) Math.round(order.getTotalPrice());
+    }
+
+    private String buildContent(List<OrderItem> items) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < items.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(items.get(i).getName());
+        }
+        String content = sb.toString().trim();
+        if (content.isEmpty()) {
+            return "Đơn hàng mỹ thuật";
+        }
+        return content.length() > 200 ? content.substring(0, 200) : content;
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 
 
