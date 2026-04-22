@@ -8,7 +8,11 @@ import vn.edu.nlu.fit.mythuatshop.Model.GhnCreateResult;
 import vn.edu.nlu.fit.mythuatshop.Model.Order;
 import vn.edu.nlu.fit.mythuatshop.Model.OrderItem;
 import vn.edu.nlu.fit.mythuatshop.Util.GhnConfig;
+import vn.edu.nlu.fit.mythuatshop.Model.GhnTrackingInfo;
+import vn.edu.nlu.fit.mythuatshop.Model.GhnTrackingLog;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -293,6 +297,69 @@ public class GhnService {
 
     private String safe(String value) {
         return value == null ? "" : value.trim();
+    }
+    public GhnTrackingInfo getTrackingDetail(String orderCode) throws Exception {
+        if (orderCode == null || orderCode.isBlank()) {
+            throw new IllegalArgumentException("orderCode không được để trống");
+        }
+
+        String url = cfg.baseUrl + "/shiip/public-api/v2/shipping-order/detail";
+        String body = "{"
+                + "\"order_code\":\"" + orderCode + "\""
+                + "}";
+
+        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+                .header("Content-Type", "application/json")
+                .header("Token", cfg.token)
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+        if (resp.statusCode() != 200) {
+            throw new RuntimeException("GHN detail error: HTTP " + resp.statusCode() + " - " + resp.body());
+        }
+
+        JsonNode root = om.readTree(resp.body());
+        int code = root.path("code").asInt(-1);
+        if (code != 200) {
+            throw new RuntimeException("GHN detail error: " + resp.body());
+        }
+
+        JsonNode data = root.path("data");
+        JsonNode orderNode = data.isArray() && data.size() > 0 ? data.get(0) : data;
+
+        GhnTrackingInfo info = new GhnTrackingInfo();
+        info.setOrderCode(orderNode.path("order_code").asText(""));
+        info.setClientOrderCode(orderNode.path("client_order_code").asText(""));
+        info.setStatus(orderNode.path("status").asText(""));
+
+        info.setLeadtime(orderNode.path("expected_delivery_time").asText(""));
+
+        info.setToName(orderNode.path("to_name").asText(""));
+        info.setToPhone(orderNode.path("to_phone").asText(""));
+        info.setToAddress(orderNode.path("to_address").asText(""));
+        info.setFromName(orderNode.path("from_name").asText(""));
+        info.setFromPhone(orderNode.path("from_phone").asText(""));
+        info.setFromAddress(orderNode.path("from_address").asText(""));
+        info.setNote(orderNode.path("note").asText(""));
+
+        List<GhnTrackingLog> logs = new ArrayList<>();
+        JsonNode logArray = orderNode.path("log");
+        if (logArray.isArray()) {
+            for (JsonNode logNode : logArray) {
+                GhnTrackingLog log = new GhnTrackingLog();
+
+                log.setStatus(logNode.path("status_name").asText(""));
+
+                log.setUpdatedDate(logNode.path("updated_date").asText(""));
+
+                logs.add(log);
+            }
+        }
+        info.setLogs(logs);
+
+        return info;
     }
 
 

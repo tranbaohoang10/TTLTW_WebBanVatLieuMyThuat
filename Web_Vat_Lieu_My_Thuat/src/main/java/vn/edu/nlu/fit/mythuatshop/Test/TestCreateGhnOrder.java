@@ -1,4 +1,4 @@
-package vn.edu.nlu.fit.mythuatshop.Controller;
+package vn.edu.nlu.fit.mythuatshop.Test;
 
 
 import vn.edu.nlu.fit.mythuatshop.Model.GhnCreateResult;
