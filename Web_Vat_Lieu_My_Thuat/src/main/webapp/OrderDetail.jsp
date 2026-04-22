@@ -338,17 +338,21 @@
                         <p class="od-name">${item.name}</p>
                         <p class="od-qty">Số lượng: ${item.quantity}</p>
 
-                        <c:if test="${order.orderStatusId == 3}">
+                        <c:if test="${order.orderStatusId == 3 || order.orderStatusId == 4}">
                             <div class="od-review-wrap">
-                                <a class="od-btn od-btn-review"
-                                   href="${pageContext.request.contextPath}/Product_ReviewsController?id=${item.productId}">
-                                    Đánh giá
-                                </a>
+
+                                <c:if test="${order.orderStatusId == 3}">
+                                    <a class="od-btn od-btn-review"
+                                       href="${pageContext.request.contextPath}/Product_ReviewsController?id=${item.productId}">
+                                        Đánh giá
+                                    </a>
+                                </c:if>
+
                                 <form action="${pageContext.request.contextPath}/AddToCart"
                                       method="post"
-                                      style="margin: 0" class="">
+                                      style="margin:0;">
                                     <input type="hidden" name="productId" value="${item.productId}">
-                                    <input type="hidden" name="quantity" value="1">
+                                    <input type="hidden" name="quantity" value="${item.quantity}">
                                     <input type="hidden" name="redirectTo" value="cart">
                                     <button type="submit" class="od-btn od-btn-reorder">
                                         Đặt lại
