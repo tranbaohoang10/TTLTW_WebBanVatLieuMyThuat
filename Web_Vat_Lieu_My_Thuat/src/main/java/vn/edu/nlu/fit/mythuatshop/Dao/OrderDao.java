@@ -445,6 +445,7 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.shippingFee   AS shippingFee, " +
                         "       o.createAt      AS createAt, " +
                         "       o.note   AS note, " +
+                        "       o.cancelReason AS cancelReason, " +
                         "       os.statusName   AS statusName " +
                         "FROM Orders o " +
                         "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
