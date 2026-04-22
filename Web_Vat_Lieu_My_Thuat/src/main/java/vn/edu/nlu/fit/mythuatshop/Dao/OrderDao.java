@@ -243,7 +243,6 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.address       AS address, " +
                 "       o.deliveryDistrictId AS deliveryDistrictId, " +
                 "       o.deliveryWardCode   AS deliveryWardCode, " +
-                "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                 "       o.ghnOrderCode  AS ghnOrderCode, " +
                 "       o.ghnStatus     AS ghnStatus, " +
                 "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +

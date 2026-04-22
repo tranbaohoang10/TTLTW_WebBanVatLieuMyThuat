@@ -362,6 +362,23 @@ public class OrderService {
 
         return order;
     }
+    public GhnTrackingInfo getTrackingForUser(int userId, int orderId) {
+        try {
+            Order order = orderDao.findOrderHeaderByIdAndUser(orderId, userId);
+            if (order == null) {
+                return null;
+            }
+
+            if (order.getGhnOrderCode() == null || order.getGhnOrderCode().isBlank()) {
+                return null;
+            }
+
+            return ghnService.getTrackingDetail(order.getGhnOrderCode());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 
 }
