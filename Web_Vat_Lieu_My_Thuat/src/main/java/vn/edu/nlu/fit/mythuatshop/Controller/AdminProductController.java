@@ -10,6 +10,7 @@ import jakarta.servlet.http.Part;
 import vn.edu.nlu.fit.mythuatshop.Dao.ProductDao;
 import vn.edu.nlu.fit.mythuatshop.Dao.SpecificationsDao;
 import vn.edu.nlu.fit.mythuatshop.Dao.SubImagesDao;
+import vn.edu.nlu.fit.mythuatshop.Model.Category;
 import vn.edu.nlu.fit.mythuatshop.Model.Product;
 import vn.edu.nlu.fit.mythuatshop.Model.Specification;
 import vn.edu.nlu.fit.mythuatshop.Model.Subimages;
@@ -47,30 +48,38 @@ public class AdminProductController extends HttpServlet {
     }
 
     @Override
+
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
         List<Product> products = productService.getAllProducts();
-        request.setAttribute("products", products);
-        request.setAttribute("categories", categoryService.getAllcategories());
+        List<Category> categories = categoryService.getAllcategories();
 
+        Map<Integer, String> categoryMap = buildCategoryMap(categories);
+
+        List<Integer> productIds = products.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+
+        Map<Integer, List<Subimages>> subImagesGroupMap = subImagesDao.findByProductIds(productIds);
         Map<Integer, String> subImagesMap = new HashMap<>();
-        Map<Integer, Specification> specificationMap = new HashMap<>();
 
         for (Product product : products) {
-            List<Subimages> subimagesList = subImagesDao.findByProductId(product.getId());
+            List<Subimages> subimagesList = subImagesGroupMap.getOrDefault(product.getId(), Collections.emptyList());
+
             String subImages = subimagesList.stream()
                     .map(Subimages::getImage)
                     .collect(Collectors.joining(","));
-            subImagesMap.put(product.getId(), subImages);
 
-            List<Specification> specificationList = specificationsDao.findByProductId(product.getId());
-            if (specificationList != null && !specificationList.isEmpty()) {
-                specificationMap.put(product.getId(), specificationList.get(0));
-            }
+            subImagesMap.put(product.getId(), subImages);
         }
 
+        Map<Integer, Specification> specificationMap = specificationsDao.findMapByProductIds(productIds);
+
+        request.setAttribute("products", products);
+        request.setAttribute("categories", categories);
+        request.setAttribute("categoryMap", categoryMap);
         request.setAttribute("subImagesMap", subImagesMap);
         request.setAttribute("specMap", specificationMap);
 
@@ -296,7 +305,15 @@ public class AdminProductController extends HttpServlet {
             return defaultValue;
         }
     }
-
+    private Map<Integer, String> buildCategoryMap(List<Category> categories) {
+        Map<Integer, String> categoryMap = new HashMap<>();
+        if (categories != null) {
+            for (Category category : categories) {
+                categoryMap.put(category.getId(), category.getCategoryName());
+            }
+        }
+        return categoryMap;
+    }
     private double parseDouble(String value, double defaultValue) {
         try {
             return Double.parseDouble(value);
