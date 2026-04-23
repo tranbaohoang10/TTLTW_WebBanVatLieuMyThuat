@@ -174,7 +174,11 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.email         AS email, " +
                         "       o.phoneNumber   AS phoneNumber, " +
                         "       o.address       AS address, " +
+                        "       o.deliveryDistrictId AS deliveryDistrictId, " +
+                        "       o.deliveryWardCode   AS deliveryWardCode, " +
                         "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
+                        "       o.ghnOrderCode  AS ghnOrderCode, " +
+                        "       o.ghnStatus     AS ghnStatus, " +
                         "       o.totalPrice    AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +
@@ -236,6 +240,10 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.email         AS email, " +
                 "       o.phoneNumber   AS phoneNumber, " +
                 "       o.address       AS address, " +
+                "       o.deliveryDistrictId AS deliveryDistrictId, " +
+                "       o.deliveryWardCode   AS deliveryWardCode, " +
+                "       o.ghnOrderCode  AS ghnOrderCode, " +
+                "       o.ghnStatus     AS ghnStatus, " +
                 "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                 "       o.totalPrice    AS totalPrice, " +
                 "       o.paymentID     AS paymentId, " +
@@ -264,30 +272,39 @@ public class OrderDao implements DaoInterface<Order> {
 
     public boolean cancelOrder(int userId, int orderId, String cancelReason) {
         return jdbi.inTransaction(handle -> {
-            Integer voucherId = handle.createQuery("""
-            SELECT voucherID
-            FROM Orders
-            WHERE ID = :oid
-              AND userID = :uid
-              AND orderStatusID = 1
+            var row = handle.createQuery("""
+            SELECT o.voucherID, o.paymentStatus, p.paymentName
+            FROM Orders o
+            JOIN Payments p ON p.ID = o.paymentID
+            WHERE o.ID = :oid
+              AND o.userID = :uid
+              AND o.orderStatusID = 1
         """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
-                    .mapTo(Integer.class)
+                    .map((rs, ctx) -> new Object[]{
+                            rs.getObject("voucherID"),
+                            rs.getString("paymentStatus"),
+                            rs.getString("paymentName")
+                    })
                     .findOne()
                     .orElse(null);
 
+            if (row == null) return false;
+
+            Integer voucherId = (Integer) row[0];
+            String paymentStatus = (String) row[1];
+            String paymentName = (String) row[2];
+
             int updated = handle.createUpdate("""
             UPDATE Orders
-            SET orderStatusID = 4,
-                cancelReason = :cancelReason
+            SET orderStatusID = 4
             WHERE ID = :oid
               AND userID = :uid
               AND orderStatusID = 1
         """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
-                    .bind("cancelReason", cancelReason)
                     .execute();
 
             if (updated != 1) return false;
@@ -302,15 +319,27 @@ public class OrderDao implements DaoInterface<Order> {
                     .bind("oid", orderId)
                     .execute();
 
+            boolean shouldReturnVoucher = false;
+
             if (voucherId != null) {
+                if ("COD".equalsIgnoreCase(paymentName)) {
+                    shouldReturnVoucher = true;
+                } else if ("VNPAY".equalsIgnoreCase(paymentName)
+                        && "Đã thanh toán".equalsIgnoreCase(paymentStatus)) {
+                    shouldReturnVoucher = true;
+                }
+            }
+
+            if (shouldReturnVoucher) {
                 handle.createUpdate("""
-                UPDATE Vouchers
-                SET quantityUsed = CASE
-                    WHEN quantityUsed > 0 THEN quantityUsed - 1
-                    ELSE 0
-                END
-                WHERE ID = :vid
-            """)
+        UPDATE Vouchers
+        SET quantityUsed = CASE
+                WHEN quantityUsed > 0 THEN quantityUsed - 1
+                ELSE 0
+            END,
+            quantity = quantity + 1
+        WHERE ID = :vid
+    """)
                         .bind("vid", voucherId)
                         .execute();
             }
@@ -331,13 +360,15 @@ public class OrderDao implements DaoInterface<Order> {
                         o.address       AS address,
                         o.totalPrice    AS totalPrice,
                         o.paymentStatus AS paymentStatus,
+                         o.ghnOrderCode  AS ghnOrderCode,
+                        o.ghnStatus     AS ghnStatus,
                         os.statusName   AS statusName,
                         GROUP_CONCAT(p.name ORDER BY p.name SEPARATOR ', ') AS productNames
                     FROM Orders o
                     JOIN Order_Statuses os ON os.ID = o.orderStatusID
                     LEFT JOIN Order_Details od ON od.orderID = o.ID
                     LEFT JOIN Products p ON p.ID = od.productID
-                    GROUP BY o.ID, o.fullName, o.phoneNumber, o.createAt, o.address, o.totalPrice,o.paymentStatus, os.statusName
+                    GROUP BY o.ID, o.fullName, o.phoneNumber, o.createAt, o.address, o.totalPrice,o.paymentStatus, o.ghnOrderCode, o.ghnStatus, os.statusName
                     ORDER BY o.createAt DESC
                 """;
 
@@ -349,7 +380,9 @@ public class OrderDao implements DaoInterface<Order> {
                     SELECT o.ID AS id,
                            os.statusName AS statusName,
                            p.paymentName AS paymentName,
-                           o.paymentStatus AS paymentStatus
+                           o.paymentStatus AS paymentStatus,
+                                   o.ghnOrderCode AS ghnOrderCode,
+                                   o.ghnStatus AS ghnStatus
                     FROM Orders o
                     JOIN Order_Statuses os ON os.ID = o.orderStatusID
                     JOIN Payments p ON p.ID = o.paymentID
@@ -414,7 +447,13 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.email AS email, " +
                         "       o.phoneNumber   AS phoneNumber, " +
                         "       o.address AS address, " +
+                        "       o.deliveryProvinceId AS deliveryProvinceId, " +
+                        "       o.deliveryDistrictId AS deliveryDistrictId, " +
+                        "       o.deliveryWardCode AS deliveryWardCode, " +
+                        "       o.expectedDeliveryTime AS expectedDeliveryTime, " +
                         "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
+                        "       o.ghnOrderCode AS ghnOrderCode, " +
+                        "       o.ghnStatus AS ghnStatus, " +
                         "       o.totalPrice   AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +
@@ -424,6 +463,7 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.shippingFee   AS shippingFee, " +
                         "       o.createAt      AS createAt, " +
                         "       o.note   AS note, " +
+                        "       o.cancelReason AS cancelReason, " +
                         "       os.statusName   AS statusName " +
                         "FROM Orders o " +
                         "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
@@ -436,6 +476,32 @@ public class OrderDao implements DaoInterface<Order> {
                         .findOne()
                         .orElse(null)
         );
+    }
+    public boolean updateGhnInfo(int orderId, String ghnOrderCode, String ghnStatus) {
+        String sql = """
+            UPDATE Orders
+            SET ghnOrderCode = :ghnOrderCode,
+                ghnStatus = :ghnStatus
+            WHERE ID = :id
+            """;
+
+        int n = jdbi.withHandle(h -> h.createUpdate(sql)
+                .bind("id", orderId)
+                .bind("ghnOrderCode", ghnOrderCode)
+                .bind("ghnStatus", ghnStatus)
+                .execute());
+
+        return n == 1;
+    }
+    public boolean updateGhnStatus(int orderId, String ghnStatus) {
+        String sql = "UPDATE Orders SET ghnStatus = :ghnStatus WHERE ID = :id";
+
+        int n = jdbi.withHandle(h -> h.createUpdate(sql)
+                .bind("id", orderId)
+                .bind("ghnStatus", ghnStatus)
+                .execute());
+
+        return n == 1;
     }
 
 

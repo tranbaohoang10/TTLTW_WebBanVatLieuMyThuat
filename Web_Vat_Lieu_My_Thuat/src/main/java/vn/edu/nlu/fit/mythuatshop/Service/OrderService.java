@@ -14,11 +14,12 @@ public class OrderService {
     private final OrderDao orderDao;
     private final PaymentDao paymentDao;
     private final OrderStatusDao orderStatusDao;
-
+    private final GhnService ghnService;
     public OrderService() {
         this.orderDao = new OrderDao();
         this.paymentDao = new PaymentDao();
         this.orderStatusDao = new OrderStatusDao();
+        this.ghnService = new GhnService();
 
     }
 
@@ -289,16 +290,13 @@ public class OrderService {
         String payName = o.getPaymentName();
         String payStatus = o.getPaymentStatus();
 
-        // 1) Khóa sửa nếu đã kết thúc
         if ("Hoàn thành".equalsIgnoreCase(current) || "Đã hủy".equalsIgnoreCase(current)) {
             return false;
         }
 
-        // 2) Rule thanh toán
         boolean isVnpay = "VNPAY".equalsIgnoreCase(payName);
 
         if (isVnpay) {
-            // chưa thanh toán hoặc thất bại thì không cho giao/hoàn thành
             if (!"Đã thanh toán".equalsIgnoreCase(payStatus)) {
                 if ("Đang vận chuyển".equalsIgnoreCase(newStatusName) || "Hoàn thành".equalsIgnoreCase(newStatusName)) {
                     return false;
@@ -306,7 +304,6 @@ public class OrderService {
             }
         }
 
-        // 3) Rule chuyển trạng thái tối thiểu
         boolean allowed =
                 ("Đang xử lý".equalsIgnoreCase(current) &&
                         ("Đang vận chuyển".equalsIgnoreCase(newStatusName) || "Đã hủy".equalsIgnoreCase(newStatusName)))
@@ -315,12 +312,35 @@ public class OrderService {
                                 "Hoàn thành".equalsIgnoreCase(newStatusName));
 
         if (!allowed) return false;
+        if ("Đang vận chuyển".equalsIgnoreCase(newStatusName)) {
+            Order fullOrder = getOrderDetailForAdmin(orderId);
+            if (fullOrder == null) {
+                return false;
+            }
 
-        // 4) Update orderStatus
+            try {
+                if (fullOrder.getGhnOrderCode() == null || fullOrder.getGhnOrderCode().isBlank()) {
+                    GhnCreateResult result = ghnService.createShippingOrder(fullOrder, fullOrder.getViewItems());
+
+                    if (result == null || result.getOrderCode() == null || result.getOrderCode().isBlank()) {
+                        return false;
+                    }
+
+
+                    boolean saved = orderDao.updateGhnInfo(orderId, result.getOrderCode(), "created");
+                    if (!saved) {
+                        return false;
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
         boolean ok = orderDao.updateOrderStatusByName(orderId, newStatusName);
         if (!ok) return false;
 
-        // 5) Nếu COD và hoàn thành => set paymentStatus = Đã thanh toán
         if ("COD".equalsIgnoreCase(payName) && "Hoàn thành".equalsIgnoreCase(newStatusName)) {
             orderDao.updatePaymentStatus(orderId, "Đã thanh toán");
         }
@@ -341,6 +361,23 @@ public class OrderService {
         order.setViewItems(items);
 
         return order;
+    }
+    public GhnTrackingInfo getTrackingForUser(int userId, int orderId) {
+        try {
+            Order order = orderDao.findOrderHeaderByIdAndUser(orderId, userId);
+            if (order == null) {
+                return null;
+            }
+
+            if (order.getGhnOrderCode() == null || order.getGhnOrderCode().isBlank()) {
+                return null;
+            }
+
+            return ghnService.getTrackingDetail(order.getGhnOrderCode());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 

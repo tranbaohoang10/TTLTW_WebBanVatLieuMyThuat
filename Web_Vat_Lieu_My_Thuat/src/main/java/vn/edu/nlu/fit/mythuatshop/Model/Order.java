@@ -32,7 +32,8 @@ public class Order implements Serializable {
     private Long expectedDeliveryTime;
     private String expectedDeliveryDateText;
     private String cancelReason;
-
+    private String ghnOrderCode;
+    private String ghnStatus;
     public Order() {
     }
 
@@ -51,7 +52,21 @@ public class Order implements Serializable {
     public void setExpectedDeliveryDateText(String expectedDeliveryDateText) {
         this.expectedDeliveryDateText = expectedDeliveryDateText;
     }
+    public String getGhnOrderCode() {
+        return ghnOrderCode;
+    }
 
+    public void setGhnOrderCode(String ghnOrderCode) {
+        this.ghnOrderCode = ghnOrderCode;
+    }
+
+    public String getGhnStatus() {
+        return ghnStatus;
+    }
+
+    public void setGhnStatus(String ghnStatus) {
+        this.ghnStatus = ghnStatus;
+    }
     public Long getExpectedDeliveryTime() {
         return expectedDeliveryTime;
     }

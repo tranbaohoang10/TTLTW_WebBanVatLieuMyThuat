@@ -18,7 +18,8 @@ public class ProductDao {
     public List<Product> findAll() {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products";
+                "FROM Products "+
+                "ORDER BY id DESC";
         return jdbi.withHandle(h -> h.createQuery(sql).mapToBean(Product.class).list());
     }
 

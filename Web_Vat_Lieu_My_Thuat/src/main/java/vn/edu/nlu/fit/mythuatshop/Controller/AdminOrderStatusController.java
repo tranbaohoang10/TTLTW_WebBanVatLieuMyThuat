@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import vn.edu.nlu.fit.mythuatshop.Model.Order;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 import vn.edu.nlu.fit.mythuatshop.Service.OrderService;
@@ -23,28 +24,54 @@ public class AdminOrderStatusController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json; charset=UTF-8");
 
-        int orderId = Integer.parseInt(req.getParameter("orderId"));
-        String newStatus = req.getParameter("statusName");
+        boolean success = false;
+        String message = "Cập nhật trạng thái thất bại";
+        String newStatus = "";
 
-        String beforeStatus = req.getParameter("currentStatus");
-        boolean ok = orderService.adminUpdateOrderStatus(orderId, newStatus);
-        if (ok) {
-            Integer userId = getCurrentUserId(req);
-            if (userId != null) {
-                logService.log(
-                        "Cập nhật trạng thái đơn hàng",
-                        userId,
-                        "AdminOrderStatusController#updateStatus",
-                        beforeStatus,
-                        newStatus
-                );
+        try {
+            int orderId = Integer.parseInt(req.getParameter("orderId"));
+            newStatus = req.getParameter("statusName");
+
+            String beforeStatus = "";
+            Order oldOrder = orderService.getOrderDetailForAdmin(orderId);
+            if (oldOrder != null && oldOrder.getStatusName() != null) {
+                beforeStatus = oldOrder.getStatusName();
             }
+
+            success = orderService.adminUpdateOrderStatus(orderId, newStatus);
+
+            if (success) {
+                Integer userId = getCurrentUserId(req);
+                if (userId != null) {
+                    logService.log(
+                            "Cập nhật trạng thái đơn hàng",
+                            userId,
+                            "AdminOrderStatusController#updateStatus",
+                            beforeStatus,
+                            newStatus
+                    );
+                }
+                message = "Cập nhật trạng thái thành công";
+            } else {
+                message = "Không thể chuyển trạng thái đơn hàng";
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = "Có lỗi xảy ra khi cập nhật trạng thái";
         }
 
-        String msg = ok ? "update_ok" : "update_fail";
-        resp.sendRedirect(req.getContextPath() + "/admin/orders?msg=" + msg);
+        String json = "{"
+                + "\"success\":" + success + ","
+                + "\"message\":\"" + message + "\","
+                + "\"newStatus\":\"" + newStatus + "\""
+                + "}";
+
+        resp.getWriter().write(json);
     }
+
     private Integer getCurrentUserId(HttpServletRequest request) {
         Object obj = request.getSession().getAttribute("currentUser");
         if (obj instanceof Users) {

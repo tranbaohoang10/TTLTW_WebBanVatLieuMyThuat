@@ -4,7 +4,10 @@ import org.jdbi.v3.core.Jdbi;
 import vn.edu.nlu.fit.mythuatshop.Model.Category;
 import vn.edu.nlu.fit.mythuatshop.Model.Specification;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SpecificationsDao {
     public final Jdbi jdbi;
@@ -27,6 +30,28 @@ public class SpecificationsDao {
                         .mapToBean(Specification.class)
                         .list()
         );
+    }
+    public Map<Integer, Specification> findMapByProductIds(List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String sql = "SELECT id, productID, Size, Standard, MadeIn, Warning " +
+                "FROM specifications " +
+                "WHERE productID IN (<productIds>)";
+
+        List<Specification> rows = jdbi.withHandle(h ->
+                h.createQuery(sql)
+                        .bindList("productIds", productIds)
+                        .mapToBean(Specification.class)
+                        .list()
+        );
+
+        Map<Integer, Specification> result = new HashMap<>();
+        for (Specification row : rows) {
+            result.putIfAbsent(row.getProductID(), row);
+        }
+        return result;
     }
     public int upsert(int productId, String size, String standard, String madeIn, String warning) {
         // nếu có thì update
