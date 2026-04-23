@@ -253,6 +253,38 @@
             background: #15803d;
             cursor: pointer;
         }
+        .tracking-box {
+            margin-top: 16px;
+        }
+
+        .btn-tracking {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #0d6efd;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        .btn-tracking:hover {
+            background: #0b5ed7;
+            color: #fff;
+        }
+
+        .tracking-code {
+            margin-top: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tracking-empty {
+            display: inline-block;
+            padding: 8px 12px;
+            background: #f1f1f1;
+            color: #666;
+            border-radius: 6px;
+            font-size: 14px;
+        }
     </style>
 </head>
 
@@ -313,6 +345,23 @@
                 <c:if test="${not empty order.note}">
                     <p><b>Ghi chú:</b> ${order.note}</p>
                 </c:if>
+            </div>
+            <div class="tracking-box">
+                <c:choose>
+                    <c:when test="${not empty order.ghnOrderCode}">
+                        <a href="${pageContext.request.contextPath}/order-tracking?id=${order.id}" class="btn-tracking">
+                            Xem vận đơn
+                        </a>
+                        <div class="tracking-code">
+                            Mã vận đơn: ${order.ghnOrderCode}
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="tracking-empty">
+                            Chưa có vận đơn
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
 
             <div class="order-items-title">Sản phẩm</div>

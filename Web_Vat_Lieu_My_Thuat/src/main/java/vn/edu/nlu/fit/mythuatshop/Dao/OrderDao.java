@@ -179,7 +179,6 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                         "       o.ghnOrderCode  AS ghnOrderCode, " +
                         "       o.ghnStatus     AS ghnStatus, " +
-                        "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                         "       o.totalPrice    AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +

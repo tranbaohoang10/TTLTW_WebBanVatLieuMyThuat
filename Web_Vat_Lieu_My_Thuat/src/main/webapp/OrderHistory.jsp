@@ -460,7 +460,7 @@
                         <c:forEach var="order" items="${orders}">
                             <div class="order-card">
                                 <div class="order-header">
-                                    <span>Mã đơn: #DH0${order.id}</span>
+                                    <span>Mã đơn: #DH${order.id}</span>
 
                                     <c:choose>
                                         <c:when test="${order.orderStatusId == 1}">
