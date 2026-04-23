@@ -188,17 +188,13 @@
               <td class="col-thumb">
                 <c:choose>
                   <c:when test="${not empty p.thumbnail}">
-                    <img class="thumb" src="${thumbUrl}" alt="thumbnail">
+                    <img class="thumb" src="${thumbUrl}" alt="thumbnail" loading="lazy">
                   </c:when>
                   <c:otherwise>-</c:otherwise>
                 </c:choose>
               </td>
 
-              <td>
-                <c:forEach var="c" items="${categories}">
-                  <c:if test="${c.id == p.categoryId}">${c.categoryName}</c:if>
-                </c:forEach>
-              </td>
+              <td>${categoryMap[p.categoryId]}</td>
 
               <td>${p.price}</td>
               <td>${p.createAt}</td>
@@ -225,10 +221,10 @@
                         data-brand="${p.brand}"
                         data-thumbnail="${thumbUrl}"
                         data-subimages="${subImagesMap[p.id]}"
-                        data-size="${specMap[p.id].size}"
-                        data-standard="${specMap[p.id].standard}"
-                        data-madein="${specMap[p.id].madeIn}"
-                        data-warning="${specMap[p.id].warning}">
+                        data-size="${empty specMap[p.id] ? '' : specMap[p.id].size}"
+                        data-standard="${empty specMap[p.id] ? '' : specMap[p.id].standard}"
+                        data-madein="${empty specMap[p.id] ? '' : specMap[p.id].madeIn}"
+                        data-warning="${empty specMap[p.id] ? '' : specMap[p.id].warning}">
                   <i class="fa-solid fa-pen-to-square"></i>
                 </button>
 
@@ -348,16 +344,16 @@
   </div>
 </div>
 
-<<script>
-  // ====== DATATABLE ======
+<script>
   $(function () {
     const viUrl = "https://cdn.datatables.net/plug-ins/1.13.8/i18n/vi.json";
     $("#productTable").DataTable({
-      pageLength: 5,
+      pageLength: 10,
       lengthChange: false,
       ordering: true,
       searching: true,
       info: false,
+      deferRender: true,
       language: { url: viUrl },
       columnDefs: [{ orderable: false, targets: [3, 9] }]
     });
