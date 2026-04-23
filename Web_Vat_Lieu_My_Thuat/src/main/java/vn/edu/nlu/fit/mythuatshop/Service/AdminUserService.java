@@ -122,4 +122,8 @@ public class AdminUserService {
     public boolean unlockUser(int id) {
         return userDao.setActive(id, 1) > 0;
     }
+
+    public Users getUserById(int id) {
+        return userDao.findById(id);
+    }
 }
