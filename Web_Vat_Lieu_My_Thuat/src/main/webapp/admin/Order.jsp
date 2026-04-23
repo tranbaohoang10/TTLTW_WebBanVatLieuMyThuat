@@ -614,6 +614,7 @@
                                     </c:if>
 
                                     <c:if test="${o.statusName == 'Đang vận chuyển'}">
+
                                         <button class="btn btn-success btn-sm btn-update-status"
                                                 type="button"
                                                 data-id="${o.id}"
@@ -621,6 +622,7 @@
                                                 title="Hoàn thành đơn">
                                             <i class="fa-solid fa-check"></i>
                                         </button>
+
                                     </c:if>
 
                                     <c:if test="${o.statusName == 'Đang xử lý'}">

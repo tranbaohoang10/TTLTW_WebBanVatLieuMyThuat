@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.nlu.fit.mythuatshop.Dao.VoucherDao;
 import vn.edu.nlu.fit.mythuatshop.Model.Voucher;
 import vn.edu.nlu.fit.mythuatshop.Service.VoucherService;
+import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -20,6 +22,7 @@ public class AdminVoucherController extends HttpServlet {
     private final VoucherService voucherService = new VoucherService();
     private final VoucherDao voucherDao = new VoucherDao();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final LogService logService = new LogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -89,26 +92,49 @@ public class AdminVoucherController extends HttpServlet {
 
     private void createVoucher(HttpServletRequest request) {
         Voucher voucher = getVoucherFromRequest(request, false);
-        voucherService.create(voucher);
+        boolean ok =  voucherService.create(voucher);
+        if(ok){
+            writeLog(request, "Tạo voucher", "AdminVoucherController#create", null, voucher);
+        }
     }
 
     private void updateVoucher(HttpServletRequest request) {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Voucher before  = voucherService.getById(id);
         Voucher voucher = getVoucherFromRequest(request, true);
-        voucherService.update(voucher);
+        boolean ok = voucherService.update(voucher);
+        if(ok){
+            Voucher after  = voucherService.getById(id);
+            writeLog(request, "Cập nhật voucher", "AdminVoucherController#update", before, after);
+        }
     }
 
     private void deleteVoucher(HttpServletRequest request) {
         int id = Integer.parseInt(request.getParameter("id"));
-        voucherService.delete(id);
+        Voucher before  = voucherService.getById(id);
+        boolean ok = voucherService.delete(id);
+        if(ok){
+            writeLog(request, "Xóa voucher",  "AdminVoucherController#delete", before, null);
+        }
     }
     private void lockVoucher(HttpServletRequest request) {
         int id = Integer.parseInt(request.getParameter("id"));
-        voucherService.lock(id);
+        Voucher before = voucherService.getById(id);
+        boolean ok = voucherService.lock(id);
+        if(ok){
+            Voucher after  = voucherService.getById(id);
+            writeLog(request, "Khóa voucher",  "AdminVoucherController#lock", before, after);
+        }
     }
     private void unlockVoucher(HttpServletRequest request) {
         int id = Integer.parseInt(request.getParameter("id"));
-        voucherService.unlock(id);
-    }
+        Voucher before = voucherService.getById(id);
+        boolean ok = voucherService.unlock(id);
+        if(ok){
+            Voucher after = voucherService.getById(id);
+            writeLog(request, "Mở khóa voucher", "AdminVoucherController#unlock", before, after);
+        }
+        }
     private Voucher getVoucherFromRequest(HttpServletRequest request, boolean isUpdate) {
         Voucher voucher = new Voucher();
 
@@ -158,5 +184,18 @@ public class AdminVoucherController extends HttpServlet {
             return defaultValue;
         }
         return Double.parseDouble(value.trim());
+    }
+    private Integer getCurrentUserId(HttpServletRequest request) {
+        Object obj = request.getSession().getAttribute("currentUser");
+        if(obj instanceof Users){
+            return ((Users)obj).getId();
+        }
+        return null;
+    }
+    private void writeLog(HttpServletRequest request, String label, String location, Object beforeData, Object afterData) {
+        Users user = (Users) request.getSession().getAttribute("currentUser");
+        if(user != null){
+            logService.log(label, user.getId(), location, beforeData, afterData);
+        }
     }
 }

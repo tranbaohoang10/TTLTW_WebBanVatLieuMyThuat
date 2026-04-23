@@ -14,7 +14,9 @@ import vn.edu.nlu.fit.mythuatshop.Model.Category;
 import vn.edu.nlu.fit.mythuatshop.Model.Product;
 import vn.edu.nlu.fit.mythuatshop.Model.Specification;
 import vn.edu.nlu.fit.mythuatshop.Model.Subimages;
+import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.CategoryService;
+import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 import vn.edu.nlu.fit.mythuatshop.Service.ProductService;
 
 import java.io.File;
@@ -37,6 +39,7 @@ public class AdminProductController extends HttpServlet {
     private ProductDao productDao;
     private SubImagesDao subImagesDao;
     private SpecificationsDao specificationsDao;
+    private LogService logService;
 
     @Override
     public void init() {
@@ -45,6 +48,7 @@ public class AdminProductController extends HttpServlet {
         productDao = new ProductDao();
         subImagesDao = new SubImagesDao();
         specificationsDao = new SpecificationsDao();
+        logService = new LogService();
     }
 
     @Override
@@ -160,6 +164,10 @@ public class AdminProductController extends HttpServlet {
         }
 
         specificationsDao.upsert(productId, size, standard, madeIn, warning);
+        Product after = productService.getProductById(productId);
+        if (after != null) {
+            writeLog(request, "Tạo sản phẩm", "AdminProductController#create", null, after);
+        }
     }
 
     private void updateProduct(HttpServletRequest request) throws Exception {
@@ -249,6 +257,10 @@ public class AdminProductController extends HttpServlet {
         }
 
         specificationsDao.upsert(id, size, standard, madeIn, warning);
+        Product after = productService.getProductById(id);
+        if (after != null) {
+            writeLog(request, "Cập nhật sản phẩm", "AdminProductController#update", oldProduct, after);
+        }
     }
 
     private void toggleProductActive(HttpServletRequest request) {
@@ -259,7 +271,11 @@ public class AdminProductController extends HttpServlet {
             return;
         }
 
+        Product before = productService.getProductById(id);
         productService.updateActive(id, isActive);
+        Product after = productService.getProductById(id);
+
+        writeLog(request, "Đổi trạng thái sản phẩm", "AdminProductController#toggleActive", before, after);
     }
 
     private String saveUploadAndReturnUrl(HttpServletRequest request, Part part, String folder) throws IOException {
@@ -319,6 +335,20 @@ public class AdminProductController extends HttpServlet {
             return Double.parseDouble(value);
         } catch (Exception exception) {
             return defaultValue;
+        }
+    }
+    private Integer getCurrentUserId(HttpServletRequest request) {
+        Object obj = request.getSession().getAttribute("currentUser");
+        if (obj instanceof Users) {
+            return ((Users) obj).getId();
+        }
+        return null;
+    }
+
+    private void writeLog(HttpServletRequest request, String label, String location, Object beforeData, Object afterData) {
+        Integer userId = getCurrentUserId(request);
+        if (userId != null) {
+            logService.log(label, userId, location, beforeData, afterData);
         }
     }
 }

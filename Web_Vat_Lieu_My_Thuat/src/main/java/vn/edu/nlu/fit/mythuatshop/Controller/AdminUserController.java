@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.AdminUserService;
+import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -16,42 +17,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @WebServlet(name = "AdminUsersController", value = "/admin/users")
 public class AdminUserController extends HttpServlet {
 
     private final AdminUserService adminUserService = new AdminUserService();
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+    private final LogService logService = new LogService();
 
-    static class UserRowDto {
-        int id;
-        String fullName;
-        String phoneNumber;
-        String address;
-        String createAt;
-        String dob;
-        String role;
-        int isActive;
-
-        public static UserRowDto fromUser(Users user) {
-            UserRowDto dto = new UserRowDto();
-            dto.id = user.getId();
-            dto.fullName = user.getFullName();
-            dto.phoneNumber = user.getPhoneNumber();
-            dto.address = user.getAddress();
-            dto.createAt = user.getCreateAt() == null ? "" : user.getCreateAt().toString();
-            dto.dob = user.getDob() == null ? "" : user.getDob().toString();
-            dto.role = user.getRole();
-            dto.isActive = user.getIsActive();
-            return dto;
-        }
-    }
-
-    static class AjaxResponse {
-        List<UserRowDto> users = new ArrayList<>();
-        int currentPage;
-        int totalPages;
-        String q;
-    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -59,50 +34,50 @@ public class AdminUserController extends HttpServlet {
         int pageSize = 10;
 
         String pageParam = request.getParameter("page");
-        if (pageParam != null) {
-            try {
-                page = Integer.parseInt(pageParam);
-            } catch (Exception e) {
-                page = 1;
-            }
-        }
-
         String q = request.getParameter("q");
         String msg = request.getParameter("msg");
 
-        boolean isAjax = false;
-        String ajaxParam = request.getParameter("ajax");
-        String requestedWith = request.getHeader("X-Requested-With");
 
-        if ("1".equals(ajaxParam) || "XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
-            isAjax = true;
+        if (q == null) {
+            q = "";
         }
-
-        if (isAjax) {
-            List<Users> userList = adminUserService.listUsers(page, pageSize, q);
-            int totalPages = adminUserService.totalPages(pageSize, q);
-
-            AjaxResponse ajaxResponse = new AjaxResponse();
-            for (Users user : userList) {
-                ajaxResponse.users.add(UserRowDto.fromUser(user));
+        try{
+            if (pageParam != null) {
+                page = Integer.parseInt(pageParam);
             }
-            ajaxResponse.currentPage = page;
-            ajaxResponse.totalPages = totalPages;
-            ajaxResponse.q = q == null ? "" : q;
-
-            response.setCharacterEncoding("UTF-8");
-            response.setContentType("application/json; charset=UTF-8");
-            response.getWriter().write(gson.toJson(ajaxResponse));
-            return;
+        } catch (Exception e) {
+            page = 1;
         }
 
         List<Users> users = adminUserService.listUsers(page, pageSize, q);
         int totalPages = adminUserService.totalPages(pageSize, q);
 
+        String ajax = request.getParameter("ajax");
+        String requestedWith = request.getHeader("X-Requested-With");
+
+
+        if ("1".equals(ajax) || "XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
+            List<Map<String, Object>> userRows = new ArrayList<>();
+            for (Users user : users) {
+                userRows.add(toUserMap(user));
+            }
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("users", userRows);
+            data.put("currentPage", page);
+            data.put("totalPages", totalPages);
+            data.put("q", q);
+
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write(gson.toJson(data));
+            return;
+        }
+
+
         request.setAttribute("users", users);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
-        request.setAttribute("q", q == null ? "" : q);
+        request.setAttribute("q",q);
         request.setAttribute("msg", msg);
 
         request.getRequestDispatcher("/admin/User.jsp").forward(request, response);
@@ -136,6 +111,15 @@ public class AdminUserController extends HttpServlet {
                     + request.getContextPath();
 
             result = adminUserService.createUser(fullName, email, phoneNumber, dob, address, role, baseUrl);
+            if (result) {
+                Users after = new Users();
+                after.setFullName(fullName);
+                after.setEmail(email);
+                after.setPhoneNumber(phoneNumber);
+                after.setAddress(address);
+                after.setRole(role);
+                writeLog(request, "Tạo người dùng", "AdminUserController#create", null, after);
+            }
 
         } else if ("update".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
@@ -145,15 +129,30 @@ public class AdminUserController extends HttpServlet {
             String address = request.getParameter("address");
             String role = request.getParameter("role");
 
+            Users before = adminUserService.getUserById(id);
             result = adminUserService.updateUser(id, fullName, phoneNumber, dob, address, role);
+            if (result) {
+                Users after = adminUserService.getUserById(id);
+                writeLog(request, "Cập nhật người dùng", "AdminUserController#update", before, after);
+            }
 
         } else if ("lock".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
+            Users before = adminUserService.getUserById(id);
             result = adminUserService.lockUser(id);
+            if (result) {
+                Users after = adminUserService.getUserById(id);
+                writeLog(request, "Khóa người dùng", "AdminUserController#lock", before, after);
+            }
 
         } else if ("unlock".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
+            Users before = adminUserService.getUserById(id);
             result = adminUserService.unlockUser(id);
+            if (result) {
+                Users after = adminUserService.getUserById(id);
+                writeLog(request, "Mở khóa người dùng", "AdminUserController#unlock", before, after);
+            }
         }
 
         String msg;
@@ -170,5 +169,31 @@ public class AdminUserController extends HttpServlet {
         response.sendRedirect(
                 request.getContextPath() + "/admin/users?page=" + page + "&q=" + qEncoded + "&msg=" + msg
         );
+    }
+    private Map<String, Object> toUserMap(Users user) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", user.getId());
+        row.put("fullName", user.getFullName());
+        row.put("phoneNumber", user.getPhoneNumber());
+        row.put("address", user.getAddress());
+        row.put("createAt", user.getCreateAt() == null ? "" : user.getCreateAt().toString());
+        row.put("dob", user.getDob() == null ? "" : user.getDob().toString());
+        row.put("role", user.getRole());
+        row.put("isActive", user.getIsActive());
+        return row;
+    }
+    private Integer getCurrentUserId(HttpServletRequest request) {
+        Object obj = request.getSession().getAttribute("currentUser");
+        if (obj instanceof Users) {
+            return ((Users) obj).getId();
+        }
+        return null;
+    }
+
+    private void writeLog(HttpServletRequest request, String label, String location, Object beforeData, Object afterData) {
+        Integer userId = getCurrentUserId(request);
+        if (userId != null) {
+            logService.log(label, userId, location, beforeData, afterData);
+        }
     }
 }

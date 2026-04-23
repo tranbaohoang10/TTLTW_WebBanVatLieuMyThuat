@@ -10,14 +10,15 @@ import vn.edu.nlu.fit.mythuatshop.Service.SliderShowService;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.util.ArrayList;
-import java.util.List;
+
 
 
 @WebServlet("/admin/sliders")
@@ -31,34 +32,7 @@ public class AdminSliderShowController extends HttpServlet {
     private SliderShowService service;
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
-    static class SliderRowDto {
-        int id;
-        String title;
-        String thumbnail;
-        int indexOrder;
-        int status; // 1 hiển thị, 0 ẩn
-        String linkTo; // nếu muốn dùng sau
 
-        static SliderRowDto from(SliderShow s) {
-            SliderRowDto d = new SliderRowDto();
-            d.id = s.getId();
-            d.title = s.getTitle();
-            d.thumbnail = s.getThumbnail();
-            d.indexOrder = s.getIndexOrder();
-            d.status = s.getStatus();
-            d.linkTo = s.getLinkTo();
-            return d;
-        }
-    }
-
-
-    static class AjaxResponse {
-        List<SliderRowDto> sliders = new ArrayList<>();
-        int currentPage;
-        int totalPages;
-        String q;
-        int size;
-    }
 
     @Override
     public void init() {
@@ -80,7 +54,7 @@ public class AdminSliderShowController extends HttpServlet {
         if (totalPages == 0) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        // ✅ LẤY LIST TRƯỚC
+
         List<SliderShow> sliders = service.findPageByKeyword(q, page, size);
 
         boolean isAjax =
@@ -88,12 +62,12 @@ public class AdminSliderShowController extends HttpServlet {
                         "XMLHttpRequest".equalsIgnoreCase(req.getHeader("X-Requested-With"));
 
         if (isAjax) {
-            AjaxResponse out = new AjaxResponse();
-            for (SliderShow s : sliders) out.sliders.add(SliderRowDto.from(s));
-            out.currentPage = page;
-            out.totalPages = totalPages;
-            out.q = (q == null) ? "" : q;
-            out.size = size;
+            Map<String, Object> out = new HashMap<>();
+            out.put("sliders", sliders);
+            out.put("currentPage", page);
+            out.put("totalPages", totalPages);
+            out.put("q", q == null ? "" : q);
+            out.put("size", size);
 
             resp.setCharacterEncoding("UTF-8");
             resp.setContentType("application/json; charset=UTF-8");
@@ -101,7 +75,7 @@ public class AdminSliderShowController extends HttpServlet {
             return;
         }
 
-        // edit mode
+
         String editIdRaw = req.getParameter("editId");
         if (editIdRaw != null) {
             int editId = parseInt(editIdRaw, -1);
@@ -179,9 +153,11 @@ public class AdminSliderShowController extends HttpServlet {
         if (id <= 0) throw new IllegalArgumentException("ID không hợp lệ");
 
         Optional<SliderShow> oldOpt = service.findById(id);
-        if (oldOpt.isEmpty()) throw new IllegalArgumentException("Slider không tồn tại");
+        if (oldOpt.isEmpty()) {
+            throw new IllegalArgumentException("Slider không tồn tại");
+        }
 
-        SliderShow old = service.findById(id).orElseThrow(() -> new IllegalArgumentException("Slider không tồn tại"));
+        SliderShow old = oldOpt.get();
 
         String title = trimOrNull(req.getParameter("title"));
         String linkTo = trimOrNull(req.getParameter("linkTo"));
@@ -228,15 +204,9 @@ public class AdminSliderShowController extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=deleted");
     }
 
-    /**
-     * Ưu tiên upload file "thumbnailFile" => trả URL dạng /{context}/uploads/sliders/xxx.jpg
-     * Nếu không upload, dùng "thumbnailUrl"
-     * Nếu update mà không có gì => giữ oldThumbnail
-     */
     private String resolveThumbnail(HttpServletRequest req, String oldThumbnail) throws Exception {
         Part filePart = req.getPart("thumbnailFile"); // servlet phải có @MultipartConfig
 
-        // Nếu có upload file => lưu file và trả URL
         if (filePart != null && filePart.getSize() > 0) {
             String submitted = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
             String ext = "";
@@ -255,18 +225,27 @@ public class AdminSliderShowController extends HttpServlet {
             return req.getContextPath() + "/uploads/sliders/" + fileName;
         }
 
-        // Update không upload ảnh mới => giữ ảnh cũ
+        String thumbnailUrl = trimOrNull(req.getParameter("thumbnailUrl"));
+        if (thumbnailUrl != null && !thumbnailUrl.isBlank()) {
+            return thumbnailUrl;
+        }
         return oldThumbnail;
     }
 
 
-    private static String trimOrNull(String s) {
+    private String trimOrNull(String s) {
         if (s == null) return null;
         s = s.trim();
         return s.isEmpty() ? null : s;
     }
 
-    private static int parseInt(String s, int def) {
-        try { return Integer.parseInt(s); } catch (Exception e) { return def; }
+    private int parseInt(String s, int def) {
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return def;
+        }
     }
+
+
 }
