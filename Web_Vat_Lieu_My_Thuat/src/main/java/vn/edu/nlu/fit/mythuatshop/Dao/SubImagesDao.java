@@ -3,7 +3,7 @@ package vn.edu.nlu.fit.mythuatshop.Dao;
 import org.jdbi.v3.core.Jdbi;
 import vn.edu.nlu.fit.mythuatshop.Model.Subimages;
 
-import java.util.List;
+import java.util.*;
 
 public class SubImagesDao {
     public final Jdbi jdbi;
@@ -24,6 +24,29 @@ public class SubImagesDao {
                         .mapToBean(Subimages.class)
                         .list()
         );
+    }
+    public Map<Integer, List<Subimages>> findByProductIds(List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String sql = "SELECT id, productID, image " +
+                "FROM subimages " +
+                "WHERE productID IN (<productIds>) " +
+                "ORDER BY productID, id";
+
+        List<Subimages> rows = jdbi.withHandle(h ->
+                h.createQuery(sql)
+                        .bindList("productIds", productIds)
+                        .mapToBean(Subimages.class)
+                        .list()
+        );
+
+        Map<Integer, List<Subimages>> result = new HashMap<>();
+        for (Subimages row : rows) {
+            result.computeIfAbsent(row.getProductID(), k -> new ArrayList<>()).add(row);
+        }
+        return result;
     }
     public int insert(int productId, String image) {
         String sql = "INSERT INTO subimages(productID, image) VALUES (:productId, :image)";
