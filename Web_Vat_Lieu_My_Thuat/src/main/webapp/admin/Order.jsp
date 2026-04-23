@@ -610,7 +610,7 @@
                                         <form action="${pageContext.request.contextPath}/admin/orders/status"
                                               method="post" style="display:inline;">
                                             <input type="hidden" name="orderId" value="${o.id}">
-                                            <input type="hidden" name="statusName" value="Hoàn thành">
+                                            <input type="hidden" name="currentStatus" value="Hoàn thành">
                                             <button class="btn btn-success btn-sm" type="submit" title="Hoàn thành đơn">
                                                 <i class="fa-solid fa-check"></i>
                                             </button>
