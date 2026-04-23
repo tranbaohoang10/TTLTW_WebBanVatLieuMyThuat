@@ -20,13 +20,33 @@ public class AdminOrderStatusController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        boolean success = false;
+        String message = "Cập nhật trạng thái thất bại";
+        String newStatus = "";
 
-        int orderId = Integer.parseInt(req.getParameter("orderId"));
-        String newStatus = req.getParameter("statusName");
+        try {
+            int orderId = Integer.parseInt(req.getParameter("orderId"));
+            newStatus = req.getParameter("statusName");
 
-        boolean ok = orderService.adminUpdateOrderStatus(orderId, newStatus);
+            success = orderService.adminUpdateOrderStatus(orderId, newStatus);
 
-        String msg = ok ? "update_ok" : "update_fail";
-        resp.sendRedirect(req.getContextPath() + "/admin/orders?msg=" + msg);
+            if (success) {
+                message = "Cập nhật trạng thái thành công";
+            } else {
+                message = "Không thể chuyển trạng thái đơn hàng";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = "Có lỗi xảy ra khi cập nhật trạng thái";
+        }
+
+        String json = "{"
+                + "\"success\":" + success + ","
+                + "\"message\":\"" + message + "\","
+                + "\"newStatus\":\"" + newStatus + "\""
+                + "}";
+
+        resp.getWriter().write(json);
     }
+
 }

@@ -167,6 +167,21 @@
                 <td class="info-label">Ghi chú</td>
                 <td>${order.note}</td>
             </tr>
+            <c:if test="${order.orderStatusId == 4}">
+                <tr>
+                    <td class="info-label">Lý do hủy đơn</td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty order.cancelReason}">
+                                ${order.cancelReason}
+                            </c:when>
+                            <c:otherwise>
+                                <span class="empty-text">Không có lý do hủy.</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                </tr>
+            </c:if>
         </table>
     </div>
 
