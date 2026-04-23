@@ -55,6 +55,8 @@ public class OrderTrackingController extends HttpServlet {
             request.setAttribute("trackingMessage", "Chưa lấy được thông tin vận đơn.");
         } else {
             request.setAttribute("tracking", tracking);
+            request.setAttribute("trackingStatusText", mapTrackingStatus(tracking.getStatus()));
+            request.setAttribute("trackingLeadtimeText", formatIsoTime(tracking.getLeadtime()));
         }
 
         request.getRequestDispatcher("/OrderTracking.jsp").forward(request, response);
@@ -63,5 +65,35 @@ public class OrderTrackingController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doGet(request, response);
+    }
+    private String mapTrackingStatus(String status) {
+        if (status == null) return "";
+        switch (status) {
+            case "ready_to_pick":
+                return "Chờ lấy hàng";
+            case "picking":
+                return "Đang lấy hàng";
+            case "picked":
+                return "Đã lấy hàng";
+            case "delivering":
+                return "Đang giao hàng";
+            case "delivered":
+                return "Giao thành công";
+            case "cancel":
+                return "Đã hủy";
+            default:
+                return status;
+        }
+    }
+
+    private String formatIsoTime(String text) {
+        if (text == null || text.isBlank()) return "";
+        try {
+            java.time.OffsetDateTime odt = java.time.OffsetDateTime.parse(text);
+            return odt.atZoneSameInstant(java.time.ZoneId.of("Asia/Ho_Chi_Minh"))
+                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        } catch (Exception e) {
+            return text;
+        }
     }
 }
