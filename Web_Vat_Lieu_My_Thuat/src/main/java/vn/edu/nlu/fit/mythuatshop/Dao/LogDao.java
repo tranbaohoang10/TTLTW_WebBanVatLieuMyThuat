@@ -10,7 +10,7 @@ public class LogDao {
         String sql = "INSERT INTO logs(label, user_id, time, location, before_data, after_data) " +
                 "VALUES (:label, :userId, :time, :location, :beforeData, :afterData)";
         jdbi.useHandle(handle -> handle.createUpdate(sql).bind("label", log.getLabel())
-                .bind("user_id", log.getId())
+                .bind("userId", log.getUserId())
                 .bind("time", log.getTime())
                 .bind("location", log.getLocation())
                 .bind("beforeData", log.getBeforeData())

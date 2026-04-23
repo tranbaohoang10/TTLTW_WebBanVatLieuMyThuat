@@ -1,21 +1,22 @@
 package vn.edu.nlu.fit.mythuatshop.Model;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 public class Log {
     private int id;
     private String label;
+    private int userId;
     private Timestamp time;
     private String location;
     private String beforeData;
     private String afterData;
 
-    public Log(String label, int userId, java.sql.Timestamp timestamp, String location, String beforeDta, String afterDta) {
+    public Log() {
     }
 
-    public Log(int id, String label, Timestamp time, String location, String beforeData, String afterData) {
-        this.id = id;
+    public Log(String label, int userId, Timestamp time, String location, String beforeData, String afterData) {
         this.label = label;
+        this.userId = userId;
         this.time = time;
         this.location = location;
         this.beforeData = beforeData;
@@ -36,6 +37,14 @@ public class Log {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     public Timestamp getTime() {
