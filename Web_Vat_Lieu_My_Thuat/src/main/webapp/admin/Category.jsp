@@ -155,6 +155,9 @@
             <a href="${pageContext.request.contextPath}/admin/vouchers"><i class="fa-solid fa-gift"></i>Quản lý khuyến mãi</a>
             <a href="${pageContext.request.contextPath}/admin/sliders"><i class="fa-solid fa-sliders"></i>Quản lý Slider Show</a>
             <a href="${pageContext.request.contextPath}/admin/contacts"><i class="fa-solid fa-address-book"></i>Quản lý liên hệ</a>
+            <a href="${pageContext.request.contextPath}/admin/logs">
+                <i class="fa-solid fa-clock-rotate-left"></i>Quản lý thao tác
+            </a>
             <a href="${pageContext.request.contextPath}/logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
 
         </div>

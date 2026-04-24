@@ -518,6 +518,9 @@
             <a href="${pageContext.request.contextPath}/admin/contacts" class="active"><i
                     class="fa-solid fa-address-book"></i>Quản lý liên
                 hệ</a>
+            <a href="${pageContext.request.contextPath}/admin/logs">
+                <i class="fa-solid fa-clock-rotate-left"></i>Quản lý thao tác
+            </a>
             <a href="${pageContext.request.contextPath}/logout"><i
                     class="fa-solid fa-right-from-bracket"></i>
                 Đăng xuất</a>

@@ -3,6 +3,8 @@ package vn.edu.nlu.fit.mythuatshop.Dao;
 import org.jdbi.v3.core.Jdbi;
 import vn.edu.nlu.fit.mythuatshop.Model.Log;
 
+import java.util.List;
+
 public class LogDao {
     private final Jdbi jdbi = JDBIConnector.getJdbi();
 
@@ -15,5 +17,24 @@ public class LogDao {
                 .bind("location", log.getLocation())
                 .bind("beforeData", log.getBeforeData())
                 .bind("afterData", log.getAfterData()).execute());
+    }
+    public List<Log> getAll() {
+        String sql = "SELECT l.*, u.fullName AS userName FROM logs l LEFT JOIN users u ON l.user_id = u.id ORDER BY l.time DESC" ;
+
+        return jdbi.withHandle(handle -> handle.createQuery(sql)
+                .map((rs, ctx) -> {
+                    Log log = new Log();
+                    log.setId(rs.getInt("id"));
+                    log.setLabel(rs.getString("label"));
+                    log.setUserId(rs.getInt("user_id"));
+                    log.setTime(rs.getTimestamp("time"));
+                    log.setLocation(rs.getString("location"));
+                    log.setBeforeData(rs.getString("before_data"));
+                    log.setAfterData(rs.getString("after_data"));
+                    log.setUserName(rs.getString("userName"));
+
+                    return log;
+                })
+                .list());
     }
 }

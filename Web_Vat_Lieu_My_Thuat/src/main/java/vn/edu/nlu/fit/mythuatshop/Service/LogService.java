@@ -8,6 +8,7 @@ import vn.edu.nlu.fit.mythuatshop.Model.Log;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
@@ -31,6 +32,9 @@ public class LogService {
 
         Log log = new Log(label, userId, new Timestamp(currentTimeMillis()), location, beforeDta, afterDta);
         logDao.insert(log);
+    }
+    public List<Log> getAll() {
+        return logDao.getAll();
     }
 
 }

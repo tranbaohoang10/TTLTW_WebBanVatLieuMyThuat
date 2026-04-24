@@ -5,6 +5,8 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import vn.edu.nlu.fit.mythuatshop.Model.SliderShow;
+import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 import vn.edu.nlu.fit.mythuatshop.Service.SliderShowService;
 
 import java.io.File;
@@ -28,7 +30,7 @@ import com.google.gson.GsonBuilder;
         maxRequestSize = 20 * 1024 * 1024
 )
 public class AdminSliderShowController extends HttpServlet {
-
+    private final LogService logService = new LogService();
     private SliderShowService service;
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
@@ -145,6 +147,7 @@ public class AdminSliderShowController extends HttpServlet {
         s.setThumbnail(thumbnail);
 
         service.create(s);
+        writeLog(req, "Tạo slider", "AdminSliderShowController#create", null, s);
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=created");
     }
 
@@ -188,24 +191,40 @@ public class AdminSliderShowController extends HttpServlet {
         s.setThumbnail(thumbnail);
 
         service.update(s);
+        writeLog(req, "Cập nhật slider", "AdminSliderShowController#update", old, s);
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=updated");
     }
 
     private void handleToggle(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         int id = parseInt(req.getParameter("id"), -1);
         int currentStatus = parseInt(req.getParameter("currentStatus"), 0);
-        if (id > 0) service.toggleStatus(id, currentStatus);
+        if (id > 0) {
+            Optional<SliderShow> oldOpt = service.findById(id);
+            service.toggleStatus(id, currentStatus);
+            Optional<SliderShow> newOpt = service.findById(id);
+
+            if (oldOpt.isPresent() && newOpt.isPresent()) {
+                writeLog(req, "Đổi trạng thái slider", "AdminSliderShowController#toggle", oldOpt.get(), newOpt.get());
+            }
+        }
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=toggled");
     }
 
     private void handleDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         int id = parseInt(req.getParameter("id"), -1);
-        if (id > 0) service.delete(id);
+        if (id > 0) {
+            Optional<SliderShow> oldOpt = service.findById(id);
+            service.delete(id);
+
+            if (oldOpt.isPresent()) {
+                writeLog(req, "Xóa slider", "AdminSliderShowController#delete", oldOpt.get(), null);
+            }
+        }
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=deleted");
     }
 
     private String resolveThumbnail(HttpServletRequest req, String oldThumbnail) throws Exception {
-        Part filePart = req.getPart("thumbnailFile"); // servlet phải có @MultipartConfig
+        Part filePart = req.getPart("thumbnailFile");
 
         if (filePart != null && filePart.getSize() > 0) {
             String submitted = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
@@ -247,5 +266,18 @@ public class AdminSliderShowController extends HttpServlet {
         }
     }
 
+    private Integer getCurrentUserId(HttpServletRequest request) {
+        Object obj = request.getSession().getAttribute("currentUser");
+        if (obj instanceof Users) {
+            return ((Users) obj).getId();
+        }
+        return null;
+    }
 
+    private void writeLog(HttpServletRequest request, String label, String location, Object beforeData, Object afterData) {
+        Integer userId = getCurrentUserId(request);
+        if (userId != null) {
+            logService.log(label, userId, location, beforeData, afterData);
+        }
+    }
 }
