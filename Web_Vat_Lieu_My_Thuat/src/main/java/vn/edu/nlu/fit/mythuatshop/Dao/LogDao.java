@@ -37,4 +37,29 @@ public class LogDao {
                 })
                 .list());
     }
+    public Log getById(int id) {
+        String sql = "SELECT l.*, u.fullName AS userName " +
+                "FROM logs l " +
+                "LEFT JOIN users u ON l.user_id = u.id " +
+                "WHERE l.id = :id";
+
+        return jdbi.withHandle(handle -> handle.createQuery(sql)
+                .bind("id", id)
+                .map((rs, ctx) -> {
+                    Log log = new Log();
+
+                    log.setId(rs.getInt("id"));
+                    log.setLabel(rs.getString("label"));
+                    log.setUserId(rs.getInt("user_id"));
+                    log.setTime(rs.getTimestamp("time"));
+                    log.setLocation(rs.getString("location"));
+                    log.setBeforeData(rs.getString("before_data"));
+                    log.setAfterData(rs.getString("after_data"));
+                    log.setUserName(rs.getString("userName"));
+
+                    return log;
+                })
+                .findOne()
+                .orElse(null));
+    }
 }
