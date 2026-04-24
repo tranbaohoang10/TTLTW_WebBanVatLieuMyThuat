@@ -36,5 +36,7 @@ public class LogService {
     public List<Log> getAll() {
         return logDao.getAll();
     }
-
+    public Log getById(int id) {
+        return logDao.getById(id);
+    }
 }

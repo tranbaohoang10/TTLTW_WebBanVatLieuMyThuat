@@ -243,7 +243,7 @@
                             <td>${log.location}</td>
 
                             <td class="text-center">
-                                <a href="#" class="btn-detail">
+                                <a href="${pageContext.request.contextPath}/admin/log-detail?id=${log.id}" class="btn-detail">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
                             </td>
