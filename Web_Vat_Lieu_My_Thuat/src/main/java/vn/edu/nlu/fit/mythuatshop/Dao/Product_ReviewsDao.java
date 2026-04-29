@@ -21,7 +21,6 @@ public class Product_ReviewsDao {
         String sql = "select AVG(rating) from product_reviews where productID = :productID";
         return jdbi.withHandle(h -> h.createQuery(sql).bind("productID",productID).mapTo(Double.class).findOne().orElse(0.0));
         }
-    // Lấy danh sách review theo productID
     public List<Product_Review> findByProductId(int productId) {
         String sql =
                 "SELECT pr.id, pr.userID, pr.productID, pr.rating, pr.comment, pr.createAt, " +

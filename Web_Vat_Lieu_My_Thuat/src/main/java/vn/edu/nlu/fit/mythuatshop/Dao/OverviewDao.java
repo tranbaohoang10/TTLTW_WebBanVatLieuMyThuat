@@ -16,7 +16,7 @@ public class OverviewDao {
 
     public int countUsers() {
         return jdbi.withHandle(h ->
-                h.createQuery("SELECT COUNT(*) FROM Users")
+                h.createQuery("SELECT COUNT(*) FROM users")
                         .mapTo(int.class)
                         .one()
         );
@@ -24,7 +24,7 @@ public class OverviewDao {
 
     public int countProducts() {
         return jdbi.withHandle(h ->
-                h.createQuery("SELECT COUNT(*) FROM Products")
+                h.createQuery("SELECT COUNT(*) FROM products")
                         .mapTo(int.class)
                         .one()
         );
@@ -34,7 +34,7 @@ public class OverviewDao {
         return jdbi.withHandle(h ->
                 h.createQuery("""
                     SELECT COALESCE(SUM(totalPrice - discount), 0)
-                    FROM Orders
+                    FROM orders
                     WHERE orderStatusID = 3
                 """)
                         .mapTo(BigDecimal.class)
@@ -46,7 +46,7 @@ public class OverviewDao {
         return jdbi.withHandle(h ->
                 h.createQuery("""
                     SELECT COUNT(*)
-                    FROM Orders
+                    FROM orders
                     WHERE orderStatusID = 3
                 """)
                         .mapTo(int.class)
@@ -73,10 +73,10 @@ public class OverviewDao {
 
                 os.statusName   AS statusName,
                 COALESCE(GROUP_CONCAT(p.name ORDER BY p.name SEPARATOR ', '), '') AS productNames
-            FROM Orders o
-            LEFT JOIN Order_Statuses os ON os.ID = o.orderStatusID
-            LEFT JOIN Order_Details od  ON od.orderID = o.ID
-            LEFT JOIN Products p        ON p.ID = od.productID
+            FROM orders o
+            LEFT JOIN order_statuses os ON os.ID = o.orderStatusID
+            LEFT JOIN order_details od  ON od.orderID = o.ID
+            LEFT JOIN products p        ON p.ID = od.productID
             GROUP BY
                 o.ID, o.userID, o.fullName, o.email, o.phoneNumber, o.address,
                 o.totalPrice, o.paymentID, o.orderStatusID, o.voucherID, o.discount,
@@ -102,10 +102,10 @@ public class OverviewDao {
                 p.price         AS price,
                 p.createAt      AS createAt,
                 COALESCE(SUM(od.quantity), 0) AS soldQty
-            FROM Order_Details od
-            JOIN Orders o      ON o.ID = od.orderID
-            JOIN Products p    ON p.ID = od.productID
-            LEFT JOIN Categories c ON c.ID = p.categoryID
+            FROM order_details od
+            JOIN orders o      ON o.ID = od.orderID
+            JOIN products p    ON p.ID = od.productID
+            LEFT JOIN categories c ON c.ID = p.categoryID
             WHERE o.orderStatusID = 3
               AND YEAR(o.createAt) = YEAR(CURDATE())
               AND MONTH(o.createAt) = MONTH(CURDATE())

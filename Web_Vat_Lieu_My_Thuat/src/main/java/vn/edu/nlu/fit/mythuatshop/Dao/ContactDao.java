@@ -24,7 +24,7 @@ public class ContactDao {
     }
 
     public boolean deleteById(int id) {
-        String sql = "DELETE FROM Contacts WHERE id = :id";
+        String sql = "DELETE FROM contacts WHERE id = :id";
         return jdbi.withHandle(h ->
                 h.createUpdate(sql)
                         .bind("id", id)
@@ -35,7 +35,7 @@ public class ContactDao {
     public Contact findById(int id) {
         String sql = """
                     SELECT id, userID AS userId, fullName, email, phoneNumber, message, status, createAt
-                    FROM Contacts
+                    FROM contacts
                     WHERE id = :id
                 """;
         return jdbi.withHandle(h ->
@@ -48,7 +48,7 @@ public class ContactDao {
     }
 
     public boolean updateStatus(int id, String status) {
-        String sql = "UPDATE Contacts SET status = :status WHERE id = :id";
+        String sql = "UPDATE contacts SET status = :status WHERE id = :id";
         return jdbi.withHandle(h ->
                 h.createUpdate(sql)
                         .bind("status", status)

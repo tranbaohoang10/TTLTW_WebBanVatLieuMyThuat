@@ -12,7 +12,6 @@ public class CategoryDao {
         jdbi = JDBIConnector.getJdbi();
     }
 
-    // Admin: lấy tất cả (kể cả đã khóa)
     public List<Category> findAll() {
         String sql = "SELECT id, categoryName, thumbnail, isActive " +
                 "FROM categories " +
@@ -22,7 +21,6 @@ public class CategoryDao {
         );
     }
 
-    // Client: chỉ lấy danh mục active
     public List<Category> findAllActive() {
         String sql = "SELECT id, categoryName, thumbnail, isActive " +
                 "FROM categories " +
@@ -46,7 +44,6 @@ public class CategoryDao {
         );
     }
 
-    // Client: lấy category active
     public Category findByIdActive(int id) {
         String sql = "SELECT id, categoryName, thumbnail, isActive " +
                 "FROM categories " +

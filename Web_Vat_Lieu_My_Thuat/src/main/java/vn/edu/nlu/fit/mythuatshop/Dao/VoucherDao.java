@@ -15,7 +15,7 @@ public class VoucherDao {
     public Voucher findByCode(String code) {
         String sql = "SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
-                "FROM Vouchers " +
+                "FROM vouchers " +
                 "WHERE code = :code LIMIT 1";
 
         return jdbi.withHandle(handle ->
@@ -29,7 +29,7 @@ public class VoucherDao {
 
     public boolean increaseUsed(int voucherId) {
         String sql = """
-        UPDATE Vouchers
+        UPDATE vouchers
         SET quantityUsed = quantityUsed + 1,
             quantity = CASE
                 WHEN quantity > 0 THEN quantity - 1
@@ -49,7 +49,7 @@ public class VoucherDao {
     }
     public boolean decreaseUsed(int voucherId) {
         String sql = """
-        UPDATE Vouchers
+        UPDATE vouchers
         SET quantityUsed = CASE
                 WHEN quantityUsed > 0 THEN quantityUsed - 1
                 ELSE 0
@@ -69,7 +69,7 @@ public class VoucherDao {
     public List<Voucher> findAll() {
         String sql = "SELECT ID, code, name,  voucherType, voucherPercent, maxDiscount, voucherCash, minOrderValue, " +
                 "startDate, endDate, quantity, quantityUsed, isActive " +
-                "FROM Vouchers " +
+                "FROM vouchers " +
                 "ORDER BY ID DESC";
 
         return jdbi.withHandle(h ->
@@ -83,7 +83,7 @@ public class VoucherDao {
         String sql = """
                 SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue,
                        startDate, endDate, quantity, quantityUsed, isActive
-                FROM Vouchers
+                FROM vouchers
                 WHERE ID = :id
                 """;
 
@@ -98,7 +98,7 @@ public class VoucherDao {
 
     public int insert(Voucher v) {
         String sql = """
-                INSERT INTO Vouchers
+                INSERT INTO vouchers
                     (code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue, startDate, endDate, quantity, quantityUsed, isActive)
                     VALUES (:code, :name, :description, :voucherType, :voucherCash, :voucherPercent,:maxDiscount, :minOrderValue, :startDate, :endDate, :quantity, :quantityUsed, :isActive)
                 """;
@@ -112,7 +112,7 @@ public class VoucherDao {
 
     public int update(Voucher v) {
         String sql = """
-                UPDATE Vouchers SET
+                UPDATE vouchers SET
                                 code = :code,
                                 name = :name,
                                 description = :description,
@@ -137,7 +137,7 @@ public class VoucherDao {
     }
 
     public int delete(int id) {
-        String sql = "DELETE FROM Vouchers WHERE ID = :id";
+        String sql = "DELETE FROM vouchers WHERE ID = :id";
         return jdbi.withHandle(h ->
                 h.createUpdate(sql)
                         .bind("id", id)
@@ -145,7 +145,7 @@ public class VoucherDao {
         );
     }
     public int countAll() {
-        String sql = "SELECT COUNT(*) FROM Vouchers";
+        String sql = "SELECT COUNT(*) FROM vouchers";
         return jdbi.withHandle(h -> h.createQuery(sql).mapTo(Integer.class).one());
     }
 
@@ -153,7 +153,7 @@ public class VoucherDao {
         String sql = """
                 SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue,
                        startDate, endDate, quantity, quantityUsed, isActive
-                FROM Vouchers
+                FROM vouchers
                 ORDER BY ID DESC
                 LIMIT :limit OFFSET :offset
                 """;
@@ -170,7 +170,7 @@ public class VoucherDao {
     public int countByKeyword(String keyword) {
         String sql = """
                 SELECT COUNT(*)
-                FROM Vouchers
+                FROM vouchers
                 WHERE code LIKE :kw OR name LIKE :kw
                 """;
         String pattern = "%" + keyword + "%";
@@ -186,7 +186,7 @@ public class VoucherDao {
         String sql = """
                 SELECT ID, code, name, description,  voucherType, voucherCash, voucherPercent, maxDiscount, minOrderValue,
                        startDate, endDate, quantity, quantityUsed, isActive
-                FROM Vouchers
+                FROM vouchers
                 WHERE code LIKE :kw OR name LIKE :kw
                 ORDER BY ID DESC
                 LIMIT :limit OFFSET :offset
@@ -203,13 +203,13 @@ public class VoucherDao {
         );
     }
     public int lock(int id) {
-        String sql = "UPDATE Vouchers SET isActive = 0 WHERE ID = :id";
+        String sql = "UPDATE vouchers SET isActive = 0 WHERE ID = :id";
         return jdbi.withHandle(h -> h.createUpdate(sql).bind("id", id).execute()
         );
     }
 
     public int unlock(int id) {
-        String sql = "UPDATE Vouchers SET isActive = 1 WHERE ID = :id";
+        String sql = "UPDATE vouchers SET isActive = 1 WHERE ID = :id";
         return jdbi.withHandle(h -> h.createUpdate(sql).bind("id", id).execute()
         );
     }

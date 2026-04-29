@@ -28,7 +28,7 @@ public class OrderStatusDao implements DaoInterface<OrderStatus> {
     @Override
     public OrderStatus findByName(String name) {
         return jdbi.withHandle(handle ->
-                handle.createQuery("SELECT ID, statusName FROM Order_Statuses WHERE statusName = :name")
+                handle.createQuery("SELECT ID, statusName FROM order_statuses WHERE statusName = :name")
                         .bind("name", name)
                         .mapToBean(OrderStatus.class)
                         .findOne()

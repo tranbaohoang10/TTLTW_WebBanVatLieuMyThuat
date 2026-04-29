@@ -190,8 +190,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.note          AS note, " +
                         "       os.statusName   AS statusName " +
 
-                        "FROM Orders o " +
-                        "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
+                        "FROM orders o " +
+                        "JOIN order_statuses os ON os.ID = o.orderStatusID " +
                         "WHERE o.userID = :userId ";
 
         if (statusId != null) {
@@ -221,8 +221,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       p.thumbnail AS thumbnail, " +
                         "       d.quantity  AS quantity, " +
                         "       d.price     AS price " +
-                        "FROM Order_Details d " +
-                        "JOIN Products p ON p.ID = d.productID " +
+                        "FROM order_details d " +
+                        "JOIN products p ON p.ID = d.productID " +
                         "WHERE d.orderID = :orderId";
 
         return jdbi.withHandle(h ->
@@ -255,8 +255,8 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.note          AS note, " +
                 "       os.statusName   AS statusName, " +
                 "       p.paymentName   AS paymentName " +
-                "FROM Orders o " +
-                "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
+                "FROM orders o " +
+                "JOIN order_statuses os ON os.ID = o.orderStatusID " +
                 "JOIN payments p ON p.ID = o.paymentID " +
                 "WHERE o.ID = :orderId AND o.userID = :userId";
 
@@ -274,8 +274,8 @@ public class OrderDao implements DaoInterface<Order> {
         return jdbi.inTransaction(handle -> {
             var row = handle.createQuery("""
             SELECT o.voucherID, o.paymentStatus, p.paymentName
-            FROM Orders o
-            JOIN Payments p ON p.ID = o.paymentID
+            FROM orders o
+            JOIN payments p ON p.ID = o.paymentID
             WHERE o.ID = :oid
               AND o.userID = :uid
               AND o.orderStatusID = 1
@@ -297,7 +297,7 @@ public class OrderDao implements DaoInterface<Order> {
             String paymentName = (String) row[2];
 
             int updated = handle.createUpdate("""
-            UPDATE Orders
+            UPDATE orders
             SET orderStatusID = 4
             WHERE ID = :oid
               AND userID = :uid
@@ -310,8 +310,8 @@ public class OrderDao implements DaoInterface<Order> {
             if (updated != 1) return false;
 
             handle.createUpdate("""
-            UPDATE Products p
-            JOIN Order_Details od ON od.productID = p.id
+            UPDATE products p
+            JOIN order_details od ON od.productID = p.id
             SET p.quantityStock = p.quantityStock + od.quantity,
                 p.soldQuantity = GREATEST(p.soldQuantity - od.quantity, 0)
             WHERE od.orderID = :oid
@@ -332,7 +332,7 @@ public class OrderDao implements DaoInterface<Order> {
 
             if (shouldReturnVoucher) {
                 handle.createUpdate("""
-        UPDATE Vouchers
+        UPDATE vouchers
         SET quantityUsed = CASE
                 WHEN quantityUsed > 0 THEN quantityUsed - 1
                 ELSE 0
@@ -364,10 +364,10 @@ public class OrderDao implements DaoInterface<Order> {
                         o.ghnStatus     AS ghnStatus,
                         os.statusName   AS statusName,
                         GROUP_CONCAT(p.name ORDER BY p.name SEPARATOR ', ') AS productNames
-                    FROM Orders o
-                    JOIN Order_Statuses os ON os.ID = o.orderStatusID
-                    LEFT JOIN Order_Details od ON od.orderID = o.ID
-                    LEFT JOIN Products p ON p.ID = od.productID
+                    FROM orders o
+                    JOIN order_statuses os ON os.ID = o.orderStatusID
+                    LEFT JOIN order_details od ON od.orderID = o.ID
+                    LEFT JOIN products p ON p.ID = od.productID
                     GROUP BY o.ID, o.fullName, o.phoneNumber, o.createAt, o.address, o.totalPrice,o.paymentStatus, o.ghnOrderCode, o.ghnStatus, os.statusName
                     ORDER BY o.createAt DESC
                 """;
@@ -383,9 +383,9 @@ public class OrderDao implements DaoInterface<Order> {
                            o.paymentStatus AS paymentStatus,
                                    o.ghnOrderCode AS ghnOrderCode,
                                    o.ghnStatus AS ghnStatus
-                    FROM Orders o
-                    JOIN Order_Statuses os ON os.ID = o.orderStatusID
-                    JOIN Payments p ON p.ID = o.paymentID
+                    FROM orders o
+                    JOIN order_statuses os ON os.ID = o.orderStatusID
+                    JOIN payments p ON p.ID = o.paymentID
                     WHERE o.ID = :id
                 """;
 
@@ -398,8 +398,8 @@ public class OrderDao implements DaoInterface<Order> {
 
     public boolean updateOrderStatusByName(int orderId, String statusName) {
         String sql = """
-                    UPDATE Orders
-                    SET orderStatusID = (SELECT ID FROM Order_Statuses WHERE statusName = :name LIMIT 1)
+                    UPDATE orders
+                    SET orderStatusID = (SELECT ID FROM order_statuses WHERE statusName = :name LIMIT 1)
                     WHERE ID = :id
                 """;
         int n = jdbi.withHandle(h -> h.createUpdate(sql)
@@ -410,7 +410,7 @@ public class OrderDao implements DaoInterface<Order> {
     }
 
     public boolean updatePaymentStatus(int orderId, String paymentStatus) {
-        String sql = "UPDATE Orders SET paymentStatus = :ps WHERE ID = :id";
+        String sql = "UPDATE orders SET paymentStatus = :ps WHERE ID = :id";
         int n = jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("id", orderId)
                 .bind("ps", paymentStatus)
@@ -420,8 +420,8 @@ public class OrderDao implements DaoInterface<Order> {
 
     public boolean updateInfoIfProcessing(int orderId, String fullName, String phone, String address) {
         String sql = """
-                    UPDATE Orders o
-                    JOIN Order_Statuses os ON os.ID = o.orderStatusID
+                    UPDATE orders o
+                    JOIN order_statuses os ON os.ID = o.orderStatusID
                     SET o.fullName = :fullName,
                         o.phoneNumber = :phone,
                         o.address = :address
@@ -465,8 +465,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.note   AS note, " +
                         "       o.cancelReason AS cancelReason, " +
                         "       os.statusName   AS statusName " +
-                        "FROM Orders o " +
-                        "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
+                        "FROM orders o " +
+                        "JOIN order_statuses os ON os.ID = o.orderStatusID " +
                         "WHERE o.ID = :orderId";
 
         return jdbi.withHandle(handle ->
@@ -479,7 +479,7 @@ public class OrderDao implements DaoInterface<Order> {
     }
     public boolean updateGhnInfo(int orderId, String ghnOrderCode, String ghnStatus) {
         String sql = """
-            UPDATE Orders
+            UPDATE orders
             SET ghnOrderCode = :ghnOrderCode,
                 ghnStatus = :ghnStatus
             WHERE ID = :id
@@ -494,7 +494,7 @@ public class OrderDao implements DaoInterface<Order> {
         return n == 1;
     }
     public boolean updateGhnStatus(int orderId, String ghnStatus) {
-        String sql = "UPDATE Orders SET ghnStatus = :ghnStatus WHERE ID = :id";
+        String sql = "UPDATE orders SET ghnStatus = :ghnStatus WHERE ID = :id";
 
         int n = jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("id", orderId)

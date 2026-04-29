@@ -12,7 +12,6 @@ public class ProductCardDao {
         this.jdbi = JDBIConnector.getJdbi();
     }
 
-    // Top theo category (dùng cho index.jsp)
     public List<ProductCard> topByCategory(int categoryId, int limit) {
         String sql = """
             SELECT 
@@ -42,7 +41,6 @@ public class ProductCardDao {
         );
     }
 
-    // Search (dùng cho ProductList.jsp)
     public List<ProductCard> search(String keyword, String sort, int offset, int limit) {
         String orderBy;
         switch (sort) {
@@ -98,7 +96,7 @@ public class ProductCardDao {
         );
     }
 
-    // Lọc theo category + min/max + sort (dùng cho ProductList.jsp)
+
     public List<ProductCard> byCategoryWithFilter(int categoryId,
                                                   Double minPrice,
                                                   Double maxPrice,

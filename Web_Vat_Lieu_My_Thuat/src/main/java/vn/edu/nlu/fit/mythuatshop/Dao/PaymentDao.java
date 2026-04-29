@@ -27,7 +27,7 @@ public class PaymentDao implements DaoInterface<Payment>{
 
     public Payment findByName(String name) {
         return jdbi.withHandle(handle ->
-                handle.createQuery("SELECT ID, paymentName, description FROM Payments WHERE paymentName = :name")
+                handle.createQuery("SELECT ID, paymentName, description FROM payments WHERE paymentName = :name")
                         .bind("name", name)
                         .mapToBean(Payment.class)
                         .findOne()
