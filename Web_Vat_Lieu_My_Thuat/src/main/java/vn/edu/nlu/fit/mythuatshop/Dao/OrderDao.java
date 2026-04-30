@@ -18,7 +18,7 @@ public class OrderDao implements DaoInterface<Order> {
 
     public int insert(Order order, boolean updateInventory) {
         return jdbi.inTransaction(handle -> {
-            String sql = "INSERT INTO Orders (userID, fullName, email, phoneNumber, address, " +
+            String sql = "INSERT INTO orders (userID, fullName, email, phoneNumber, address, " +
                     "deliveryProvinceId, deliveryDistrictId, deliveryWardCode, expectedDeliveryTime, expectedDeliveryDateText, " +
                     " totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note,paymentStatus ) " +
                     "VALUES (:userID, :fullName, :email, :phoneNumber, :address, " +
@@ -49,7 +49,7 @@ public class OrderDao implements DaoInterface<Order> {
 
             for (OrderDetail d : order.getItems()) {
                 handle.createUpdate(
-                                "INSERT INTO Order_Details (orderID, productID, quantity, price) " +
+                                "INSERT INTO order_details (orderID, productID, quantity, price) " +
                                         "VALUES (:orderID, :productID, :quantity, :price)")
                         .bind("orderID", orderId)
                         .bind("productID", d.getProductId())
@@ -74,7 +74,7 @@ public class OrderDao implements DaoInterface<Order> {
             String sql = """
                         SELECT ID, userID, fullName, email, phoneNumber, address,
                                totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note
-                        FROM Orders
+                        FROM orders
                         WHERE ID = :id
                     """;
 
@@ -112,7 +112,7 @@ public class OrderDao implements DaoInterface<Order> {
 
             List<OrderDetail> details = handle.createQuery("""
                                 SELECT productID, quantity, price
-                                FROM Order_Details
+                                FROM order_details
                                 WHERE orderID = :oid
                             """)
                     .bind("oid", orderId)
@@ -134,9 +134,9 @@ public class OrderDao implements DaoInterface<Order> {
 
 
             handle.createUpdate("""
-                                UPDATE Orders
+                                UPDATE orders
                                 SET orderStatusID = (
-                                        SELECT ID FROM Order_Statuses WHERE statusName = 'Đang xử lý' LIMIT 1
+                                        SELECT ID FROM order_statuses WHERE statusName = 'Đang xử lý' LIMIT 1
                                     ),
                                     paymentStatus = 'Đã thanh toán'
                                 WHERE ID = :id
@@ -152,9 +152,9 @@ public class OrderDao implements DaoInterface<Order> {
 
     public void markVnpayFailed(int orderId) {
         String sql = """
-                    UPDATE Orders
+                    UPDATE orders
                     SET orderStatusID = (
-                        SELECT ID FROM Order_Statuses WHERE statusName = 'Đã hủy' LIMIT 1
+                        SELECT ID FROM order_statuses WHERE statusName = 'Đã hủy' LIMIT 1
                     ),
                     paymentStatus = 'Thanh toán thất bại'
                     WHERE ID = :id

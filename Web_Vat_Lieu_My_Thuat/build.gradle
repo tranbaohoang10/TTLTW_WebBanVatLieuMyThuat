@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'war'
+    id "org.hidetake.ssh" version "2.11.2"
+
 }
 
 group = 'vn.edu.nlu.fit'
@@ -55,5 +57,75 @@ test {
 }
 
 war {
-    archiveFileName = 'mythuat-shop.war'
+    archiveFileName = 'ROOT.war'
+}
+remotes {
+    server {
+        host = '192.168.216.128'
+        user = 'danghau2512'
+        password = 'Hau!25122005'
+    }
+}
+
+ssh.settings {
+    knownHosts = allowAnyHosts
+}
+
+tasks.register('dockerStopTomcat') {
+    doLast {
+        println 'begin dockerStopTomcat'
+        ssh.run {
+            session(remotes.server) {
+                execute 'docker rm -f tomcat10 || true'            }
+        }
+    }
+}
+
+tasks.register('dockerUploadWar') {
+    dependsOn war
+
+    doLast {
+        println 'begin dockerUploadWar'
+        ssh.run {
+            session(remotes.server) {
+                execute 'mkdir -p /usr/deploy'
+
+                execute 'docker run --rm ' +
+                        '-v /usr/deploy:/deploy ' +
+                        'tomcat:10.1 ' +
+                        'sh -c "rm -rf /deploy/ROOT /deploy/ROOT.war /deploy/mythuat-shop /deploy/mythuat-shop.war"'
+
+                put from: "${project.projectDir}/build/libs/ROOT.war",
+                        into: "/usr/deploy/ROOT.war"
+            }
+        }
+    }
+}
+
+tasks.register('dockerStartTomcat') {
+    doLast {
+        println 'begin dockerStartTomcat'
+        ssh.run {
+            session(remotes.server) {
+                execute 'docker run -d ' +
+                        '--restart unless-stopped ' +
+                        '--name tomcat10 ' +
+                        '-v /usr/deploy:/usr/local/tomcat/webapps ' +
+                        '-p 80:8080 ' +
+                        '-e TZ=Asia/Ho_Chi_Minh ' +
+                        '-e JAVA_OPTS="-Duser.timezone=Asia/Ho_Chi_Minh" ' +
+                        'tomcat:10.1'
+            }
+        }
+    }
+}
+tasks.register('dockerDeploy') {
+    dependsOn build
+    dependsOn dockerStopTomcat
+    dependsOn dockerUploadWar
+    dependsOn dockerStartTomcat
+
+    tasks.named('dockerStopTomcat').get().mustRunAfter build
+    tasks.named('dockerUploadWar').get().mustRunAfter dockerStopTomcat
+    tasks.named('dockerStartTomcat').get().mustRunAfter dockerUploadWar
 }

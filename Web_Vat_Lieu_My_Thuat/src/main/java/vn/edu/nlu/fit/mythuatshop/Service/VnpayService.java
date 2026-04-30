@@ -16,7 +16,7 @@ public class VnpayService {
                 .setScale(0, RoundingMode.HALF_UP)
                 .longValue();
         long vnpAmount = amountVnd * 100;
-
+        String txnRef = order.getId() + "_" + System.currentTimeMillis();
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
@@ -24,8 +24,7 @@ public class VnpayService {
         vnp_Params.put("vnp_Amount", String.valueOf(vnpAmount));
         vnp_Params.put("vnp_CurrCode", "VND");
 
-        // Dùng orderId để về return xử lý
-        vnp_Params.put("vnp_TxnRef", String.valueOf(order.getId()));
+        vnp_Params.put("vnp_TxnRef", txnRef);
 
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang DH" + order.getId());
         vnp_Params.put("vnp_OrderType", "other");
@@ -33,12 +32,17 @@ public class VnpayService {
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", ConfigVNPay.vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", ConfigVNPay.getIpAddress(req));
-        vnp_Params.put("vnp_CreateDate", nowyyyyMMddHHmmss());
+        TimeZone vnTimeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
 
-        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(vnTimeZone);
+
+        Date createDate = new Date();
+        vnp_Params.put("vnp_CreateDate", formatter.format(createDate));
+
+        Calendar cal = Calendar.getInstance(vnTimeZone);
         cal.add(Calendar.MINUTE, 15);
-        vnp_Params.put("vnp_ExpireDate", new SimpleDateFormat("yyyyMMddHHmmss").format(cal.getTime()));
-
+        vnp_Params.put("vnp_ExpireDate", formatter.format(cal.getTime()));
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
 
