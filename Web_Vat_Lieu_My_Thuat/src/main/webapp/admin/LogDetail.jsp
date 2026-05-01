@@ -257,7 +257,7 @@
 
                     <c:choose>
                         <c:when test="${not empty log.beforeData}">
-                            <pre>${log.beforeData}</pre>
+                            <pre>${beforeData}</pre>
                         </c:when>
                         <c:otherwise>
                             <p class="empty-text">Không có dữ liệu trước khi thay đổi.</p>
@@ -270,7 +270,7 @@
 
                     <c:choose>
                         <c:when test="${not empty log.afterData}">
-                            <pre>${log.afterData}</pre>
+                            <pre>${afterData}</pre>
                         </c:when>
                         <c:otherwise>
                             <p class="empty-text">Không có dữ liệu sau khi thay đổi.</p>

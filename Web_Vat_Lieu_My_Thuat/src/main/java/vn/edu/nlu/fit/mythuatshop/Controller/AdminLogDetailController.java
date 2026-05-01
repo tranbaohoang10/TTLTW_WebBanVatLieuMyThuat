@@ -1,5 +1,6 @@
 package vn.edu.nlu.fit.mythuatshop.Controller;
 
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,8 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.nlu.fit.mythuatshop.Model.Log;
 import vn.edu.nlu.fit.mythuatshop.Service.LogService;
+import vn.edu.nlu.fit.mythuatshop.Util.FormatDataLog;
 
 import java.io.IOException;
+
 
 @WebServlet(name = "AdminLogDetailController", value = "/admin/log-detail")
 public class AdminLogDetailController extends HttpServlet {
@@ -41,6 +44,8 @@ public class AdminLogDetailController extends HttpServlet {
         }
 
         request.setAttribute("log", log);
+        request.setAttribute("beforeData", FormatDataLog.format(log.getBeforeData()));
+        request.setAttribute("afterData", FormatDataLog.format(log.getAfterData()));
         request.getRequestDispatcher("/admin/LogDetail.jsp").forward(request, response);
     }
 
@@ -49,4 +54,5 @@ public class AdminLogDetailController extends HttpServlet {
             throws ServletException, IOException {
         doGet(request, response);
     }
+
 }
