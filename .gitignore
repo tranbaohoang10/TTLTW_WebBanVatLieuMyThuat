@@ -65,3 +65,5 @@ src/main/resources/email.properties
 
 Web_Vat_Lieu_My_Thuat/gradle.properties
 
+Web_Vat_Lieu_My_Thuat/.gradle/
+
