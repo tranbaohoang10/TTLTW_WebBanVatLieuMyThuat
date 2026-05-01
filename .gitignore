@@ -63,3 +63,5 @@ src/main/resources/ghn.properties
 Web_Vat_Lieu_My_Thuat/src/main/resources/db.properties
 src/main/resources/email.properties
 
+Web_Vat_Lieu_My_Thuat/gradle.properties
+

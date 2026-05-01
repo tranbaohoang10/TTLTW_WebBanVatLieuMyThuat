@@ -101,7 +101,9 @@ tasks.register('dockerUploadWar') {
         }
     }
 }
-
+def googleClientId = project.findProperty("googleClientId") ?: ""
+def googleClientSecret = project.findProperty("googleClientSecret") ?: ""
+def googleRedirectUri = project.findProperty("googleRedirectUri") ?: "https://mythuatshop.id.vn/oauth2/callback/google"
 tasks.register('dockerStartTomcat') {
     doLast {
         println 'begin dockerStartTomcat'
@@ -113,6 +115,9 @@ tasks.register('dockerStartTomcat') {
                         '-v /usr/deploy:/usr/local/tomcat/webapps ' +
                         '-p 80:8080 ' +
                         '-e TZ=Asia/Ho_Chi_Minh ' +
+                        "-e GOOGLE_CLIENT_ID='${googleClientId}' " +
+                        "-e GOOGLE_CLIENT_SECRET='${googleClientSecret}' " +
+                        "-e GOOGLE_REDIRECT_URI='${googleRedirectUri}' " +
                         '-e JAVA_OPTS="-Duser.timezone=Asia/Ho_Chi_Minh" ' +
                         'tomcat:10.1'
             }
