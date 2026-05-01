@@ -10,6 +10,8 @@
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 
     <style>
         #main {
@@ -142,6 +144,24 @@
         .text-center {
             text-align: center;
         }
+        .dataTables_filter {
+            margin-bottom: 15px;
+        }
+
+        .dataTables_filter input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .dataTables_info {
+            display: none;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #2659F5 !important;
+            color: white !important;
+        }
     </style>
 </head>
 
@@ -206,7 +226,7 @@
                     <h1>Quản lý thao tác</h1>
                 </div>
 
-                <table class="log-table">
+                <table id="logTable" class="log-table">
                     <thead>
                     <tr>
                         <th>STT</th>
@@ -250,16 +270,40 @@
                         </tr>
                     </c:forEach>
 
-                    <c:if test="${empty logs}">
-                        <tr>
-                            <td colspan="6" class="text-center">Chưa có log nào.</td>
-                        </tr>
-                    </c:if>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#logTable').DataTable({
+            pageLength: 10,
+            lengthChange: false,
+            searching: true,
+            ordering: true,
+            language: {
+                search: "Tìm kiếm:",
+                zeroRecords: "Không tìm thấy lịch sử thao tác",
+                emptyTable: "Chưa có lịch sử thao tác nào",
+                paginate: {
+                    previous: "Trước",
+                    next: "Sau"
+                }
+            },
+            columnDefs: [
+                {
+                    targets: 5,
+                    orderable: false
+                }
+            ]
+        });
+    });
+</script>
+
 </body>
+
 </html>

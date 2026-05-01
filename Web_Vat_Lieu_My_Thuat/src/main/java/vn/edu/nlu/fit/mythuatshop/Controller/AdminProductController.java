@@ -166,7 +166,7 @@ public class AdminProductController extends HttpServlet {
         specificationsDao.upsert(productId, size, standard, madeIn, warning);
         Product after = productService.getProductById(productId);
         if (after != null) {
-            writeLog(request, "Tạo sản phẩm", "AdminProductController#create", null, after);
+            writeLog(request, "Tạo sản phẩm", "Quản lý sản phẩm", null, after);
         }
     }
 
@@ -259,7 +259,7 @@ public class AdminProductController extends HttpServlet {
         specificationsDao.upsert(id, size, standard, madeIn, warning);
         Product after = productService.getProductById(id);
         if (after != null) {
-            writeLog(request, "Cập nhật sản phẩm", "AdminProductController#update", oldProduct, after);
+            writeLog(request, "Cập nhật sản phẩm", "Quản lý sản phẩm", oldProduct, after);
         }
     }
 
@@ -275,7 +275,7 @@ public class AdminProductController extends HttpServlet {
         productService.updateActive(id, isActive);
         Product after = productService.getProductById(id);
 
-        writeLog(request, "Đổi trạng thái sản phẩm", "AdminProductController#toggleActive", before, after);
+        writeLog(request, "Đổi trạng thái sản phẩm", "Quản lý sản phẩm", before, after);
     }
 
     private String saveUploadAndReturnUrl(HttpServletRequest request, Part part, String folder) throws IOException {

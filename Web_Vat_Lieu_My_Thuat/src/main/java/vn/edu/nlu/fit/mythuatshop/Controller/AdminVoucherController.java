@@ -94,7 +94,7 @@ public class AdminVoucherController extends HttpServlet {
         Voucher voucher = getVoucherFromRequest(request, false);
         boolean ok =  voucherService.create(voucher);
         if(ok){
-            writeLog(request, "Tạo voucher", "AdminVoucherController#create", null, voucher);
+            writeLog(request, "Tạo voucher", "Quản lý khuyến mãi", null, voucher);
         }
     }
 
@@ -105,7 +105,7 @@ public class AdminVoucherController extends HttpServlet {
         boolean ok = voucherService.update(voucher);
         if(ok){
             Voucher after  = voucherService.getById(id);
-            writeLog(request, "Cập nhật voucher", "AdminVoucherController#update", before, after);
+            writeLog(request, "Cập nhật voucher", "Quản lý khuyến mãi", before, after);
         }
     }
 
@@ -114,7 +114,7 @@ public class AdminVoucherController extends HttpServlet {
         Voucher before  = voucherService.getById(id);
         boolean ok = voucherService.delete(id);
         if(ok){
-            writeLog(request, "Xóa voucher",  "AdminVoucherController#delete", before, null);
+            writeLog(request, "Xóa voucher",  "Quản lý khuyến mãi", before, null);
         }
     }
     private void lockVoucher(HttpServletRequest request) {
@@ -123,7 +123,7 @@ public class AdminVoucherController extends HttpServlet {
         boolean ok = voucherService.lock(id);
         if(ok){
             Voucher after  = voucherService.getById(id);
-            writeLog(request, "Khóa voucher",  "AdminVoucherController#lock", before, after);
+            writeLog(request, "Khóa voucher",  "Quản lý khuyến mãi", before, after);
         }
     }
     private void unlockVoucher(HttpServletRequest request) {
@@ -132,7 +132,7 @@ public class AdminVoucherController extends HttpServlet {
         boolean ok = voucherService.unlock(id);
         if(ok){
             Voucher after = voucherService.getById(id);
-            writeLog(request, "Mở khóa voucher", "AdminVoucherController#unlock", before, after);
+            writeLog(request, "Mở khóa voucher", "Quản lý khuyến mãi", before, after);
         }
         }
     private Voucher getVoucherFromRequest(HttpServletRequest request, boolean isUpdate) {
