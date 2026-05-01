@@ -93,4 +93,91 @@ public class InventoryDao {
             return true;
         });
     }
+    public boolean adjustStock(int productId, int newStock, String note, Integer adminId) {
+        if (productId <= 0 || newStock < 0) {
+            return false;
+        }
+
+        return jdbi.inTransaction(handle -> {
+            int beforeStock = getCurrentStockForUpdate(handle, productId);
+            int changedQuantity = newStock - beforeStock;
+
+            int updated = updateStockOnly(handle, productId, newStock);
+            if (updated != 1) {
+                return false;
+            }
+
+            insertWithHandle(
+                    handle,
+                    productId,
+                    "ADJUST",
+                    changedQuantity,
+                    beforeStock,
+                    newStock,
+                    note,
+                    null,
+                    adminId
+            );
+
+            return true;
+        });
+    }
+
+    public int getCurrentStockForUpdate(Handle handle, int productId) {
+        return handle.createQuery("""
+                        SELECT quantityStock
+                        FROM Products
+                        WHERE ID = :productId
+                        FOR UPDATE
+                        """)
+                .bind("productId", productId)
+                .mapTo(Integer.class)
+                .findOne()
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm ID = " + productId));
+    }
+
+    public int updateStockOnly(Handle handle, int productId, int newStock) {
+        String sql = """
+                UPDATE Products
+                SET quantityStock = :newStock,
+                    status = CASE
+                        WHEN :newStock > 0 THEN 'Còn hàng'
+                        ELSE 'Hết hàng'
+                    END
+                WHERE ID = :productId
+                """;
+
+        return handle.createUpdate(sql)
+                .bind("productId", productId)
+                .bind("newStock", newStock)
+                .execute();
+    }
+
+    public void insertWithHandle(Handle handle,
+                                 int productId,
+                                 String type,
+                                 int quantity,
+                                 int beforeStock,
+                                 int afterStock,
+                                 String note,
+                                 Integer orderId,
+                                 Integer createdBy) {
+        String sql = """
+                INSERT INTO Inventory_Transactions
+                (productID, type, quantity, beforeStock, afterStock, note, orderID, createdBy)
+                VALUES
+                (:productID, :type, :quantity, :beforeStock, :afterStock, :note, :orderID, :createdBy)
+                """;
+
+        handle.createUpdate(sql)
+                .bind("productID", productId)
+                .bind("type", type)
+                .bind("quantity", quantity)
+                .bind("beforeStock", beforeStock)
+                .bind("afterStock", afterStock)
+                .bind("note", note)
+                .bind("orderID", orderId)
+                .bind("createdBy", createdBy)
+                .execute();
+    }
 }
