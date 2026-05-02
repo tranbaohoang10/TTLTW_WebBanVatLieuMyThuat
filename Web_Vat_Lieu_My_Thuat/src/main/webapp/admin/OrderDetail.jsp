@@ -138,6 +138,19 @@
                 <td>${order.expectedDeliveryDateText}</td>
             </tr>
             <tr>
+                <td class="info-label">Mã vận đơn</td>
+                <td>
+                    <c:choose>
+                        <c:when test="${not empty order.ghnOrderCode}">
+                            ${order.ghnOrderCode}
+                        </c:when>
+                        <c:otherwise>
+                            <span class="empty-text">Chưa có vận đơn</span>
+                        </c:otherwise>
+                    </c:choose>
+                </td>
+            </tr>
+            <tr>
                 <td class="info-label">Trạng thái đơn</td>
                 <td>${order.statusName}</td>
             </tr>
