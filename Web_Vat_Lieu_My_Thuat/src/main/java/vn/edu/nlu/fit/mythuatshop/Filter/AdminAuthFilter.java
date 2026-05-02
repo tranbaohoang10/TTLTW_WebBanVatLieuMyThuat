@@ -25,18 +25,51 @@ public class AdminAuthFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
 
         HttpSession session = req.getSession(false);
-        Users currentUser = (session == null) ? null : (Users) session.getAttribute("currentUser");
+        Users currentUser = null;
+
+        if(session != null){
+            currentUser = (Users) session.getAttribute("currentUser");
+        }
 
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
-        if (currentUser.getRole() == null || !currentUser.getRole().equalsIgnoreCase("ADMIN")) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            req.getRequestDispatcher("/Error404.jsp").forward(req, resp);
+        String role = currentUser.getRole();
+            if(role == null){
+                show404(req, resp);
+                return;
+            }
+            String path = req.getServletPath() ;
+            if(role.equalsIgnoreCase("ADMIN")){
+                chain.doFilter(request, response);
+                return;
+            }
+            if (role.equalsIgnoreCase("STAFF")) {
+             if (isStaffPage(path)) {
+                chain.doFilter(request, response);
+                return;
+            }
+
+            show404(req, resp);
             return;
         }
-        // OK -> cho qua
-        chain.doFilter(request, response);
+
+        show404(req, resp);
     }
+    private void show404(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        req.getRequestDispatcher("/Error404.jsp").forward(req, resp);
     }
+    private boolean isStaffPage(String path) {
+        return path.equals("/admin/overview")
+                || path.equals("/admin/products")
+                || path.equals("/admin/orders")
+                || path.equals("/admin/order-detail")
+                || path.equals("/admin/orders/edit")
+                || path.equals("/admin/orders/status")
+                || path.equals("/admin/contacts")
+                || path.equals("/admin/contacts/delete")
+                || path.equals("/admin/contacts/reply");
+    }
+}

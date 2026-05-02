@@ -19,7 +19,7 @@ public class AdminContactController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         Users currentUser = (session == null) ? null : (Users) session.getAttribute("currentUser");
-        if (currentUser == null || !"admin".equalsIgnoreCase(currentUser.getRole())) {
+        if (currentUser == null || !"admin".equalsIgnoreCase(currentUser.getRole()) || !"staff".equalsIgnoreCase(currentUser.getRole())) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
