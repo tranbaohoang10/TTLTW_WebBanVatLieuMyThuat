@@ -178,12 +178,6 @@
           color: #222;
         }
 
-        .sub-title {
-          color: #555;
-          font-size: 16px;
-          margin-bottom: 20px;
-        }
-
         .order-table {
           width: 100%;
           border-collapse: collapse;
@@ -217,7 +211,6 @@
           border-right: 1px solid #ddd;
         }
 
-        /* Trạng thái đơn hàng */
         .status {
           display: inline-flex;
           align-items: center;
@@ -296,11 +289,6 @@
         .product-table .xoa-sanpham:hover {
           opacity: 0.9;
         }
-        /* DataTables: giữ layout đẹp */
-        .dataTables_wrapper {
-          width: 100%;
-          margin-top: 10px;
-        }
 
         .dataTables_filter input,
         .dataTables_length select {
@@ -308,10 +296,6 @@
           border-radius: 6px;
           border: 1px solid #ddd;
           outline: none;
-        }
-
-        .dataTables_filter {
-          margin-bottom: 10px;
         }
 
         .dataTables_paginate .paginate_button {
@@ -324,20 +308,18 @@
           color: #fff !important;
           border: none !important;
         }
-        /* nút phân trang DataTables */
+
         .dataTables_wrapper .dataTables_paginate .paginate_button {
           border-radius: 8px;
           border: 1px solid transparent !important;
         }
 
-        /* hover */
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
           background: #17479D !important;
           color: #fff !important;
           border: 1px solid #17479D !important;
         }
 
-        /* nút đang active */
         .dataTables_wrapper .dataTables_paginate .paginate_button.current {
           background: #17479D !important;
           color: #fff !important;
@@ -355,26 +337,32 @@
               <a href="${pageContext.request.contextPath}/admin/overview" class="active"><i
                   class="fa-solid fa-house"></i>
                 Tổng quan</a>
+                <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
               <a href="${pageContext.request.contextPath}/admin/statistics"><i class="fa-solid fa-chart-line"></i>Thống
                 kê</a>
               <a href="${pageContext.request.contextPath}/admin/categories"><i class="fa-solid fa-list"></i>Quản lý danh
                 mục</a>
+                </c:if>
               <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                 lý sản phẩm</a>
-                <a href="${pageContext.request.contextPath}/admin/users" ><i
-                        class="fa-solid fa-person"></i>Quản lý người dùng</a>
-
+                <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+                <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+                </c:if>
               <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
                 lý đơn hàng</a>
+                <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
               <a href="${pageContext.request.contextPath}/admin/vouchers"><i class="fa-solid fa-gift"></i>Quản lý
                 khuyến mãi</a>
               <a href="${pageContext.request.contextPath}/admin/sliders"><i class="fa-solid fa-sliders"></i>Quản lý
                 Slider Show</a>
+                </c:if>
               <a href="${pageContext.request.contextPath}/admin/contacts"><i class="fa-solid fa-address-book"></i>Quản lý
                 liên hệ</a>
+                <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
                 <a href="${pageContext.request.contextPath}/admin/logs">
                     <i class="fa-solid fa-clock-rotate-left"></i>Quản lý thao tác
                 </a>
+                </c:if>
               <a href="${pageContext.request.contextPath}/logout"><i class="fa-solid fa-right-from-bracket"></i>
                 Đăng xuất</a>
             </div>

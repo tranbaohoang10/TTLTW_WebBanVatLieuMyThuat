@@ -173,45 +173,35 @@
                 <img src="${pageContext.request.contextPath}/assets/images/logo/logo.png" alt="">
             </a>
 
-            <a href="${pageContext.request.contextPath}/admin/overview">
-                <i class="fa-solid fa-house"></i>Tổng quan
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/statistics">
-                <i class="fa-solid fa-chart-line"></i>Thống kê
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/categories">
-                <i class="fa-solid fa-list"></i>Quản lý danh mục
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/products">
-                <i class="fa-solid fa-palette"></i>Quản lý sản phẩm
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/users">
-                <i class="fa-solid fa-person"></i>Quản lý người dùng
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/orders">
-                <i class="fa-solid fa-box-open"></i>Quản lý đơn hàng
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/vouchers">
-                <i class="fa-solid fa-gift"></i>Quản lý khuyến mãi
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/sliders">
-                <i class="fa-solid fa-sliders"></i>Quản lý Slider Show
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/contacts">
-                <i class="fa-solid fa-address-book"></i>Quản lý liên hệ
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/logs" class="active">
-                <i class="fa-solid fa-clock-rotate-left"></i>Quản lý thao tác
-            </a>
+            <a href="${pageContext.request.contextPath}/admin/overview" ><i
+                    class="fa-solid fa-house"></i>
+                Tổng quan</a>
+            <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+                <a href="${pageContext.request.contextPath}/admin/statistics"><i class="fa-solid fa-chart-line"></i>Thống
+                    kê</a>
+                <a href="${pageContext.request.contextPath}/admin/categories"><i class="fa-solid fa-list"></i>Quản lý danh
+                    mục</a>
+            </c:if>
+            <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
+                lý sản phẩm</a>
+            <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+                <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+            </c:if>
+            <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
+                lý đơn hàng</a>
+            <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+                <a href="${pageContext.request.contextPath}/admin/vouchers"><i class="fa-solid fa-gift"></i>Quản lý
+                    khuyến mãi</a>
+                <a href="${pageContext.request.contextPath}/admin/sliders"><i class="fa-solid fa-sliders"></i>Quản lý
+                    Slider Show</a>
+            </c:if>
+            <a href="${pageContext.request.contextPath}/admin/contacts"><i class="fa-solid fa-address-book"></i>Quản lý
+                liên hệ</a>
+            <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+                <a href="${pageContext.request.contextPath}/admin/logs" class="active">
+                    <i class="fa-solid fa-clock-rotate-left" ></i>Quản lý thao tác
+                </a>
+            </c:if>
 
             <a href="${pageContext.request.contextPath}/logout">
                 <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
