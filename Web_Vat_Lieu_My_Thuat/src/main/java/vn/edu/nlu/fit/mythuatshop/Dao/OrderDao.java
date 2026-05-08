@@ -317,13 +317,14 @@ public class OrderDao implements DaoInterface<Order> {
     public boolean cancelOrder(int userId, int orderId, String cancelReason) {
         return jdbi.inTransaction(handle -> {
             var row = handle.createQuery("""
-            SELECT o.voucherID, o.paymentStatus, p.paymentName
-            FROM Orders o
-            JOIN Payments p ON p.ID = o.paymentID
-            WHERE o.ID = :oid
-              AND o.userID = :uid
-              AND o.orderStatusID = 1
-        """)
+                SELECT o.voucherID, o.paymentStatus, p.paymentName
+                FROM Orders o
+                JOIN Payments p ON p.ID = o.paymentID
+                WHERE o.ID = :oid
+                  AND o.userID = :uid
+                  AND o.orderStatusID = 1
+                FOR UPDATE
+                """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
                     .map((rs, ctx) -> new Object[]{
@@ -334,34 +335,79 @@ public class OrderDao implements DaoInterface<Order> {
                     .findOne()
                     .orElse(null);
 
-            if (row == null) return false;
+            if (row == null) {
+                return false;
+            }
 
-            Integer voucherId = (Integer) row[0];
+            Integer voucherId = row[0] == null ? null : ((Number) row[0]).intValue();
             String paymentStatus = (String) row[1];
             String paymentName = (String) row[2];
 
             int updated = handle.createUpdate("""
-            UPDATE Orders
-            SET orderStatusID = 4
-            WHERE ID = :oid
-              AND userID = :uid
-              AND orderStatusID = 1
-        """)
+                UPDATE Orders
+                SET orderStatusID = 4,
+                    cancelReason = :cancelReason
+                WHERE ID = :oid
+                  AND userID = :uid
+                  AND orderStatusID = 1
+                """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
+                    .bind("cancelReason", cancelReason)
                     .execute();
 
-            if (updated != 1) return false;
+            if (updated != 1) {
+                return false;
+            }
 
-            handle.createUpdate("""
-            UPDATE Products p
-            JOIN Order_Details od ON od.productID = p.id
-            SET p.quantityStock = p.quantityStock + od.quantity,
-                p.soldQuantity = GREATEST(p.soldQuantity - od.quantity, 0)
-            WHERE od.orderID = :oid
-        """)
-                    .bind("oid", orderId)
-                    .execute();
+            boolean shouldRestoreInventory = false;
+
+            if ("COD".equalsIgnoreCase(paymentName)) {
+                shouldRestoreInventory = true;
+            } else if ("VNPAY".equalsIgnoreCase(paymentName)
+                    && "Đã thanh toán".equalsIgnoreCase(paymentStatus)) {
+                shouldRestoreInventory = true;
+            }
+
+            if (shouldRestoreInventory) {
+                List<OrderDetail> details = handle.createQuery("""
+                    SELECT productID, quantity, price
+                    FROM Order_Details
+                    WHERE orderID = :oid
+                    """)
+                        .bind("oid", orderId)
+                        .map((rs, ctx) -> {
+                            OrderDetail d = new OrderDetail();
+                            d.setProductId(rs.getInt("productID"));
+                            d.setQuantity(rs.getInt("quantity"));
+                            d.setPrice(rs.getDouble("price"));
+                            return d;
+                        })
+                        .list();
+
+                for (OrderDetail d : details) {
+                    int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
+                    int affected = productDao.restoreStockAndSold(handle, d.getProductId(), d.getQuantity());
+                    if (affected == 0) {
+                        throw new IllegalStateException("Không thể hoàn tồn kho cho sản phẩm: " + d.getProductId());
+                    }
+
+                    int afterStock = beforeStock + d.getQuantity();
+
+                    inventoryDao.insertWithHandle(
+                            handle,
+                            d.getProductId(),
+                            "CANCEL",
+                            d.getQuantity(),
+                            beforeStock,
+                            afterStock,
+                            "Hủy đơn #DH" + orderId + " - " + cancelReason,
+                            orderId,
+                            userId
+                    );
+                }
+            }
 
             boolean shouldReturnVoucher = false;
 
@@ -376,14 +422,14 @@ public class OrderDao implements DaoInterface<Order> {
 
             if (shouldReturnVoucher) {
                 handle.createUpdate("""
-        UPDATE Vouchers
-        SET quantityUsed = CASE
-                WHEN quantityUsed > 0 THEN quantityUsed - 1
-                ELSE 0
-            END,
-            quantity = quantity + 1
-        WHERE ID = :vid
-    """)
+                    UPDATE Vouchers
+                    SET quantityUsed = CASE
+                            WHEN quantityUsed > 0 THEN quantityUsed - 1
+                            ELSE 0
+                        END,
+                        quantity = quantity + 1
+                    WHERE ID = :vid
+                    """)
                         .bind("vid", voucherId)
                         .execute();
             }
