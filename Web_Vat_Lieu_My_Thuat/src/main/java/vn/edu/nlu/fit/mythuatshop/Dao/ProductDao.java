@@ -267,13 +267,18 @@ public class ProductDao {
 
     public int updateStockAndSold(Handle handle, int productId, int qty) {
         String sql = """
-                UPDATE Products
-                SET quantityStock = quantityStock - :qty,
-                    soldQuantity = soldQuantity + :qty
-                WHERE id = :pid
-                  AND isActive = 1
-                  AND quantityStock >= :qty
-                """;
+            UPDATE Products
+            SET quantityStock = quantityStock - :qty,
+                soldQuantity = soldQuantity + :qty,
+                status = CASE
+                    WHEN quantityStock - :qty > 0 THEN 'Còn hàng'
+                    ELSE 'Hết hàng'
+                END
+            WHERE ID = :pid
+              AND isActive = 1
+              AND quantityStock >= :qty
+            """;
+
         return handle.createUpdate(sql)
                 .bind("pid", productId)
                 .bind("qty", qty)
@@ -282,14 +287,16 @@ public class ProductDao {
 
     public int restoreStockAndSold(Handle handle, int productId, int qty) {
         String sql = """
-                    UPDATE Products
-                    SET quantityStock = quantityStock + :qty,
-                        soldQuantity = CASE
-                            WHEN soldQuantity >= :qty THEN soldQuantity - :qty
-                            ELSE 0
-                        END
-                    WHERE id = :pid
-                """;
+            UPDATE Products
+            SET quantityStock = quantityStock + :qty,
+                soldQuantity = CASE
+                    WHEN soldQuantity >= :qty THEN soldQuantity - :qty
+                    ELSE 0
+                END,
+                status = 'Còn hàng'
+            WHERE ID = :pid
+            """;
+
         return handle.createUpdate(sql)
                 .bind("pid", productId)
                 .bind("qty", qty)
@@ -327,16 +334,15 @@ public class ProductDao {
 
     public int update(Product p) {
         String sql = """
-                UPDATE Products
-                SET name = :name,
-                    price = :price,
-                    discountDefault = :discountDefault,
-                    categoryID = :categoryID,
-                    thumbnail = :thumbnail,
-                    quantityStock = :quantityStock,
-                    brand = :brand
-                WHERE id = :id
-                """;
+            UPDATE Products
+            SET name = :name,
+                price = :price,
+                discountDefault = :discountDefault,
+                categoryID = :categoryID,
+                thumbnail = :thumbnail,
+                brand = :brand
+            WHERE ID = :id
+            """;
 
         return jdbi.withHandle(h ->
                 h.createUpdate(sql)
@@ -346,7 +352,6 @@ public class ProductDao {
                         .bind("discountDefault", p.getDiscountDefault())
                         .bind("categoryID", p.getCategoryId())
                         .bind("thumbnail", p.getThumbnail())
-                        .bind("quantityStock", p.getQuantityStock())
                         .bind("brand", p.getBrand())
                         .execute()
         );

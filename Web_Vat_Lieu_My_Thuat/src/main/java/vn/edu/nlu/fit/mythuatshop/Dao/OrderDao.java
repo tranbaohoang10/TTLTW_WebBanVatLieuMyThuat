@@ -10,6 +10,7 @@ import java.util.List;
 public class OrderDao implements DaoInterface<Order> {
     private final Jdbi jdbi;
     private final ProductDao productDao = new ProductDao();
+    private final InventoryDao inventoryDao = new InventoryDao();
 
 
     public OrderDao() {
@@ -20,10 +21,11 @@ public class OrderDao implements DaoInterface<Order> {
         return jdbi.inTransaction(handle -> {
             String sql = "INSERT INTO Orders (userID, fullName, email, phoneNumber, address, " +
                     "deliveryProvinceId, deliveryDistrictId, deliveryWardCode, expectedDeliveryTime, expectedDeliveryDateText, " +
-                    " totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note,paymentStatus ) " +
+                    " totalPrice, paymentID, orderStatusID, voucherID, discount, shippingFee, note, paymentStatus ) " +
                     "VALUES (:userID, :fullName, :email, :phoneNumber, :address, " +
                     ":deliveryProvinceId, :deliveryDistrictId, :deliveryWardCode, :expectedDeliveryTime, :expectedDeliveryDateText, " +
-                    " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount,:shippingFee, :note, :paymentStatus)";
+                    " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount, :shippingFee, :note, :paymentStatus)";
+
             int orderId = handle.createUpdate(sql)
                     .bind("userID", order.getUserId())
                     .bind("fullName", order.getFullName())
@@ -57,14 +59,32 @@ public class OrderDao implements DaoInterface<Order> {
                         .bind("price", d.getPrice())
                         .execute();
             }
+
             if (updateInventory) {
                 for (OrderDetail d : order.getItems()) {
+                    int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
                     int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
                     if (affected == 0) {
                         throw new IllegalStateException("Không đủ tồn kho cho sản phẩm : " + d.getProductId());
                     }
+
+                    int afterStock = beforeStock - d.getQuantity();
+
+                    inventoryDao.insertWithHandle(
+                            handle,
+                            d.getProductId(),
+                            "SALE",
+                            -d.getQuantity(),
+                            beforeStock,
+                            afterStock,
+                            "Bán hàng COD - đơn #DH" + orderId,
+                            orderId,
+                            order.getUserId()
+                    );
                 }
             }
+
             return orderId;
         });
     }
