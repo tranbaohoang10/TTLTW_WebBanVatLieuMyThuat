@@ -396,6 +396,22 @@ public class OrderService {
             return null;
         }
     }
+    public Order getOrderByGhnCode(String ghnOrderCode) {
+        try {
+            return orderDao.findByGhnOrderCode(ghnOrderCode);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
 
+    }
+    public boolean updateGhnWebhookStatus(String ghnOrderCode, String ghnStatus, String ghnUpdatedTime, String ghnWarehouse) {
+        try {
+            return orderDao.updateGhnWebhookInfo(ghnOrderCode, ghnStatus, ghnUpdatedTime, ghnWarehouse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 }

@@ -244,6 +244,8 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.deliveryWardCode   AS deliveryWardCode, " +
                 "       o.ghnOrderCode  AS ghnOrderCode, " +
                 "       o.ghnStatus     AS ghnStatus, " +
+                "       o.ghnUpdatedTime AS ghnUpdatedTime, " +
+                "       o.ghnWarehouse AS ghnWarehouse, " +
                 "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                 "       o.totalPrice    AS totalPrice, " +
                 "       o.paymentID     AS paymentId, " +
@@ -454,6 +456,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                         "       o.ghnOrderCode AS ghnOrderCode, " +
                         "       o.ghnStatus AS ghnStatus, " +
+                        "       o.ghnUpdatedTime AS ghnUpdatedTime, " +
+                        "       o.ghnWarehouse AS ghnWarehouse, " +
                         "       o.totalPrice   AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +
@@ -499,6 +503,38 @@ public class OrderDao implements DaoInterface<Order> {
         int n = jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("id", orderId)
                 .bind("ghnStatus", ghnStatus)
+                .execute());
+
+        return n == 1;
+    }
+    public Order findByGhnOrderCode(String ghnOrderCode) {
+        String sql = "SELECT o.ID AS id, o.userID AS userId, o.fullName AS fullName, " +
+                "o.email AS email, o.phoneNumber AS phoneNumber, o.address AS address, " +
+                "o.ghnOrderCode AS ghnOrderCode, o.ghnStatus AS ghnStatus, " +
+                "o.ghnUpdatedTime AS ghnUpdatedTime, o.ghnWarehouse AS ghnWarehouse, " +
+                "o.totalPrice AS totalPrice, o.paymentStatus AS paymentStatus, " +
+                "o.paymentID AS paymentId, o.orderStatusID AS orderStatusId, " +
+                "os.statusName AS statusName " +
+                "FROM orders o " +
+                "JOIN order_statuses os ON os.ID = o.orderStatusID " +
+                "WHERE o.ghnOrderCode = :ghnOrderCode";
+
+        return jdbi.withHandle(handle -> handle.createQuery(sql)
+                .bind("ghnOrderCode", ghnOrderCode)
+                .mapToBean(Order.class)
+                .findOne()
+                .orElse(null));
+    }
+
+    public boolean updateGhnWebhookInfo(String ghnOrderCode, String ghnStatus, String ghnUpdatedTime, String ghnWarehouse) {
+        String sql = "UPDATE orders SET ghnStatus = :ghnStatus, ghnUpdatedTime = :ghnUpdatedTime, " +
+                "ghnWarehouse = :ghnWarehouse WHERE ghnOrderCode = :ghnOrderCode";
+
+        int n = jdbi.withHandle(handle -> handle.createUpdate(sql)
+                .bind("ghnStatus", ghnStatus)
+                .bind("ghnUpdatedTime", ghnUpdatedTime)
+                .bind("ghnWarehouse", ghnWarehouse)
+                .bind("ghnOrderCode", ghnOrderCode)
                 .execute());
 
         return n == 1;
