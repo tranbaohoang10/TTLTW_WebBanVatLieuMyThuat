@@ -92,11 +92,13 @@ public class OrderDao implements DaoInterface<Order> {
     public Order confirmVnpayPaid(int orderId, long amountVnd) {
         return jdbi.inTransaction(handle -> {
             String sql = """
-                        SELECT ID, userID, fullName, email, phoneNumber, address,
-                               totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note
-                        FROM Orders
-                        WHERE ID = :id
-                    """;
+                SELECT ID, userID, fullName, email, phoneNumber, address,
+                       totalPrice, paymentID, orderStatusID, voucherID, discount,
+                       shippingFee, note, paymentStatus
+                FROM Orders
+                WHERE ID = :id
+                FOR UPDATE
+                """;
 
             Order order = handle.createQuery(sql)
                     .bind("id", orderId)
@@ -115,26 +117,32 @@ public class OrderDao implements DaoInterface<Order> {
                         o.setDiscount(rs.getDouble("discount"));
                         o.setShippingFee(rs.getDouble("shippingFee"));
                         o.setNote(rs.getString("note"));
+                        o.setPaymentStatus(rs.getString("paymentStatus"));
                         return o;
                     })
                     .findOne()
                     .orElse(null);
 
-            if (order == null) return null;
+            if (order == null) {
+                return null;
+            }
+            if ("Đã thanh toán".equalsIgnoreCase(order.getPaymentStatus())) {
+                return null;
+            }
 
             long dbAmountVnd = java.math.BigDecimal.valueOf(order.getTotalPrice())
                     .setScale(0, java.math.RoundingMode.HALF_UP)
                     .longValue();
 
             if (dbAmountVnd != amountVnd) {
-                throw new IllegalStateException("Sai số tiền thanh toán cho đơn hàng #DH0=" + orderId);
+                throw new IllegalStateException("Sai số tiền thanh toán cho đơn hàng #DH" + orderId);
             }
 
             List<OrderDetail> details = handle.createQuery("""
-                                SELECT productID, quantity, price
-                                FROM Order_Details
-                                WHERE orderID = :oid
-                            """)
+                SELECT productID, quantity, price
+                FROM Order_Details
+                WHERE orderID = :oid
+                """)
                     .bind("oid", orderId)
                     .map((rs, ctx) -> {
                         OrderDetail d = new OrderDetail();
@@ -146,26 +154,42 @@ public class OrderDao implements DaoInterface<Order> {
                     .list();
 
             for (OrderDetail d : details) {
+                int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
                 int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
                 if (affected == 0) {
                     throw new IllegalStateException("Không đủ tồn kho cho sản phẩm: " + d.getProductId());
                 }
+
+                int afterStock = beforeStock - d.getQuantity();
+
+                inventoryDao.insertWithHandle(
+                        handle,
+                        d.getProductId(),
+                        "SALE",
+                        -d.getQuantity(),
+                        beforeStock,
+                        afterStock,
+                        "Bán hàng VNPAY - đơn #DH" + orderId,
+                        orderId,
+                        order.getUserId()
+                );
             }
 
-
             handle.createUpdate("""
-                                UPDATE Orders
-                                SET orderStatusID = (
-                                        SELECT ID FROM Order_Statuses WHERE statusName = 'Đang xử lý' LIMIT 1
-                                    ),
-                                    paymentStatus = 'Đã thanh toán'
-                                WHERE ID = :id
-                            """)
+                UPDATE Orders
+                SET orderStatusID = (
+                        SELECT ID FROM Order_Statuses WHERE statusName = 'Đang xử lý' LIMIT 1
+                    ),
+                    paymentStatus = 'Đã thanh toán'
+                WHERE ID = :id
+                """)
                     .bind("id", orderId)
                     .execute();
 
-
             order.setItems(details);
+            order.setPaymentStatus("Đã thanh toán");
+
             return order;
         });
     }
