@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import vn.edu.nlu.fit.mythuatshop.Model.Cart;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Service.PermissionService;
 import vn.edu.nlu.fit.mythuatshop.Service.UserService;
 import vn.edu.nlu.fit.mythuatshop.Util.Env;
 
@@ -14,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 @WebServlet(name = "GoogleCallbackController", value = "/oauth2/callback/google")
 public class GoogleCallbackController extends HttpServlet {
@@ -23,10 +25,12 @@ public class GoogleCallbackController extends HttpServlet {
     private static final String REDIRECT_URI = Env.require("GOOGLE_REDIRECT_URI");
 
     private UserService userService;
+    private PermissionService permissionService;
 
     @Override
     public void init() {
         userService = new UserService();
+        permissionService = new PermissionService();
     }
 
     @Override
@@ -64,6 +68,9 @@ public class GoogleCallbackController extends HttpServlet {
         }
 
         session.setAttribute("currentUser", user);
+        Set<String> permissions = permissionService.getPermissionsByUserId(user.getId());
+        session.setAttribute("permissions", permissions);
+        session.setAttribute("loginTime", System.currentTimeMillis());
         session.setMaxInactiveInterval(30 * 60);
 
         Object obj = session.getAttribute("cart");
@@ -77,7 +84,7 @@ public class GoogleCallbackController extends HttpServlet {
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
         String role = user.getRole();
-        if (role != null && role.equalsIgnoreCase("ADMIN")) {
+        if (role != null && role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("STAFF")) {
             resp.sendRedirect(req.getContextPath() + "/admin/overview");
             return;
         }
