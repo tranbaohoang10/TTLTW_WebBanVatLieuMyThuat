@@ -361,6 +361,9 @@
                 mục</a>
               <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                 lý sản phẩm</a>
+              <a href="${pageContext.request.contextPath}/admin/inventory"><i
+                      class="fa-solid fa-person"></i>Quản
+                lý tổn kho</a>
                 <a href="${pageContext.request.contextPath}/admin/users" ><i
                         class="fa-solid fa-person"></i>Quản lý người dùng</a>
 
