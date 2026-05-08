@@ -55,9 +55,22 @@ public class OrderTrackingController extends HttpServlet {
             request.setAttribute("trackingMessage", "Chưa lấy được thông tin vận đơn.");
         } else {
             request.setAttribute("tracking", tracking);
-            request.setAttribute("trackingStatusText", mapTrackingStatus(tracking.getStatus()));
-            request.setAttribute("trackingLeadtimeText", formatIsoTime(tracking.getLeadtime()));
         }
+
+        String statusRaw = order.getGhnStatus();
+        if ((statusRaw == null || statusRaw.isBlank()) && tracking != null) {
+            statusRaw = tracking.getStatus();
+        }
+
+        String leadtimeRaw = "";
+        if (tracking != null) {
+            leadtimeRaw = tracking.getLeadtime();
+        }
+
+        request.setAttribute("trackingStatusText", mapTrackingStatus(statusRaw));
+        request.setAttribute("trackingLeadtimeText", formatIsoTime(leadtimeRaw));
+        request.setAttribute("trackingUpdatedTimeText", formatIsoTime(order.getGhnUpdatedTime()));
+        request.setAttribute("trackingWarehouseText", order.getGhnWarehouse());
 
         request.getRequestDispatcher("/OrderTracking.jsp").forward(request, response);
     }
