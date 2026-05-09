@@ -130,35 +130,48 @@
 </head>
 
 <body>
+
+<c:set var="permissions" value="${sessionScope.permissions}" />
+<c:set var="role" value="${sessionScope.currentUser.role}" />
 <div id="main">
   <div class="left">
     <div class="list-admin">
       <a href="Admin.jsp" class="logo"><img src="../assets/images/logo/logo.png" alt=""></a>
-        <a href="${pageContext.request.contextPath}/admin/overview" ><i
+        <a href="${pageContext.request.contextPath}/admin/overview"><i
                 class="fa-solid fa-house"></i>
             Tổng quan</a>
-        <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+        <c:if test="${role == 'ADMIN' || permissions.contains('STATISTIC_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/statistics"><i class="fa-solid fa-chart-line"></i>Thống
                 kê</a>
+        </c:if>
+        <c:if test="${role == 'ADMIN' || permissions.contains('CATEGORY_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/categories"><i class="fa-solid fa-list"></i>Quản lý danh
                 mục</a>
         </c:if>
-        <a href="${pageContext.request.contextPath}/admin/products" class="active"><i class="fa-solid fa-palette"></i>Quản
-            lý sản phẩm</a>
-        <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+        <c:if test="${role == 'ADMIN' || permissions.contains('PRODUCT_VIEW')}">
+            <a href="${pageContext.request.contextPath}/admin/products" class="active"><i class="fa-solid fa-palette"></i>Quản
+                lý sản phẩm</a>
+        </c:if>
+        <c:if test="${role == 'ADMIN' || permissions.contains('USERS_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
         </c:if>
-        <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
-            lý đơn hàng</a>
-        <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+        <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">
+            <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
+                lý đơn hàng</a>
+        </c:if>
+        <c:if test="${role == 'ADMIN' || permissions.contains('VOUCHER_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/vouchers"><i class="fa-solid fa-gift"></i>Quản lý
                 khuyến mãi</a>
+        </c:if>
+        <c:if test="${role == 'ADMIN' || permissions.contains('SLIDER_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/sliders"><i class="fa-solid fa-sliders"></i>Quản lý
                 Slider Show</a>
         </c:if>
-        <a href="${pageContext.request.contextPath}/admin/contacts"><i class="fa-solid fa-address-book"></i>Quản lý
-            liên hệ</a>
-        <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+        <c:if test="${role == 'ADMIN' || permissions.contains('CONTACT_VIEW')}">
+            <a href="${pageContext.request.contextPath}/admin/contacts"><i class="fa-solid fa-address-book"></i>Quản lý
+                liên hệ</a>
+        </c:if>
+        <c:if test="${role == 'ADMIN' || permissions.contains('LOG_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/logs">
                 <i class="fa-solid fa-clock-rotate-left"></i>Quản lý thao tác
             </a>

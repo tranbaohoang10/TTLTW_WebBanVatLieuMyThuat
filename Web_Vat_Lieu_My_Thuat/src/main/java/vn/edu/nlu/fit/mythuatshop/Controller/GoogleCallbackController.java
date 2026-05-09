@@ -84,7 +84,7 @@ public class GoogleCallbackController extends HttpServlet {
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
         String role = user.getRole();
-        if (role != null && role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("STAFF")) {
+        if (role != null && (role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("STAFF"))) {
             resp.sendRedirect(req.getContextPath() + "/admin/overview");
             return;
         }

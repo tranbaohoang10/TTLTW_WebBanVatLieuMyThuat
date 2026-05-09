@@ -5,9 +5,11 @@ import jakarta.servlet.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import vn.edu.nlu.fit.mythuatshop.Controller.AdminResource;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 
 import java.io.IOException;
+import java.util.Set;
 
 @WebFilter(urlPatterns = "/admin/*")
 public class AdminAuthFilter implements Filter {
@@ -36,17 +38,23 @@ public class AdminAuthFilter implements Filter {
             return;
         }
         String role = currentUser.getRole();
-            if(role == null){
+            if(role == null || role.equalsIgnoreCase("USER")){
                 show404(req, resp);
                 return;
             }
             String path = req.getServletPath() ;
+            String permissionCode = AdminResource.getPermissionCode(path);
+            if(permissionCode == null){
+                show404(req, resp);
+                return;
+            }
             if(role.equalsIgnoreCase("ADMIN")){
                 chain.doFilter(request, response);
                 return;
             }
             if (role.equalsIgnoreCase("STAFF")) {
-             if (isStaffPage(path)) {
+                Set<String> permissions = (Set<String>) session.getAttribute("permissions");
+             if (permissions != null && permissions.contains(permissionCode)) {
                 chain.doFilter(request, response);
                 return;
             }
@@ -61,15 +69,5 @@ public class AdminAuthFilter implements Filter {
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         req.getRequestDispatcher("/Error404.jsp").forward(req, resp);
     }
-    private boolean isStaffPage(String path) {
-        return path.equals("/admin/overview")
-                || path.equals("/admin/products")
-                || path.equals("/admin/orders")
-                || path.equals("/admin/order-detail")
-                || path.equals("/admin/orders/edit")
-                || path.equals("/admin/orders/status")
-                || path.equals("/admin/contacts")
-                || path.equals("/admin/contacts/delete")
-                || path.equals("/admin/contacts/reply");
-    }
+
 }
