@@ -10,6 +10,7 @@ import java.util.List;
 public class OrderDao implements DaoInterface<Order> {
     private final Jdbi jdbi;
     private final ProductDao productDao = new ProductDao();
+    private final InventoryDao inventoryDao = new InventoryDao();
 
 
     public OrderDao() {
@@ -20,10 +21,11 @@ public class OrderDao implements DaoInterface<Order> {
         return jdbi.inTransaction(handle -> {
             String sql = "INSERT INTO orders (userID, fullName, email, phoneNumber, address, " +
                     "deliveryProvinceId, deliveryDistrictId, deliveryWardCode, expectedDeliveryTime, expectedDeliveryDateText, " +
-                    " totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note,paymentStatus ) " +
+                    " totalPrice, paymentID, orderStatusID, voucherID, discount, shippingFee, note, paymentStatus ) " +
                     "VALUES (:userID, :fullName, :email, :phoneNumber, :address, " +
                     ":deliveryProvinceId, :deliveryDistrictId, :deliveryWardCode, :expectedDeliveryTime, :expectedDeliveryDateText, " +
-                    " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount,:shippingFee, :note, :paymentStatus)";
+                    " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount, :shippingFee, :note, :paymentStatus)";
+
             int orderId = handle.createUpdate(sql)
                     .bind("userID", order.getUserId())
                     .bind("fullName", order.getFullName())
@@ -57,14 +59,32 @@ public class OrderDao implements DaoInterface<Order> {
                         .bind("price", d.getPrice())
                         .execute();
             }
+
             if (updateInventory) {
                 for (OrderDetail d : order.getItems()) {
+                    int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
                     int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
                     if (affected == 0) {
                         throw new IllegalStateException("Không đủ tồn kho cho sản phẩm : " + d.getProductId());
                     }
+
+                    int afterStock = beforeStock - d.getQuantity();
+
+                    inventoryDao.insertWithHandle(
+                            handle,
+                            d.getProductId(),
+                            "SALE",
+                            -d.getQuantity(),
+                            beforeStock,
+                            afterStock,
+                            "Bán hàng COD - đơn #DH" + orderId,
+                            orderId,
+                            order.getUserId()
+                    );
                 }
             }
+
             return orderId;
         });
     }
@@ -95,19 +115,25 @@ public class OrderDao implements DaoInterface<Order> {
                         o.setDiscount(rs.getDouble("discount"));
                         o.setShippingFee(rs.getDouble("shippingFee"));
                         o.setNote(rs.getString("note"));
+                        o.setPaymentStatus(rs.getString("paymentStatus"));
                         return o;
                     })
                     .findOne()
                     .orElse(null);
 
-            if (order == null) return null;
+            if (order == null) {
+                return null;
+            }
+            if ("Đã thanh toán".equalsIgnoreCase(order.getPaymentStatus())) {
+                return null;
+            }
 
             long dbAmountVnd = java.math.BigDecimal.valueOf(order.getTotalPrice())
                     .setScale(0, java.math.RoundingMode.HALF_UP)
                     .longValue();
 
             if (dbAmountVnd != amountVnd) {
-                throw new IllegalStateException("Sai số tiền thanh toán cho đơn hàng #DH0=" + orderId);
+                throw new IllegalStateException("Sai số tiền thanh toán cho đơn hàng #DH" + orderId);
             }
 
             List<OrderDetail> details = handle.createQuery("""
@@ -126,12 +152,27 @@ public class OrderDao implements DaoInterface<Order> {
                     .list();
 
             for (OrderDetail d : details) {
+                int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
                 int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
                 if (affected == 0) {
                     throw new IllegalStateException("Không đủ tồn kho cho sản phẩm: " + d.getProductId());
                 }
-            }
 
+                int afterStock = beforeStock - d.getQuantity();
+
+                inventoryDao.insertWithHandle(
+                        handle,
+                        d.getProductId(),
+                        "SALE",
+                        -d.getQuantity(),
+                        beforeStock,
+                        afterStock,
+                        "Bán hàng VNPAY - đơn #DH" + orderId,
+                        orderId,
+                        order.getUserId()
+                );
+            }
 
             handle.createUpdate("""
                                 UPDATE orders
@@ -144,8 +185,9 @@ public class OrderDao implements DaoInterface<Order> {
                     .bind("id", orderId)
                     .execute();
 
-
             order.setItems(details);
+            order.setPaymentStatus("Đã thanh toán");
+
             return order;
         });
     }
@@ -292,9 +334,11 @@ public class OrderDao implements DaoInterface<Order> {
                     .findOne()
                     .orElse(null);
 
-            if (row == null) return false;
+            if (row == null) {
+                return false;
+            }
 
-            Integer voucherId = (Integer) row[0];
+            Integer voucherId = row[0] == null ? null : ((Number) row[0]).intValue();
             String paymentStatus = (String) row[1];
             String paymentName = (String) row[2];
 
@@ -307,19 +351,63 @@ public class OrderDao implements DaoInterface<Order> {
         """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
+                    .bind("cancelReason", cancelReason)
                     .execute();
 
-            if (updated != 1) return false;
+            if (updated != 1) {
+                return false;
+            }
 
-            handle.createUpdate("""
-            UPDATE products p
-            JOIN order_details od ON od.productID = p.id
-            SET p.quantityStock = p.quantityStock + od.quantity,
-                p.soldQuantity = GREATEST(p.soldQuantity - od.quantity, 0)
-            WHERE od.orderID = :oid
-        """)
-                    .bind("oid", orderId)
-                    .execute();
+
+            boolean shouldRestoreInventory = false;
+
+            if ("COD".equalsIgnoreCase(paymentName)) {
+                shouldRestoreInventory = true;
+            } else if ("VNPAY".equalsIgnoreCase(paymentName)
+                    && "Đã thanh toán".equalsIgnoreCase(paymentStatus)) {
+                shouldRestoreInventory = true;
+            }
+
+            if (shouldRestoreInventory) {
+                List<OrderDetail> details = handle.createQuery("""
+                    SELECT productID, quantity, price
+                    FROM Order_Details
+                    WHERE orderID = :oid
+                    """)
+                        .bind("oid", orderId)
+                        .map((rs, ctx) -> {
+                            OrderDetail d = new OrderDetail();
+                            d.setProductId(rs.getInt("productID"));
+                            d.setQuantity(rs.getInt("quantity"));
+                            d.setPrice(rs.getDouble("price"));
+                            return d;
+                        })
+                        .list();
+
+                for (OrderDetail d : details) {
+                    int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
+                    int affected = productDao.restoreStockAndSold(handle, d.getProductId(), d.getQuantity());
+                    if (affected == 0) {
+                        throw new IllegalStateException("Không thể hoàn tồn kho cho sản phẩm: " + d.getProductId());
+                    }
+
+                    int afterStock = beforeStock + d.getQuantity();
+
+                    inventoryDao.insertWithHandle(
+                            handle,
+                            d.getProductId(),
+                            "CANCEL",
+                            d.getQuantity(),
+                            beforeStock,
+                            afterStock,
+                            "Hủy đơn #DH" + orderId + " - " + cancelReason,
+                            orderId,
+                            userId
+                    );
+                }
+            }
+
 
             boolean shouldReturnVoucher = false;
 
