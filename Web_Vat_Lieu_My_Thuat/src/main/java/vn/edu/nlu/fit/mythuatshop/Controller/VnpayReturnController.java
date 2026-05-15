@@ -32,7 +32,7 @@ public class VnpayReturnController extends HttpServlet {
         String txnRef = req.getParameter("vnp_TxnRef"); // orderId
         String amountStr = req.getParameter("vnp_Amount");
 
-        int orderId = Integer.parseInt(txnRef);
+        int orderId = Integer.parseInt(txnRef.split("_")[0]);
         long amountVnd = Long.parseLong(amountStr) / 100;
         boolean success = "00".equals(responseCode) && "00".equals(tranStatus);
 

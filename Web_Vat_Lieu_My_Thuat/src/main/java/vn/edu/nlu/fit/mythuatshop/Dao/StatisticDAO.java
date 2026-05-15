@@ -19,23 +19,20 @@ public class StatisticDAO {
         this.jdbi = JDBIConnector.getJdbi();
     }
 
-    // Lấy thời điểm bắt đầu của khoảng N tháng, tính từ tháng hiện tại
     public static LocalDateTime getStartOfMonthRange(int numberOfMonths) {
         LocalDate firstDayOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
         return firstDayOfCurrentMonth.minusMonths(numberOfMonths - 1L).atStartOfDay();
     }
 
-    // Lấy thời điểm bắt đầu của tháng sau
     public static LocalDateTime getEndOfMonthRange() {
         LocalDate firstDayOfNextMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1);
         return firstDayOfNextMonth.atStartOfDay();
     }
 
-    // Tổng doanh thu của năm hiện tại
     public BigDecimal getTotalRevenueOfCurrentYear() {
         String sql = """
             SELECT COALESCE(SUM(totalPrice), 0)
-            FROM Orders
+            FROM orders
             WHERE orderStatusID = 3
               AND YEAR(createAt) = YEAR(CURDATE())
         """;
@@ -47,7 +44,6 @@ public class StatisticDAO {
         );
     }
 
-    // Doanh thu theo từng tháng của năm hiện tại
     public List<RevenueMonth> getRevenueByMonthOfCurrentYear() {
         String sql = """
             SELECT
@@ -71,7 +67,7 @@ public class StatisticDAO {
                 SELECT
                     MONTH(createAt) AS monthValue,
                     SUM(totalPrice) AS revenue
-                FROM Orders
+                FROM orders
                 WHERE orderStatusID = 3
                   AND YEAR(createAt) = YEAR(CURDATE())
                 GROUP BY MONTH(createAt)
@@ -90,7 +86,6 @@ public class StatisticDAO {
         );
     }
 
-    // Danh sách sản phẩm không bán được trong khoảng thời gian truyền vào
     public List<NoSaleRow> getProductsWithNoSales(LocalDateTime startTime, LocalDateTime endTime) {
         String sql = """
             SELECT
@@ -100,13 +95,13 @@ public class StatisticDAO {
                 product.price AS price,
                 product.createAt AS createAt,
                 0 AS soldQuantity
-            FROM Products product
-            JOIN Categories category
+            FROM products product
+            JOIN categories category
                 ON category.ID = product.categoryID
             WHERE NOT EXISTS (
                 SELECT 1
-                FROM Order_Details orderDetail
-                JOIN Orders orderTable
+                FROM order_details orderDetail
+                JOIN orders orderTable
                     ON orderTable.ID = orderDetail.orderID
                 WHERE orderDetail.productID = product.ID
                   AND orderTable.orderStatusID = 3
@@ -125,7 +120,6 @@ public class StatisticDAO {
         );
     }
 
-    // Danh sách sản phẩm bán chạy nhất
     public List<BestSellerRow> getBestSellingProductsOfAllTime() {
         String sql = """
             SELECT
@@ -136,14 +130,14 @@ public class StatisticDAO {
                 product.createAt AS createAt,
                 COALESCE((
                     SELECT SUM(orderDetail.quantity)
-                    FROM Order_Details orderDetail
-                    JOIN Orders orderTable
+                    FROM order_details orderDetail
+                    JOIN orders orderTable
                         ON orderTable.ID = orderDetail.orderID
                     WHERE orderDetail.productID = product.ID
                       AND orderTable.orderStatusID = 3
                 ), 0) AS soldQty
-            FROM Products product
-            JOIN Categories category
+            FROM products product
+            JOIN categories category
                 ON category.ID = product.categoryID
             ORDER BY soldQty DESC
         """;
@@ -155,7 +149,6 @@ public class StatisticDAO {
         );
     }
 
-    // Top 5 sản phẩm bán chạy nhất để vẽ biểu đồ
     public List<BestSellerChartPoint> getTop5BestSellingProductsForChart() {
         String sql = """
             SELECT
@@ -163,8 +156,8 @@ public class StatisticDAO {
                 product.name AS productName,
                 COALESCE((
                     SELECT SUM(orderDetail.quantity)
-                    FROM Order_Details orderDetail
-                    JOIN Orders orderTable
+                    FROM order_details orderDetail
+                    JOIN orders orderTable
                         ON orderTable.ID = orderDetail.orderID
                     WHERE orderDetail.productID = product.ID
                       AND orderTable.orderStatusID = 3

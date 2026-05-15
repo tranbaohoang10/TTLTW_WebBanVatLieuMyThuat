@@ -146,6 +146,10 @@
         <a href="${pageContext.request.contextPath}/admin/products" class="active"><i class="fa-solid fa-palette"></i>Quản
             lý sản phẩm</a>
         <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+          <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
+                lý tồn kho</a>
+          </c:if>
+        <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
             <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
         </c:if>
         <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản

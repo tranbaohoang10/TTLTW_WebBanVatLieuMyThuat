@@ -13,7 +13,6 @@ public class SliderShowDao {
         this.jdbi = JDBIConnector.getJdbi();
     }
 
-    // ========== FRONTEND (chỉ lấy slider đang bật) ==========
     public List<SliderShow> getSliderShowAll() {
         String sql = """
             SELECT id, title, thumbnail, status, indexOrder, linkTo
@@ -24,7 +23,6 @@ public class SliderShowDao {
         return jdbi.withHandle(h -> h.createQuery(sql).mapToBean(SliderShow.class).list());
     }
 
-    // ========== ADMIN: COUNT (phục vụ phân trang + search) ==========
     public int countByKeyword(String keyword) {
         String kw = (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim();
         String sql = """
@@ -41,7 +39,7 @@ public class SliderShowDao {
         );
     }
 
-    // ========== ADMIN: LIST + SEARCH + PAGING ==========
+
     public List<SliderShow> findPageByKeyword(String keyword, int offset, int limit) {
         String kw = (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim();
         String sql = """
@@ -62,7 +60,6 @@ public class SliderShowDao {
         );
     }
 
-    // ========== ADMIN: FIND BY ID (phục vụ sửa) ==========
     public Optional<SliderShow> findById(int id) {
         String sql = """
             SELECT id, title, thumbnail, status, indexOrder, linkTo
@@ -77,7 +74,6 @@ public class SliderShowDao {
         );
     }
 
-    // ========== ADMIN: CHECK TRÙNG indexOrder ==========
     public boolean existsIndexOrder(int indexOrder, Integer excludeId) {
         String sql = """
             SELECT COUNT(*)
@@ -95,7 +91,6 @@ public class SliderShowDao {
         return c > 0;
     }
 
-    // ========== ADMIN: CREATE ==========
     public int insert(SliderShow s) {
         String sql = """
             INSERT INTO slidershows(title, thumbnail, status, indexOrder, linkTo)
@@ -110,7 +105,6 @@ public class SliderShowDao {
         );
     }
 
-    // ========== ADMIN: UPDATE ==========
     public int update(SliderShow s) {
         String sql = """
             UPDATE slidershows
@@ -124,7 +118,6 @@ public class SliderShowDao {
         return jdbi.withHandle(h -> h.createUpdate(sql).bindBean(s).execute());
     }
 
-    // ========== ADMIN: TOGGLE STATUS ==========
     public int updateStatus(int id, int status) {
         String sql = "UPDATE slidershows SET status = :status WHERE id = :id";
         return jdbi.withHandle(h ->
@@ -135,7 +128,6 @@ public class SliderShowDao {
         );
     }
 
-    // ========== ADMIN: DELETE ==========
     public int delete(int id) {
         String sql = "DELETE FROM slidershows WHERE id = :id";
         return jdbi.withHandle(h -> h.createUpdate(sql).bind("id", id).execute());
