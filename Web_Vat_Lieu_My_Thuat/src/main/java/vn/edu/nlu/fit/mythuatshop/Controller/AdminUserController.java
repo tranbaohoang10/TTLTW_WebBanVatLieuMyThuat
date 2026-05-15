@@ -118,7 +118,7 @@ public class AdminUserController extends HttpServlet {
                 after.setPhoneNumber(phoneNumber);
                 after.setAddress(address);
                 after.setRole(role);
-                writeLog(request, "Tạo người dùng", "AdminUserController#create", null, after);
+                writeLog(request, "Tạo người dùng", "Quản lý người dùng", null, after);
             }
 
         } else if ("update".equals(action)) {
@@ -133,7 +133,7 @@ public class AdminUserController extends HttpServlet {
             result = adminUserService.updateUser(id, fullName, phoneNumber, dob, address, role);
             if (result) {
                 Users after = adminUserService.getUserById(id);
-                writeLog(request, "Cập nhật người dùng", "AdminUserController#update", before, after);
+                writeLog(request, "Cập nhật người dùng", "Quản lý người dùng", before, after);
             }
 
         } else if ("lock".equals(action)) {
@@ -142,7 +142,7 @@ public class AdminUserController extends HttpServlet {
             result = adminUserService.lockUser(id);
             if (result) {
                 Users after = adminUserService.getUserById(id);
-                writeLog(request, "Khóa người dùng", "AdminUserController#lock", before, after);
+                writeLog(request, "Khóa người dùng", "Quản lý người dùng", before, after);
             }
 
         } else if ("unlock".equals(action)) {
@@ -151,7 +151,7 @@ public class AdminUserController extends HttpServlet {
             result = adminUserService.unlockUser(id);
             if (result) {
                 Users after = adminUserService.getUserById(id);
-                writeLog(request, "Mở khóa người dùng", "AdminUserController#unlock", before, after);
+                writeLog(request, "Mở khóa người dùng", "Quản lý người dùng", before, after);
             }
         }
 

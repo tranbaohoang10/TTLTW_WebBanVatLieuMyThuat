@@ -111,7 +111,7 @@ public class LoginController extends HttpServlet {
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
         String role = user1.getRole();
-        if(role.equalsIgnoreCase("admin")){
+        if(role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("staff")) {
             resp.sendRedirect(req.getContextPath()+"/admin/overview");
             return;
         }
