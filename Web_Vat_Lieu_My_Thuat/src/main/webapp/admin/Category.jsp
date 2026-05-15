@@ -150,9 +150,8 @@
                 <i class="fa-solid fa-list"></i>Quản lý danh mục
             </a>
             <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản lý sản phẩm</a>
-            <a href="${pageContext.request.contextPath}/admin/inventory"><i
-                    class="fa-solid fa-person"></i>Quản
-                lý tổn kho</a>
+            <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
+                lý tồn kho</a>
             <a href="${pageContext.request.contextPath}/admin/users"><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
             <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản lý đơn hàng</a>
             <a href="${pageContext.request.contextPath}/admin/vouchers"><i class="fa-solid fa-gift"></i>Quản lý khuyến mãi</a>

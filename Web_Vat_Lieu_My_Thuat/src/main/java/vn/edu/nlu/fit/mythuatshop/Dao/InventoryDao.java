@@ -65,7 +65,7 @@ public class InventoryDao {
     }
 
     public boolean importStock(int productId, int quantity, String note, Integer adminId) {
-        if (productId <= 0 || quantity <= 0) {
+        if (productId < 0 || quantity <= 0) {
             return false;
         }
 
@@ -94,7 +94,7 @@ public class InventoryDao {
         });
     }
     public boolean adjustStock(int productId, int newStock, String note, Integer adminId) {
-        if (productId <= 0 || newStock < 0) {
+        if (productId < 0 || newStock < 0) {
             return false;
         }
 
@@ -179,5 +179,24 @@ public class InventoryDao {
                 .bind("orderID", orderId)
                 .bind("createdBy", createdBy)
                 .execute();
+    }
+    public void recordInitialStock(int productId, int quantity, String note, Integer adminId) {
+        if (productId < 0 || quantity <= 0) {
+            return;
+        }
+
+        jdbi.useHandle(handle ->
+                insertWithHandle(
+                        handle,
+                        productId,
+                        "IMPORT",
+                        quantity,
+                        0,
+                        quantity,
+                        note,
+                        null,
+                        adminId
+                )
+        );
     }
 }
