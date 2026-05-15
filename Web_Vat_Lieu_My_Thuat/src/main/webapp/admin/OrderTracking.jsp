@@ -88,6 +88,41 @@
     <div class="row">
         <span class="label">Mã vận đơn GHN:</span> ${order.ghnOrderCode}
     </div>
+    <div class="row">
+        <span class="label">Trạng thái webhook:</span>
+        <c:choose>
+            <c:when test="${not empty statusRaw}">
+                ${statusRaw}
+            </c:when>
+            <c:otherwise>
+                Chưa có thông tin
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <div class="row">
+        <span class="label">Cập nhật lúc:</span>
+        <c:choose>
+            <c:when test="${not empty updatedTimeRaw}">
+                ${updatedTimeRaw}
+            </c:when>
+            <c:otherwise>
+                Chưa có thông tin
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <div class="row">
+        <span class="label">Kho hiện tại:</span>
+        <c:choose>
+            <c:when test="${not empty warehouseRaw}">
+                ${warehouseRaw}
+            </c:when>
+            <c:otherwise>
+                Chưa có thông tin
+            </c:otherwise>
+        </c:choose>
+    </div>
 
     <div class="row">
         <span class="label">Trạng thái:</span>

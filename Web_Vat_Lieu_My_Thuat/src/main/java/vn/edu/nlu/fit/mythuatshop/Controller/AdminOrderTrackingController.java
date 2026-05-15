@@ -38,6 +38,9 @@ public class AdminOrderTrackingController extends HttpServlet {
         }
 
         request.setAttribute("order", order);
+        request.setAttribute("statusRaw", order.getGhnStatus());
+        request.setAttribute("updatedTimeRaw", order.getGhnUpdatedTime());
+        request.setAttribute("warehouseRaw", order.getGhnWarehouse());
 
         if (order.getGhnOrderCode() == null || order.getGhnOrderCode().isBlank()) {
             request.setAttribute("trackingMessage", "Đơn hàng chưa được tạo vận đơn.");
