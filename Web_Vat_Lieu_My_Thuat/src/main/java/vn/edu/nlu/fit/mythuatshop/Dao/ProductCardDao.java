@@ -3,6 +3,7 @@ package vn.edu.nlu.fit.mythuatshop.Dao;
 import org.jdbi.v3.core.Jdbi;
 import vn.edu.nlu.fit.mythuatshop.Model.ProductCard;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductCardDao {
@@ -51,50 +52,71 @@ public class ProductCardDao {
             default         -> orderBy = " ORDER BY p.soldQuantity DESC ";
         }
 
-        String sql = """
-            SELECT 
-                p.id, p.name, p.price, p.discountDefault,
-                p.categoryID AS categoryId,
-                p.thumbnail, p.quantityStock, p.soldQuantity,
-                p.status, p.createAt, p.brand,
-                COALESCE(AVG(pr.rating), 0) AS avgRating,
-                COUNT(pr.id) AS reviewCount
-            FROM products p
-            LEFT JOIN product_reviews pr ON pr.productID = p.id
-            WHERE p.isActive = 1
-              AND p.name LIKE CONCAT('%', :kw, '%')
-            GROUP BY 
-                p.id, p.name, p.price, p.discountDefault, p.categoryID,
-                p.thumbnail, p.quantityStock, p.soldQuantity, p.status, p.createAt, p.brand
-        """ + orderBy + """
-            LIMIT :limit OFFSET :offset
-        """;
+        List<String> keywords = splitKeywords(keyword);
 
-        return jdbi.withHandle(h ->
-                h.createQuery(sql)
-                        .bind("kw", keyword)
-                        .bind("limit", limit)
-                        .bind("offset", offset)
-                        .mapToBean(ProductCard.class)
-                        .list()
-        );
+        StringBuilder sql = new StringBuilder("""
+        SELECT 
+            p.id, p.name, p.price, p.discountDefault,
+            p.categoryID AS categoryId,
+            p.thumbnail, p.quantityStock, p.soldQuantity,
+            p.status, p.createAt, p.brand,
+            COALESCE(AVG(pr.rating), 0) AS avgRating,
+            COUNT(pr.id) AS reviewCount
+        FROM products p
+        LEFT JOIN product_reviews pr ON pr.productID = p.id
+        WHERE p.isActive = 1
+    """);
+
+        for (int i = 0; i < keywords.size(); i++) {
+            sql.append(" AND p.name LIKE CONCAT('%', :kw").append(i).append(", '%') ");
+        }
+
+        sql.append("""
+        GROUP BY 
+            p.id, p.name, p.price, p.discountDefault, p.categoryID,
+            p.thumbnail, p.quantityStock, p.soldQuantity, p.status, p.createAt, p.brand
+    """);
+
+        sql.append(orderBy);
+        sql.append(" LIMIT :limit OFFSET :offset ");
+
+        return jdbi.withHandle(h -> {
+            var query = h.createQuery(sql.toString())
+                    .bind("limit", limit)
+                    .bind("offset", offset);
+
+            for (int i = 0; i < keywords.size(); i++) {
+                query.bind("kw" + i, keywords.get(i));
+            }
+
+            return query.mapToBean(ProductCard.class).list();
+        });
     }
 
     public int countSearch(String keyword) {
-        String sql = """
-            SELECT COUNT(*)
-            FROM products p
-            WHERE p.isActive = 1
-              AND p.name LIKE CONCAT('%', :kw, '%')
-        """;
+        List<String> keywords = splitKeywords(keyword);
 
-        return jdbi.withHandle(h ->
-                h.createQuery(sql)
-                        .bind("kw", keyword)
-                        .mapTo(Integer.class)
-                        .one()
-        );
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*)
+        FROM products p
+        WHERE p.isActive = 1
+    """);
+
+        for (int i = 0; i < keywords.size(); i++) {
+            sql.append(" AND p.name LIKE CONCAT('%', :kw").append(i).append(", '%') ");
+        }
+
+        return jdbi.withHandle(h -> {
+            var query = h.createQuery(sql.toString());
+
+            for (int i = 0; i < keywords.size(); i++) {
+                query.bind("kw" + i, keywords.get(i));
+            }
+
+            return query.mapTo(Integer.class).one();
+        });
     }
+
 
 
     public List<ProductCard> byCategoryWithFilter(int categoryId,
@@ -176,5 +198,22 @@ public class ProductCardDao {
             if (maxPrice != null) q.bind("maxPrice", maxPrice);
             return q.mapTo(Integer.class).one();
         });
+    }
+    private List<String> splitKeywords(String keyword) {
+        List<String> keywords = new ArrayList<>();
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return keywords;
+        }
+
+        String[] parts = keyword.trim().replaceAll("\\s+", " ").split(" ");
+
+        for (String part : parts) {
+            if (!part.trim().isEmpty()) {
+                keywords.add(part.trim());
+            }
+        }
+
+        return keywords;
     }
 }
