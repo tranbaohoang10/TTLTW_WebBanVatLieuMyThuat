@@ -18,16 +18,15 @@ public class ProductDao {
     public List<Product> findAll() {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products "+
+                "FROM products "+
                 "ORDER BY id DESC";
         return jdbi.withHandle(h -> h.createQuery(sql).mapToBean(Product.class).list());
     }
 
-    // Admin cần lấy theo id (để update vẫn lấy được thumbnail cũ)
     public Product findByProductId(int productId) {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products " +
+                "FROM products " +
                 "WHERE id = :productId";
         return jdbi.withHandle(h ->
                 h.createQuery(sql)
@@ -43,7 +42,7 @@ public class ProductDao {
     public Product findByProductIdActive(int productId) {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products " +
+                "FROM products " +
                 "WHERE id = :productId AND isActive = 1";
         return jdbi.withHandle(h ->
                 h.createQuery(sql)
@@ -57,7 +56,7 @@ public class ProductDao {
     public List<Product> findByCategoryId(int categoryId) {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products " +
+                "FROM products " +
                 "WHERE categoryId = :categoryId AND isActive = 1 " +
                 "ORDER BY soldQuantity DESC " +
                 "LIMIT 10";
@@ -72,7 +71,7 @@ public class ProductDao {
     public List<Product> findByCategoryIdTop5(int categoryId) {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products " +
+                "FROM products " +
                 "WHERE categoryId = :categoryId AND isActive = 1 " +
                 "ORDER BY soldQuantity DESC " +
                 "LIMIT 6";
@@ -87,7 +86,7 @@ public class ProductDao {
     public List<Product> findByCategoryIdNoLimit(int categoryId) {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products " +
+                "FROM products " +
                 "WHERE categoryId = :categoryId AND isActive = 1 " +
                 "ORDER BY soldQuantity DESC";
         return jdbi.withHandle(h ->
@@ -98,7 +97,6 @@ public class ProductDao {
         );
     }
 
-    // ===================== FILTER (client) =====================
 
     public List<Product> findByCategoryWithFilter(int categoryId,
                                                   Double minPrice,
@@ -106,7 +104,7 @@ public class ProductDao {
                                                   String sort) {
 
         StringBuilder sql = new StringBuilder(
-                "SELECT * FROM Products WHERE categoryId = :categoryId AND isActive = 1 ");
+                "SELECT * FROM products WHERE categoryId = :categoryId AND isActive = 1 ");
 
         if (minPrice != null) {
             sql.append(" AND price * (100.0 - discountDefault) / 100.0 >= :minPrice");
@@ -144,7 +142,7 @@ public class ProductDao {
                                                   int limit) {
 
         StringBuilder sql = new StringBuilder(
-                "SELECT * FROM Products WHERE categoryId = :categoryId AND isActive = 1 ");
+                "SELECT * FROM products WHERE categoryId = :categoryId AND isActive = 1 ");
 
         if (minPrice != null) {
             sql.append(" AND price * (100.0 - discountDefault) / 100.0 >= :minPrice");
@@ -180,7 +178,7 @@ public class ProductDao {
 
     public int countProductsByCategory(int categoryId, Double minPrice, Double maxPrice) {
         StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(*) FROM Products WHERE categoryId = :categoryId AND isActive = 1 ");
+                "SELECT COUNT(*) FROM products WHERE categoryId = :categoryId AND isActive = 1 ");
 
         if (minPrice != null) {
             sql.append(" AND price * (100.0 - discountDefault) / 100.0 >= :minPrice");
@@ -200,12 +198,11 @@ public class ProductDao {
         });
     }
 
-    // ===================== SEARCH (client) =====================
 
     public List<Product> getProductSearch(String productName) {
         String sql = "SELECT id, name, price, discountDefault, categoryId, " +
                 "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                "FROM Products " +
+                "FROM products " +
                 "WHERE isActive = 1 AND name LIKE CONCAT('%', :productName, '%')";
         return jdbi.withHandle(h ->
                 h.createQuery(sql)
@@ -219,7 +216,7 @@ public class ProductDao {
         StringBuilder sql = new StringBuilder(
                 "SELECT id, name, price, discountDefault, categoryId, " +
                         "thumbnail, quantityStock, soldQuantity, status, createAt, brand, isActive " +
-                        "FROM Products " +
+                        "FROM products " +
                         "WHERE isActive = 1 AND name LIKE CONCAT('%', :productName, '%') ");
 
         if (sort != null && !sort.isEmpty()) {
@@ -255,7 +252,7 @@ public class ProductDao {
     }
 
     public int countProductSearch(String productName) {
-        String sql = "SELECT COUNT(*) FROM Products " +
+        String sql = "SELECT COUNT(*) FROM products " +
                 "WHERE isActive = 1 AND name LIKE CONCAT('%', :productName, '%')";
         return jdbi.withHandle(h ->
                 h.createQuery(sql)
@@ -267,18 +264,13 @@ public class ProductDao {
 
     public int updateStockAndSold(Handle handle, int productId, int qty) {
         String sql = """
-            UPDATE Products
-            SET quantityStock = quantityStock - :qty,
-                soldQuantity = soldQuantity + :qty,
-                status = CASE
-                    WHEN quantityStock - :qty > 0 THEN 'Còn hàng'
-                    ELSE 'Hết hàng'
-                END
-            WHERE ID = :pid
-              AND isActive = 1
-              AND quantityStock >= :qty
-            """;
-
+                UPDATE products
+                SET quantityStock = quantityStock - :qty,
+                    soldQuantity = soldQuantity + :qty
+                WHERE id = :pid
+                  AND isActive = 1
+                  AND quantityStock >= :qty
+                """;
         return handle.createUpdate(sql)
                 .bind("pid", productId)
                 .bind("qty", qty)
@@ -287,27 +279,24 @@ public class ProductDao {
 
     public int restoreStockAndSold(Handle handle, int productId, int qty) {
         String sql = """
-            UPDATE Products
-            SET quantityStock = quantityStock + :qty,
-                soldQuantity = CASE
-                    WHEN soldQuantity >= :qty THEN soldQuantity - :qty
-                    ELSE 0
-                END,
-                status = 'Còn hàng'
-            WHERE ID = :pid
-            """;
-
+                    UPDATE products
+                    SET quantityStock = quantityStock + :qty,
+                        soldQuantity = CASE
+                            WHEN soldQuantity >= :qty THEN soldQuantity - :qty
+                            ELSE 0
+                        END
+                    WHERE id = :pid
+                """;
         return handle.createUpdate(sql)
                 .bind("pid", productId)
                 .bind("qty", qty)
                 .execute();
     }
 
-    // ===================== CRUD ADMIN =====================
 
     public int insertReturnId(Product p) {
         String sql = """
-                INSERT INTO Products(name, price, discountDefault, categoryID, thumbnail,
+                INSERT INTO products(name, price, discountDefault, categoryID, thumbnail,
                                      quantityStock, soldQuantity, status, createAt, brand, isActive)
                 VALUES (:name, :price, :discountDefault, :categoryID, :thumbnail,
                         :quantityStock, :soldQuantity, :status, :createAt, :brand, :isActive)
@@ -334,15 +323,16 @@ public class ProductDao {
 
     public int update(Product p) {
         String sql = """
-            UPDATE Products
-            SET name = :name,
-                price = :price,
-                discountDefault = :discountDefault,
-                categoryID = :categoryID,
-                thumbnail = :thumbnail,
-                brand = :brand
-            WHERE ID = :id
-            """;
+                UPDATE products
+                SET name = :name,
+                    price = :price,
+                    discountDefault = :discountDefault,
+                    categoryID = :categoryID,
+                    thumbnail = :thumbnail,
+                    quantityStock = :quantityStock,
+                    brand = :brand
+                WHERE id = :id
+                """;
 
         return jdbi.withHandle(h ->
                 h.createUpdate(sql)
@@ -358,7 +348,7 @@ public class ProductDao {
     }
 
     public int updateActive(int id, int isActive) {
-        String sql = "UPDATE Products SET isActive = :isActive WHERE id = :id";
+        String sql = "UPDATE products SET isActive = :isActive WHERE id = :id";
         return jdbi.withHandle(h ->
                 h.createUpdate(sql)
                         .bind("id", id)
@@ -368,7 +358,7 @@ public class ProductDao {
     }
 
     public int deleteById(int id) {
-        String sql = "DELETE FROM Products WHERE id = :id";
+        String sql = "DELETE FROM products WHERE id = :id";
         return jdbi.withHandle(h -> h.createUpdate(sql).bind("id", id).execute());
     }
 }

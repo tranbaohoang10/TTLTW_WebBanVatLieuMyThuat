@@ -34,7 +34,25 @@ public class Order implements Serializable {
     private String cancelReason;
     private String ghnOrderCode;
     private String ghnStatus;
+    private String ghnUpdatedTime;
+    private String ghnWarehouse;
     public Order() {
+    }
+
+    public String getGhnUpdatedTime() {
+        return ghnUpdatedTime;
+    }
+
+    public void setGhnUpdatedTime(String ghnUpdatedTime) {
+        this.ghnUpdatedTime = ghnUpdatedTime;
+    }
+
+    public String getGhnWarehouse() {
+        return ghnWarehouse;
+    }
+
+    public void setGhnWarehouse(String ghnWarehouse) {
+        this.ghnWarehouse = ghnWarehouse;
     }
 
     public Integer getDeliveryProvinceId() {

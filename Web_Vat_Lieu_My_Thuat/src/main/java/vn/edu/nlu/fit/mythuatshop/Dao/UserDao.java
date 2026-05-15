@@ -15,7 +15,7 @@ public class UserDao {
 
     public Users findByEmail(String email) {
         String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, createAt, isActive" +
-                " FROM Users WHERE email = :email ";
+                " FROM users WHERE email = :email ";
         return jdbi.withHandle(handle -> handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
     }
     public int insertUser(Users user) {

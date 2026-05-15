@@ -96,6 +96,25 @@
             color: #888;
             font-style: italic;
         }
+        .btn-view-tracking {
+            display: inline-block;
+            padding: 8px 14px;
+            background: #2563eb;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .btn-view-tracking:hover {
+            background: #1d4ed8;
+            color: #fff;
+        }
+
+        .empty-text {
+            color: #777;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -136,6 +155,35 @@
             <tr>
                 <td class="info-label">Ngày dự kiến</td>
                 <td>${order.expectedDeliveryDateText}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Mã vận đơn</td>
+                <td>
+                    <c:choose>
+                        <c:when test="${not empty order.ghnOrderCode}">
+                            ${order.ghnOrderCode}
+                        </c:when>
+                        <c:otherwise>
+                            <span class="empty-text">Chưa có vận đơn</span>
+                        </c:otherwise>
+                    </c:choose>
+                </td>
+            </tr>
+            <tr>
+                <td class="info-label">Xem vận đơn</td>
+                <td>
+                    <c:choose>
+                        <c:when test="${not empty order.ghnOrderCode}">
+                            <a href="${pageContext.request.contextPath}/admin/order-tracking?id=${order.id}"
+                               class="btn-view-tracking">
+                                Xem vận đơn
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="empty-text">Chưa có vận đơn</span>
+                        </c:otherwise>
+                    </c:choose>
+                </td>
             </tr>
             <tr>
                 <td class="info-label">Trạng thái đơn</td>
