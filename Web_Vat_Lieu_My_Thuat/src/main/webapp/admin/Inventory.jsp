@@ -9,7 +9,7 @@
     <meta charset="UTF-8">
     <title>Quản lý tồn kho</title>
 
-    <link rel="stylesheet" href="${ctx}/assets/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css"/>
 
@@ -187,21 +187,21 @@
 <div id="main">
     <div class="left">
         <div class="list-admin">
-            <a href="${ctx}/admin/Admin.jsp" class="logo">
-                <img src="${ctx}/assets/images/logo/logo.png" alt="">
+            <a href="${pageContext.request.contextPath}/admin/Admin.jsp" class="logo">
+                <img src="${pageContext.request.contextPath}/assets/images/logo/logo.png" alt="">
             </a>
 
-            <a href="${ctx}/admin/overview"><i class="fa-solid fa-house"></i>Tổng quan</a>
-            <a href="${ctx}/admin/statistics"><i class="fa-solid fa-chart-line"></i>Thống kê</a>
-            <a href="${ctx}/admin/categories"><i class="fa-solid fa-list"></i>Quản lý danh mục</a>
-            <a href="${ctx}/admin/products"><i class="fa-solid fa-palette"></i>Quản lý sản phẩm</a>
-            <a href="${ctx}/admin/inventory" class="active"><i class="fa-solid fa-warehouse"></i>Quản lý tồn kho</a>
-            <a href="${ctx}/admin/users"><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
-            <a href="${ctx}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản lý đơn hàng</a>
-            <a href="${ctx}/admin/vouchers"><i class="fa-solid fa-gift"></i>Quản lý khuyến mãi</a>
-            <a href="${ctx}/admin/sliders"><i class="fa-solid fa-sliders"></i>Quản lý Slider Show</a>
-            <a href="${ctx}/admin/contacts"><i class="fa-solid fa-address-book"></i>Quản lý liên hệ</a>
-            <a href="${ctx}/logout"><i class="fa-solid fa-right-from-bracket"></i>Đăng xuất</a>
+            <a href="${pageContext.request.contextPath}/admin/overview"><i class="fa-solid fa-house"></i>Tổng quan</a>
+            <a href="${pageContext.request.contextPath}/admin/statistics"><i class="fa-solid fa-chart-line"></i>Thống kê</a>
+            <a href="${pageContext.request.contextPath}/admin/categories"><i class="fa-solid fa-list"></i>Quản lý danh mục</a>
+            <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản lý sản phẩm</a>
+            <a href="${pageContext.request.contextPath}/admin/inventory" class="active"><i class="fa-solid fa-warehouse"></i>Quản lý tồn kho</a>
+            <a href="${pageContext.request.contextPath}/admin/users"><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+            <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản lý đơn hàng</a>
+            <a href="${pageContext.request.contextPath}/admin/vouchers"><i class="fa-solid fa-gift"></i>Quản lý khuyến mãi</a>
+            <a href="${pageContext.request.contextPath}/admin/sliders"><i class="fa-solid fa-sliders"></i>Quản lý Slider Show</a>
+            <a href="${pageContext.request.contextPath}/admin/contacts"><i class="fa-solid fa-address-book"></i>Quản lý liên hệ</a>
+            <a href="${pageContext.request.contextPath}/logout"><i class="fa-solid fa-right-from-bracket"></i>Đăng xuất</a>
         </div>
     </div>
 
@@ -257,7 +257,7 @@
                             </td>
 
                             <td>
-                                <form class="form-inline" method="post" action="${ctx}/admin/inventory">
+                                <form class="form-inline" method="post" action="${pageContext.request.contextPath}/admin/inventory">
                                     <input type="hidden" name="action" value="importStock">
                                     <input type="hidden" name="productId" value="${p.id}">
                                     <input type="number" name="quantity" min="1" required placeholder="SL" style="width:70px;">
@@ -267,7 +267,7 @@
                             </td>
 
                             <td>
-                                <form class="form-inline" method="post" action="${ctx}/admin/inventory"
+                                <form class="form-inline" method="post" action="${pageContext.request.contextPath}/admin/inventory"
                                       onsubmit="return confirm('Bạn chắc muốn chỉnh tồn kho sản phẩm này?')">
                                     <input type="hidden" name="action" value="adjustStock">
                                     <input type="hidden" name="productId" value="${p.id}">

@@ -36,7 +36,7 @@ public class AdminInventoryController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-        int productId = parseInt(request.getParameter("productId"), 0);
+        int productId = parseInt(request.getParameter("productId"), -1);
         String note = request.getParameter("note");
         Integer adminId = getCurrentUserId(request);
 

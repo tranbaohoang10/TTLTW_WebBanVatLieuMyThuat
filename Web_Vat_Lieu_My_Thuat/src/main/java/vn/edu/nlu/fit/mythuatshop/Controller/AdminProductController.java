@@ -171,8 +171,8 @@ public class AdminProductController extends HttpServlet {
     }
 
     private void updateProduct(HttpServletRequest request) throws Exception {
-        int id = parseInt(request.getParameter("id"), 0);
-        if (id <= 0) {
+        int id = parseInt(request.getParameter("id"), -1);
+        if (id < 0) {
             return;
         }
 
@@ -264,10 +264,10 @@ public class AdminProductController extends HttpServlet {
     }
 
     private void toggleProductActive(HttpServletRequest request) {
-        int id = parseInt(request.getParameter("id"), 0);
+        int id = parseInt(request.getParameter("id"), -1);
         int isActive = parseInt(request.getParameter("isActive"), 1);
 
-        if (id <= 0) {
+        if (id < 0) {
             return;
         }
 
