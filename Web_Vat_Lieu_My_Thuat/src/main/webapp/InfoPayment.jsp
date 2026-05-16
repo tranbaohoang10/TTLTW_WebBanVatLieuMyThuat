@@ -639,9 +639,9 @@
                         <div id="shippingAreaError" class="text-danger mt-2"></div>
 
                         <div class="input-group">
-                            <label for="address">Địa chỉ</label>
+                            <label for="address">Số nhà, tên đường</label>
                             <input type="text" class="form-input-item" id="address" name="address"
-                                   placeholder="Địa chỉ"
+                                   placeholder="123 Nguyễn Văn Cừ"
                                    value="${sessionScope.currentUser.address}" required>
                         </div>
 
@@ -720,6 +720,10 @@
                         <input type="hidden" name="provinceId" id="provinceIdInput">
                         <input type="hidden" name="districtId" id="districtIdInput">
                         <input type="hidden" name="wardCode" id="wardCodeInput">
+
+                        <input type="hidden" name="provinceName" id="provinceNameInput">
+                        <input type="hidden" name="districtName" id="districtNameInput">
+                        <input type="hidden" name="wardName" id="wardNameInput">
                         <div class="price-summary">
                             <div class="price-row">
                                 <span>Tạm tính</span>
@@ -816,6 +820,9 @@
         const provinceIdInput = $("provinceIdInput");
         const districtIdInput = $("districtIdInput");
         const wardCodeInput = $("wardCodeInput");
+        const provinceNameInput = $("provinceNameInput");
+        const districtNameInput = $("districtNameInput");
+        const wardNameInput = $("wardNameInput")
         const shippingAreaError = $("shippingAreaError");
         const checkoutForm = $("checkoutForm");
 
@@ -881,6 +888,12 @@
                 }
             });
         }
+        function getSelectedText(select) {
+            if (!select || select.selectedIndex < 0 || !select.value) {
+                return "";
+            }
+            return select.options[select.selectedIndex].textContent || "";
+        }
         function updateShippingAreaInputs() {
             if (provinceIdInput) {
                 provinceIdInput.value = provinceSelect.value || "";
@@ -890,6 +903,15 @@
             }
             if (wardCodeInput) {
                 wardCodeInput.value = wardSelect.value || "";
+            }
+            if (provinceNameInput) {
+                provinceNameInput.value = getSelectedText(provinceSelect);
+            }
+            if (districtNameInput) {
+                districtNameInput.value = getSelectedText(districtSelect);
+            }
+            if (wardNameInput) {
+                wardNameInput.value = getSelectedText(wardSelect);
             }
         }
 
