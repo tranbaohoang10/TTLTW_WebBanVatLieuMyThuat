@@ -366,10 +366,12 @@
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
             </c:if>
+
           <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
               <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
               </c:if>
+
             <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
             </c:if>

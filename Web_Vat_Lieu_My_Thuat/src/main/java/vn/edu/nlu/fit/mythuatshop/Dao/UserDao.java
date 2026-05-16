@@ -126,11 +126,8 @@ public class UserDao {
     }
 
     public int adminCreateUser(Users user) {
-        String sql = """
-                    INSERT INTO users (fullName, email, password, phoneNumber, dob, address, role, group_id, createAt, isActive)
-                    VALUES (:fullName, :email, :password, :phoneNumber, :dob, :address, :role, :group_id, CURRENT_TIMESTAMP(), :isActive)
-                """;
-
+        String sql = " INSERT INTO users (fullName, email, password, phoneNumber, dob, address, role, group_id, createAt, isActive) "+
+    " VALUES (:fullName, :email, :password, :phoneNumber, :dob, :address, :role, :groupId, CURRENT_TIMESTAMP(), :isActive)";
 
         return jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("fullName", user.getFullName())
@@ -140,7 +137,7 @@ public class UserDao {
                 .bind("dob", user.getDob() != null ? java.sql.Date.valueOf(user.getDob()) : null)
                 .bind("address", user.getAddress())
                 .bind("role", user.getRole())
-                .bind("group_id", user.getGroupId())
+                .bind("groupId", user.getGroupId())
                 .bind("isActive", user.getIsActive())
                 .executeAndReturnGeneratedKeys("id")
                 .mapTo(int.class)
@@ -165,7 +162,7 @@ public class UserDao {
                 .bind("dob", user.getDob() != null ? java.sql.Date.valueOf(user.getDob()) : null)
                 .bind("address", user.getAddress())
                 .bind("role", user.getRole())
-                .bind("group_id", user.getGroupId())
+                .bind("groupId", user.getGroupId())
                 .bind("id", user.getId())
                 .execute());
     }
