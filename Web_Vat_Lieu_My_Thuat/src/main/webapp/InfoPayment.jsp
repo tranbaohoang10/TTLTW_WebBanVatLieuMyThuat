@@ -679,19 +679,23 @@
                         </div>
                         <div class="map-area">
                             <label>Vị trí giao hàng trên bản đồ</label>
-                            <div class="map-note">
-                                Người dùng chọn vị trí nhận hàng cụ thể trên bản đồ để hỗ trợ giao hàng chính xác hơn.
-                            </div>
-
+                            <button type="button" id="btnFindMap" class="btn-apply">
+                                Tìm vị trí trên bản đồ
+                            </button>
+                            <button type="button" id="btnConfirmMap" class="btn-apply" style="margin-left: 8px;">
+                                Xác nhận vị trí
+                            </button>
                             <div id="mapBox">
-                                Bản đồ sẽ được hiển thị ở đây
-                            </div>
+                           </div>
 
                             <div id="mapAddressText">
-                                Chưa chọn vị trí giao hàng
-                            </div>
+                                Chưa xác nhận vị trí giao hàng
+                             </div>
                         </div>
-
+                        <input type="hidden" name="deliveryLatitude" id="deliveryLatitudeInput">
+                        <input type="hidden" name="deliveryLongitude" id="deliveryLongitudeInput">
+                        <input type="hidden" name="deliveryMapAddress" id="deliveryMapAddressInput">
+                        <input type="hidden" name="mapConfirmed" id="mapConfirmedInput" value="0">
                         <div class="note">
                             <label for="content-notes">Ghi chú đơn hàng</label>
                             <textarea class="form-control" id="content-notes" name="note" rows="5"
@@ -839,6 +843,8 @@
         setTimeout(() => {
             map.invalidateSize();
         }, 300);
+
+
         function vnd(n) {
             n = Math.round(Number(n) || 0);
             return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "₫";
@@ -874,7 +880,18 @@
         const wardSelect = $("wardSelect");
         const shippingFeeText = $("shippingFeeText");
         const expectedDeliveryText = $("expectedDeliveryText");
+        const addressInput = $("address");
 
+        const btnFindMap = $("btnFindMap");
+        const btnConfirmMap = $("btnConfirmMap");
+        const mapAddressText = $("mapAddressText");
+
+        const deliveryLatitudeInput = $("deliveryLatitudeInput");
+        const deliveryLongitudeInput = $("deliveryLongitudeInput");
+        const deliveryMapAddressInput = $("deliveryMapAddressInput");
+        const mapConfirmedInput = $("mapConfirmedInput");
+
+        let deliveryMarker = null;
         const provinceIdInput = $("provinceIdInput");
         const districtIdInput = $("districtIdInput");
         const wardCodeInput = $("wardCodeInput");
@@ -888,6 +905,82 @@
             console.warn("Missing select elements for GHN");
             return;
         }
+
+        function setMapMarker(lat, lon) {
+            map.setView([lat, lon], 17);
+
+            if (deliveryMarker == null) {
+                deliveryMarker = L.marker([lat, lon]).addTo(map);
+            } else {
+                deliveryMarker.setLatLng([lat, lon]);
+            }
+
+            deliveryLatitudeInput.value = lat;
+            deliveryLongitudeInput.value = lon;
+            mapConfirmedInput.value = "0";
+        }
+
+        function getSelectedText(select) {
+            return select.options[select.selectedIndex].textContent;
+        }
+
+        function buildSearchAddress() {
+            const address = addressInput.value.trim();
+            const wardName = getSelectedText(wardSelect);
+            const districtName = getSelectedText(districtSelect);
+            const provinceName = getSelectedText(provinceSelect);
+
+            return address + ", " + wardName + ", " + districtName + ", " + provinceName;
+        }
+
+        async function findLocationByAddress() {
+            const searchAddress = buildSearchAddress();
+
+            mapAddressText.textContent = "Đang tìm vị trí...";
+
+            const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=vn&q="
+                + encodeURIComponent(searchAddress);
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.length === 0) {
+                mapAddressText.textContent = "Không tìm thấy vị trí phù hợp.";
+                return;
+            }
+
+            const lat = data[0].lat;
+            const lon = data[0].lon;
+
+            setMapMarker(lat, lon);
+
+            deliveryMapAddressInput.value = data[0].display_name;
+            mapAddressText.textContent = "Vị trí tìm được: " + data[0].display_name;
+        }
+
+        btnFindMap.addEventListener("click", function () {
+            findLocationByAddress();
+        });
+
+        btnConfirmMap.addEventListener("click", function () {
+            if (deliveryLatitudeInput.value === "" || deliveryLongitudeInput.value === "") {
+                mapAddressText.textContent = "Vui lòng tìm vị trí trên bản đồ trước.";
+                return;
+            }
+
+            mapConfirmedInput.value = "1";
+            mapAddressText.textContent = "Đã xác nhận vị trí giao hàng.";
+        });
+
+        map.on("click", function (event) {
+            const lat = event.latlng.lat.toFixed(7);
+            const lon = event.latlng.lng.toFixed(7);
+
+            setMapMarker(lat, lon);
+
+            deliveryMapAddressInput.value = "";
+            mapAddressText.textContent = "Đã chọn lại vị trí: " + lat + ", " + lon;
+        });
 
         if (btnApplyVoucher) {
             btnApplyVoucher.addEventListener("click", async () => {
@@ -946,6 +1039,7 @@
                 }
             });
         }
+
         function getSelectedText(select) {
             if (!select || select.selectedIndex < 0 || !select.value) {
                 return "";
@@ -1090,6 +1184,7 @@
         }
 
         provinceSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const pid = provinceSelect.value;
             districtSelect.disabled = true;
             wardSelect.disabled = true;
@@ -1102,6 +1197,7 @@
         });
 
         districtSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const did = districtSelect.value;
             if (!did) return;
             wardSelect.disabled = true;
@@ -1112,6 +1208,7 @@
         });
 
         wardSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const did = districtSelect.value;
             const wcode = wardSelect.value;
             updateShippingAreaInputs();
@@ -1124,6 +1221,9 @@
                 return;
             }
             calcFee(did, wcode);
+        });
+        addressInput.addEventListener("input", function () {
+            mapConfirmedInput.value = "0";
         });
         if (checkoutForm) {
             checkoutForm.addEventListener("submit", (event) => {
