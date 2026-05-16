@@ -14,6 +14,7 @@ public class Users {
     private String role;
     private LocalDateTime createAt;
     private int isActive;
+    private Integer groupId;
 
 
     public int getId() {
@@ -91,5 +92,11 @@ public class Users {
     public int getIsActive() { return isActive; }
     public void setIsActive(int isActive) { this.isActive = isActive; }
 
+    public Integer getGroupId() {
+        return groupId;
+    }
 
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
+    }
 }
