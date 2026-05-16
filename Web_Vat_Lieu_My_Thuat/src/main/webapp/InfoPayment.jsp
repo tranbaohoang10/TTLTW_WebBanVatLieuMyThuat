@@ -568,6 +568,42 @@
     #shippingAreaError {
         color: red;
     }
+    .map-area {
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    .map-area label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .map-note {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+
+    #mapBox {
+        width: 100%;
+        height: 280px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    #mapAddressText {
+        margin-top: 8px;
+        font-size: 14px;
+        color: #374151;
+    }
 
 
 </style>
@@ -643,6 +679,20 @@
                             <input type="text" class="form-input-item" id="address" name="address"
                                    placeholder="123 Nguyễn Văn Cừ"
                                    value="${sessionScope.currentUser.address}" required>
+                        </div>
+                        <div class="map-area">
+                            <label>Vị trí giao hàng trên bản đồ</label>
+                            <div class="map-note">
+                                Người dùng chọn vị trí nhận hàng cụ thể trên bản đồ để hỗ trợ giao hàng chính xác hơn.
+                            </div>
+
+                            <div id="mapBox">
+                                Bản đồ sẽ được hiển thị ở đây
+                            </div>
+
+                            <div id="mapAddressText">
+                                Chưa chọn vị trí giao hàng
+                            </div>
                         </div>
 
                         <div class="note">
