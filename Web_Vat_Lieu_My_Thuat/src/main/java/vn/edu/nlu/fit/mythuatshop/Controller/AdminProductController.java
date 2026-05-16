@@ -25,6 +25,10 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelImportResult;
+import vn.edu.nlu.fit.mythuatshop.Service.ProductExcelImportService;
+
+import java.io.InputStream;
 
 @WebServlet(name = "AdminProductController", value = "/admin/products")
 @MultipartConfig(
@@ -39,6 +43,7 @@ public class AdminProductController extends HttpServlet {
     private ProductDao productDao;
     private SubImagesDao subImagesDao;
     private SpecificationsDao specificationsDao;
+    private ProductExcelImportService productExcelImportService;
     private LogService logService;
 
     @Override
@@ -48,6 +53,7 @@ public class AdminProductController extends HttpServlet {
         productDao = new ProductDao();
         subImagesDao = new SubImagesDao();
         specificationsDao = new SpecificationsDao();
+        productExcelImportService = new ProductExcelImportService();
         logService = new LogService();
     }
 
@@ -110,6 +116,9 @@ public class AdminProductController extends HttpServlet {
                     break;
                 case "toggleActive":
                     toggleProductActive(request);
+                    break;
+                case "importExcel":
+                    importProductsFromExcel(request);
                     break;
                 default:
                     break;
@@ -276,6 +285,35 @@ public class AdminProductController extends HttpServlet {
         Product after = productService.getProductById(id);
 
         writeLog(request, "Đổi trạng thái sản phẩm", "Quản lý sản phẩm", before, after);
+    }
+    private void importProductsFromExcel(HttpServletRequest request) throws Exception {
+        Part excelPart = request.getPart("excelFile");
+
+        if (excelPart == null || excelPart.getSize() == 0) {
+            request.getSession().setAttribute("productError", "Vui lòng chọn file Excel.");
+            return;
+        }
+
+        String fileName = excelPart.getSubmittedFileName();
+
+        if (fileName == null || !fileName.toLowerCase().endsWith(".xlsx")) {
+            request.getSession().setAttribute("productError", "Chỉ hỗ trợ file Excel định dạng .xlsx.");
+            return;
+        }
+
+        try (InputStream inputStream = excelPart.getInputStream()) {
+            ProductExcelImportResult result =
+                    productExcelImportService.importExcel(inputStream, getCurrentUserId(request));
+
+            if (result.isSuccess()) {
+                request.getSession().setAttribute(
+                        "productMessage",
+                        "Import Excel thành công " + result.getImportedCount() + " sản phẩm."
+                );
+            } else {
+                request.getSession().setAttribute("productImportErrors", result.getErrors());
+            }
+        }
     }
 
     private String saveUploadAndReturnUrl(HttpServletRequest request, Part part, String folder) throws IOException {

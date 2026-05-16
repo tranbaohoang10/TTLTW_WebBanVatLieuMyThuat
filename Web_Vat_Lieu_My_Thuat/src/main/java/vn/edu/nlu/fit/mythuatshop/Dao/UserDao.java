@@ -9,15 +9,18 @@ import java.util.List;
 
 public class UserDao {
     private final Jdbi jdbi;
+
     public UserDao() {
         this.jdbi = JDBIConnector.getJdbi();
     }
 
     public Users findByEmail(String email) {
-        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, createAt, isActive" +
+
+        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, group_id AS groupId, createAt, isActive" +
                 " FROM users WHERE email = :email ";
         return jdbi.withHandle(handle -> handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
     }
+
     public int insertUser(Users user) {
         String sql = "INSERT INTO users (fullName, email, password, phoneNumber, address, role, createAt, isActive) " +
                 "VALUES (:fullName, :email, :password, :phoneNumber, :address, :role, CURRENT_TIMESTAMP(), :isActive)";
@@ -32,6 +35,7 @@ public class UserDao {
                 .execute()
         );
     }
+
     public int updateUser(Users user) {
         String sql = "UPDATE users " +
                 "SET fullName = :fullName, " +
@@ -49,8 +53,9 @@ public class UserDao {
                         .execute()
         );
     }
+
     public Users findById(int id) {
-        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, createAt, isActive " +
+        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, group_id AS groupId, createAt, isActive " +
                 "  FROM users WHERE id = :id";
         return jdbi.withHandle(handle ->
                 handle.createQuery(sql)
@@ -63,16 +68,17 @@ public class UserDao {
 
     public boolean updatePassword(int userId, String newHash) {
         String sql = "UPDATE users SET password = :matkhaumoi WHERE id = :id";
-        int row = jdbi.withHandle(handle ->handle.createUpdate(sql)
+        int row = jdbi.withHandle(handle -> handle.createUpdate(sql)
                 .bind("matkhaumoi", newHash)
                 .bind("id", userId)
                 .execute());
         return row > 0;
     }
-    public Users findByEmailFp(String email){
-        String sql = "SELECT id, fullName, email, password, phoneNumber, dob, address, role, createAt, isActive" +
+
+    public Users findByEmailFp(String email) {
+        String sql = "SELECT id, fullName, email, password, phoneNumber, dob, address, role, group_id AS groupId, createAt, isActive" +
                 " FROM users WHERE email = :email ";
-        return jdbi.withHandle(handle ->handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
+        return jdbi.withHandle(handle -> handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
     }
 
     public List<Users> findUsers(String keyword, int offset, int limit) {
@@ -80,7 +86,7 @@ public class UserDao {
         boolean hasKw = keyword != null && !keyword.trim().isEmpty();
 
         String sql =
-                "SELECT id, fullName, email, phoneNumber, dob, address, role, createAt, isActive " +
+                "SELECT id, fullName, email, phoneNumber, dob, address, role, group_id AS groupId, createAt, isActive " +
                         "FROM users " +
                         (hasKw ? "WHERE fullName LIKE :kw OR email LIKE :kw OR phoneNumber LIKE :kw " : "") +
                         "ORDER BY createAt DESC " +
@@ -120,11 +126,8 @@ public class UserDao {
     }
 
     public int adminCreateUser(Users user) {
-        String sql = """
-    INSERT INTO users (fullName, email, password, phoneNumber, dob, address, role, createAt, isActive)
-    VALUES (:fullName, :email, :password, :phoneNumber, :dob, :address, :role, CURRENT_TIMESTAMP(), :isActive)
-""";
-
+        String sql = " INSERT INTO users (fullName, email, password, phoneNumber, dob, address, role, group_id, createAt, isActive) "+
+    " VALUES (:fullName, :email, :password, :phoneNumber, :dob, :address, :role, :groupId, CURRENT_TIMESTAMP(), :isActive)";
 
         return jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("fullName", user.getFullName())
@@ -134,6 +137,7 @@ public class UserDao {
                 .bind("dob", user.getDob() != null ? java.sql.Date.valueOf(user.getDob()) : null)
                 .bind("address", user.getAddress())
                 .bind("role", user.getRole())
+                .bind("groupId", user.getGroupId())
                 .bind("isActive", user.getIsActive())
                 .executeAndReturnGeneratedKeys("id")
                 .mapTo(int.class)
@@ -142,14 +146,15 @@ public class UserDao {
 
     public int adminUpdateUser(Users user) {
         String sql = """
-        UPDATE users
-        SET fullName = :fullName,
-            phoneNumber = :phoneNumber,
-            dob = :dob,
-            address = :address,
-            role = :role
-        WHERE id = :id
-    """;
+                    UPDATE users
+                    SET fullName = :fullName,
+                        phoneNumber = :phoneNumber,
+                        dob = :dob,
+                        address = :address,
+                        role = :role,
+                        group_id = :groupId
+                    WHERE id = :id
+                """;
 
         return jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("fullName", user.getFullName())
@@ -157,6 +162,7 @@ public class UserDao {
                 .bind("dob", user.getDob() != null ? java.sql.Date.valueOf(user.getDob()) : null)
                 .bind("address", user.getAddress())
                 .bind("role", user.getRole())
+                .bind("groupId", user.getGroupId())
                 .bind("id", user.getId())
                 .execute());
     }
@@ -171,6 +177,7 @@ public class UserDao {
                         .execute()
         );
     }
+
     public int insertUserAndReturnId(Users user) {
         String sql = "INSERT INTO users (fullName, email, password, phoneNumber, address, role, createAt, isActive) " +
                 "VALUES (:fullName, :email, :password, :phoneNumber, :address, :role, CURRENT_TIMESTAMP(), :isActive)";

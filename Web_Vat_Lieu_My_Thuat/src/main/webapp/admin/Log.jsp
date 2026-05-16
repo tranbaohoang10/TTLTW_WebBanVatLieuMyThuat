@@ -190,7 +190,7 @@
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
             </c:if>
-            <c:if test="${role == 'ADMIN' || permissions.contains('USERS_VIEW')}">
+            <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">

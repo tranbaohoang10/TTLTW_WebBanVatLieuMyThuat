@@ -505,10 +505,12 @@
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
             </c:if>
+
           <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
               <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
               </c:if>
+
             <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/users"  class="active"><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
             </c:if>
@@ -567,7 +569,7 @@
                         <input id="userSearchInput" type="text" name="q" value="${q}" placeholder="Tìm kiếm người dùng..." autocomplete="off">
                         <button type="submit" class="icon"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
-                    <button type="button" class="btn-them-khach-hang">Thêm khách hàng</button>
+                    <button type="button" class="btn-them-khach-hang">Thêm người dùng</button>
                 </form>
 
                 <div id="searchStatus" style="margin:6px 0; font-size:13px; color:#666;"></div>
@@ -582,6 +584,7 @@
                         <th>Ngày đăng ký</th>
                         <th>Năm sinh</th>
                         <th>Vai trò</th>
+                        <th>Nhóm quyền</th>
                         <th>Tùy chọn</th>
                     </tr>
                     </thead>
@@ -598,13 +601,29 @@
                             <td class="col-vaitro"><c:out value="${u.role}"/></td>
 
                             <td>
+                                <c:choose>
+                                    <c:when test="${empty u.groupId}">
+                                        Chưa có nhóm
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach var="g" items="${groups}">
+                                            <c:if test="${g.id == u.groupId}">
+                                                <c:out value="${g.name}"/>
+                                            </c:if>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+
+                            <td>
                                 <button type="button" class="btn-Sua"
                                         data-id="${u.id}"
                                         data-fullname="${u.fullName}"
                                         data-phone="${u.phoneNumber}"
                                         data-address="${u.address}"
                                         data-dob="${u.dob}"
-                                        data-role="${u.role}">
+                                        data-role="${u.role}"
+                                        data-groupid="${u.groupId}">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
                                 <c:choose>
@@ -673,7 +692,7 @@
 <div id="customerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Thêm khách hàng</h2>
+            <h2>Thêm người dùng</h2>
             <span class="close-modal">&times;</span>
         </div>
 
@@ -715,6 +734,17 @@
                         <option value="USER" selected>USER</option>
                         <option value="ADMIN">ADMIN</option>
                         <option value="STAFF">STAFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="groupKH">Nhóm quyền</label>
+                    <select id="groupKH" name="groupId">
+                        <option value="">Chưa chọn nhóm</option>
+                        <c:forEach var="g" items="${groups}">
+                            <option value="${g.id}">
+                                <c:out value="${g.name}"/>
+                            </option>
+                        </c:forEach>
                     </select>
                 </div>
             </div>
@@ -770,6 +800,17 @@
                         <option value="USER">USER</option>
                         <option value="STAFF">STAFF</option>
                         <option value="ADMIN">ADMIN</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editGroupKH">Nhóm quyền</label>
+                    <select id="editGroupKH" name="groupId">
+                        <option value="">Chưa chọn nhóm</option>
+                        <c:forEach var="g" items="${groups}">
+                            <option value="${g.id}">
+                                <c:out value="${g.name}"/>
+                            </option>
+                        </c:forEach>
                     </select>
                 </div>
             </div>
@@ -841,6 +882,7 @@
         const diachi = btn.dataset.address || "";
         const dob = btn.dataset.dob || "";
         const vaitro = (btn.dataset.role || "USER").toUpperCase();
+        const groupId = btn.dataset.groupid || "";
 
         const editId = document.getElementById("editId");
         if (editId) editId.value = id;
@@ -849,6 +891,7 @@
         document.getElementById("editSdtKH").value = sdt;
         document.getElementById("editDiaChiKH").value = diachi;
         document.getElementById("editVaiTroKH").value = vaitro;
+        document.getElementById("editGroupKH").value = groupId;
 
         const editDob = document.getElementById("editDobKH");
         if (editDob) editDob.value = dob;
