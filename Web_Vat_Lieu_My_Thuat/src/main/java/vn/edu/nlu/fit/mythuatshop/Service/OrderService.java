@@ -379,6 +379,39 @@ public class OrderService {
             return null;
         }
     }
+    public GhnTrackingInfo getTrackingForAdmin(int orderId) {
+        try {
+            Order order = orderDao.findOrderById(orderId);
+            if (order == null) {
+                return null;
+            }
 
+            if (order.getGhnOrderCode() == null || order.getGhnOrderCode().isBlank()) {
+                return null;
+            }
+
+            return ghnService.getTrackingDetail(order.getGhnOrderCode());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public Order getOrderByGhnCode(String ghnOrderCode) {
+        try {
+            return orderDao.findByGhnOrderCode(ghnOrderCode);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    public boolean updateGhnWebhookStatus(String ghnOrderCode, String ghnStatus, String ghnUpdatedTime, String ghnWarehouse) {
+        try {
+            return orderDao.updateGhnWebhookInfo(ghnOrderCode, ghnStatus, ghnUpdatedTime, ghnWarehouse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 }

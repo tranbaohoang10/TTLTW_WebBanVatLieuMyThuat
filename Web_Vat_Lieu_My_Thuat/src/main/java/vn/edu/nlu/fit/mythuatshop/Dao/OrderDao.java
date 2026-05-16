@@ -10,6 +10,7 @@ import java.util.List;
 public class OrderDao implements DaoInterface<Order> {
     private final Jdbi jdbi;
     private final ProductDao productDao = new ProductDao();
+    private final InventoryDao inventoryDao = new InventoryDao();
 
 
     public OrderDao() {
@@ -18,12 +19,13 @@ public class OrderDao implements DaoInterface<Order> {
 
     public int insert(Order order, boolean updateInventory) {
         return jdbi.inTransaction(handle -> {
-            String sql = "INSERT INTO Orders (userID, fullName, email, phoneNumber, address, " +
+            String sql = "INSERT INTO orders (userID, fullName, email, phoneNumber, address, " +
                     "deliveryProvinceId, deliveryDistrictId, deliveryWardCode, expectedDeliveryTime, expectedDeliveryDateText, " +
-                    " totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note,paymentStatus ) " +
+                    " totalPrice, paymentID, orderStatusID, voucherID, discount, shippingFee, note, paymentStatus ) " +
                     "VALUES (:userID, :fullName, :email, :phoneNumber, :address, " +
                     ":deliveryProvinceId, :deliveryDistrictId, :deliveryWardCode, :expectedDeliveryTime, :expectedDeliveryDateText, " +
-                    " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount,:shippingFee, :note, :paymentStatus)";
+                    " :totalPrice, :paymentID, :orderStatusID, :voucherID, :discount, :shippingFee, :note, :paymentStatus)";
+
             int orderId = handle.createUpdate(sql)
                     .bind("userID", order.getUserId())
                     .bind("fullName", order.getFullName())
@@ -49,7 +51,7 @@ public class OrderDao implements DaoInterface<Order> {
 
             for (OrderDetail d : order.getItems()) {
                 handle.createUpdate(
-                                "INSERT INTO Order_Details (orderID, productID, quantity, price) " +
+                                "INSERT INTO order_details (orderID, productID, quantity, price) " +
                                         "VALUES (:orderID, :productID, :quantity, :price)")
                         .bind("orderID", orderId)
                         .bind("productID", d.getProductId())
@@ -57,14 +59,32 @@ public class OrderDao implements DaoInterface<Order> {
                         .bind("price", d.getPrice())
                         .execute();
             }
+
             if (updateInventory) {
                 for (OrderDetail d : order.getItems()) {
+                    int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
                     int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
                     if (affected == 0) {
                         throw new IllegalStateException("Không đủ tồn kho cho sản phẩm : " + d.getProductId());
                     }
+
+                    int afterStock = beforeStock - d.getQuantity();
+
+                    inventoryDao.insertWithHandle(
+                            handle,
+                            d.getProductId(),
+                            "SALE",
+                            -d.getQuantity(),
+                            beforeStock,
+                            afterStock,
+                            "Bán hàng COD - đơn #DH" + orderId,
+                            orderId,
+                            order.getUserId()
+                    );
                 }
             }
+
             return orderId;
         });
     }
@@ -74,7 +94,7 @@ public class OrderDao implements DaoInterface<Order> {
             String sql = """
                         SELECT ID, userID, fullName, email, phoneNumber, address,
                                totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note
-                        FROM Orders
+                        FROM orders
                         WHERE ID = :id
                     """;
 
@@ -95,24 +115,30 @@ public class OrderDao implements DaoInterface<Order> {
                         o.setDiscount(rs.getDouble("discount"));
                         o.setShippingFee(rs.getDouble("shippingFee"));
                         o.setNote(rs.getString("note"));
+                        o.setPaymentStatus(rs.getString("paymentStatus"));
                         return o;
                     })
                     .findOne()
                     .orElse(null);
 
-            if (order == null) return null;
+            if (order == null) {
+                return null;
+            }
+            if ("Đã thanh toán".equalsIgnoreCase(order.getPaymentStatus())) {
+                return null;
+            }
 
             long dbAmountVnd = java.math.BigDecimal.valueOf(order.getTotalPrice())
                     .setScale(0, java.math.RoundingMode.HALF_UP)
                     .longValue();
 
             if (dbAmountVnd != amountVnd) {
-                throw new IllegalStateException("Sai số tiền thanh toán cho đơn hàng #DH0=" + orderId);
+                throw new IllegalStateException("Sai số tiền thanh toán cho đơn hàng #DH" + orderId);
             }
 
             List<OrderDetail> details = handle.createQuery("""
                                 SELECT productID, quantity, price
-                                FROM Order_Details
+                                FROM order_details
                                 WHERE orderID = :oid
                             """)
                     .bind("oid", orderId)
@@ -126,17 +152,32 @@ public class OrderDao implements DaoInterface<Order> {
                     .list();
 
             for (OrderDetail d : details) {
+                int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
                 int affected = productDao.updateStockAndSold(handle, d.getProductId(), d.getQuantity());
                 if (affected == 0) {
                     throw new IllegalStateException("Không đủ tồn kho cho sản phẩm: " + d.getProductId());
                 }
+
+                int afterStock = beforeStock - d.getQuantity();
+
+                inventoryDao.insertWithHandle(
+                        handle,
+                        d.getProductId(),
+                        "SALE",
+                        -d.getQuantity(),
+                        beforeStock,
+                        afterStock,
+                        "Bán hàng VNPAY - đơn #DH" + orderId,
+                        orderId,
+                        order.getUserId()
+                );
             }
 
-
             handle.createUpdate("""
-                                UPDATE Orders
+                                UPDATE orders
                                 SET orderStatusID = (
-                                        SELECT ID FROM Order_Statuses WHERE statusName = 'Đang xử lý' LIMIT 1
+                                        SELECT ID FROM order_statuses WHERE statusName = 'Đang xử lý' LIMIT 1
                                     ),
                                     paymentStatus = 'Đã thanh toán'
                                 WHERE ID = :id
@@ -144,17 +185,18 @@ public class OrderDao implements DaoInterface<Order> {
                     .bind("id", orderId)
                     .execute();
 
-
             order.setItems(details);
+            order.setPaymentStatus("Đã thanh toán");
+
             return order;
         });
     }
 
     public void markVnpayFailed(int orderId) {
         String sql = """
-                    UPDATE Orders
+                    UPDATE orders
                     SET orderStatusID = (
-                        SELECT ID FROM Order_Statuses WHERE statusName = 'Đã hủy' LIMIT 1
+                        SELECT ID FROM order_statuses WHERE statusName = 'Đã hủy' LIMIT 1
                     ),
                     paymentStatus = 'Thanh toán thất bại'
                     WHERE ID = :id
@@ -190,8 +232,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.note          AS note, " +
                         "       os.statusName   AS statusName " +
 
-                        "FROM Orders o " +
-                        "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
+                        "FROM orders o " +
+                        "JOIN order_statuses os ON os.ID = o.orderStatusID " +
                         "WHERE o.userID = :userId ";
 
         if (statusId != null) {
@@ -221,8 +263,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       p.thumbnail AS thumbnail, " +
                         "       d.quantity  AS quantity, " +
                         "       d.price     AS price " +
-                        "FROM Order_Details d " +
-                        "JOIN Products p ON p.ID = d.productID " +
+                        "FROM order_details d " +
+                        "JOIN products p ON p.ID = d.productID " +
                         "WHERE d.orderID = :orderId";
 
         return jdbi.withHandle(h ->
@@ -244,6 +286,8 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.deliveryWardCode   AS deliveryWardCode, " +
                 "       o.ghnOrderCode  AS ghnOrderCode, " +
                 "       o.ghnStatus     AS ghnStatus, " +
+                "       o.ghnUpdatedTime AS ghnUpdatedTime, " +
+                "       o.ghnWarehouse AS ghnWarehouse, " +
                 "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                 "       o.totalPrice    AS totalPrice, " +
                 "       o.paymentID     AS paymentId, " +
@@ -255,8 +299,8 @@ public class OrderDao implements DaoInterface<Order> {
                 "       o.note          AS note, " +
                 "       os.statusName   AS statusName, " +
                 "       p.paymentName   AS paymentName " +
-                "FROM Orders o " +
-                "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
+                "FROM orders o " +
+                "JOIN order_statuses os ON os.ID = o.orderStatusID " +
                 "JOIN payments p ON p.ID = o.paymentID " +
                 "WHERE o.ID = :orderId AND o.userID = :userId";
 
@@ -274,8 +318,8 @@ public class OrderDao implements DaoInterface<Order> {
         return jdbi.inTransaction(handle -> {
             var row = handle.createQuery("""
             SELECT o.voucherID, o.paymentStatus, p.paymentName
-            FROM Orders o
-            JOIN Payments p ON p.ID = o.paymentID
+            FROM orders o
+            JOIN payments p ON p.ID = o.paymentID
             WHERE o.ID = :oid
               AND o.userID = :uid
               AND o.orderStatusID = 1
@@ -290,14 +334,16 @@ public class OrderDao implements DaoInterface<Order> {
                     .findOne()
                     .orElse(null);
 
-            if (row == null) return false;
+            if (row == null) {
+                return false;
+            }
 
-            Integer voucherId = (Integer) row[0];
+            Integer voucherId = row[0] == null ? null : ((Number) row[0]).intValue();
             String paymentStatus = (String) row[1];
             String paymentName = (String) row[2];
 
             int updated = handle.createUpdate("""
-            UPDATE Orders
+            UPDATE orders
             SET orderStatusID = 4
             WHERE ID = :oid
               AND userID = :uid
@@ -305,19 +351,63 @@ public class OrderDao implements DaoInterface<Order> {
         """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
+                    .bind("cancelReason", cancelReason)
                     .execute();
 
-            if (updated != 1) return false;
+            if (updated != 1) {
+                return false;
+            }
 
-            handle.createUpdate("""
-            UPDATE Products p
-            JOIN Order_Details od ON od.productID = p.id
-            SET p.quantityStock = p.quantityStock + od.quantity,
-                p.soldQuantity = GREATEST(p.soldQuantity - od.quantity, 0)
-            WHERE od.orderID = :oid
-        """)
-                    .bind("oid", orderId)
-                    .execute();
+
+            boolean shouldRestoreInventory = false;
+
+            if ("COD".equalsIgnoreCase(paymentName)) {
+                shouldRestoreInventory = true;
+            } else if ("VNPAY".equalsIgnoreCase(paymentName)
+                    && "Đã thanh toán".equalsIgnoreCase(paymentStatus)) {
+                shouldRestoreInventory = true;
+            }
+
+            if (shouldRestoreInventory) {
+                List<OrderDetail> details = handle.createQuery("""
+                    SELECT productID, quantity, price
+                    FROM Order_Details
+                    WHERE orderID = :oid
+                    """)
+                        .bind("oid", orderId)
+                        .map((rs, ctx) -> {
+                            OrderDetail d = new OrderDetail();
+                            d.setProductId(rs.getInt("productID"));
+                            d.setQuantity(rs.getInt("quantity"));
+                            d.setPrice(rs.getDouble("price"));
+                            return d;
+                        })
+                        .list();
+
+                for (OrderDetail d : details) {
+                    int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
+                    int affected = productDao.restoreStockAndSold(handle, d.getProductId(), d.getQuantity());
+                    if (affected == 0) {
+                        throw new IllegalStateException("Không thể hoàn tồn kho cho sản phẩm: " + d.getProductId());
+                    }
+
+                    int afterStock = beforeStock + d.getQuantity();
+
+                    inventoryDao.insertWithHandle(
+                            handle,
+                            d.getProductId(),
+                            "CANCEL",
+                            d.getQuantity(),
+                            beforeStock,
+                            afterStock,
+                            "Hủy đơn #DH" + orderId + " - " + cancelReason,
+                            orderId,
+                            userId
+                    );
+                }
+            }
+
 
             boolean shouldReturnVoucher = false;
 
@@ -332,7 +422,7 @@ public class OrderDao implements DaoInterface<Order> {
 
             if (shouldReturnVoucher) {
                 handle.createUpdate("""
-        UPDATE Vouchers
+        UPDATE vouchers
         SET quantityUsed = CASE
                 WHEN quantityUsed > 0 THEN quantityUsed - 1
                 ELSE 0
@@ -364,10 +454,10 @@ public class OrderDao implements DaoInterface<Order> {
                         o.ghnStatus     AS ghnStatus,
                         os.statusName   AS statusName,
                         GROUP_CONCAT(p.name ORDER BY p.name SEPARATOR ', ') AS productNames
-                    FROM Orders o
-                    JOIN Order_Statuses os ON os.ID = o.orderStatusID
-                    LEFT JOIN Order_Details od ON od.orderID = o.ID
-                    LEFT JOIN Products p ON p.ID = od.productID
+                    FROM orders o
+                    JOIN order_statuses os ON os.ID = o.orderStatusID
+                    LEFT JOIN order_details od ON od.orderID = o.ID
+                    LEFT JOIN products p ON p.ID = od.productID
                     GROUP BY o.ID, o.fullName, o.phoneNumber, o.createAt, o.address, o.totalPrice,o.paymentStatus, o.ghnOrderCode, o.ghnStatus, os.statusName
                     ORDER BY o.createAt DESC
                 """;
@@ -383,9 +473,9 @@ public class OrderDao implements DaoInterface<Order> {
                            o.paymentStatus AS paymentStatus,
                                    o.ghnOrderCode AS ghnOrderCode,
                                    o.ghnStatus AS ghnStatus
-                    FROM Orders o
-                    JOIN Order_Statuses os ON os.ID = o.orderStatusID
-                    JOIN Payments p ON p.ID = o.paymentID
+                    FROM orders o
+                    JOIN order_statuses os ON os.ID = o.orderStatusID
+                    JOIN payments p ON p.ID = o.paymentID
                     WHERE o.ID = :id
                 """;
 
@@ -398,8 +488,8 @@ public class OrderDao implements DaoInterface<Order> {
 
     public boolean updateOrderStatusByName(int orderId, String statusName) {
         String sql = """
-                    UPDATE Orders
-                    SET orderStatusID = (SELECT ID FROM Order_Statuses WHERE statusName = :name LIMIT 1)
+                    UPDATE orders
+                    SET orderStatusID = (SELECT ID FROM order_statuses WHERE statusName = :name LIMIT 1)
                     WHERE ID = :id
                 """;
         int n = jdbi.withHandle(h -> h.createUpdate(sql)
@@ -410,7 +500,7 @@ public class OrderDao implements DaoInterface<Order> {
     }
 
     public boolean updatePaymentStatus(int orderId, String paymentStatus) {
-        String sql = "UPDATE Orders SET paymentStatus = :ps WHERE ID = :id";
+        String sql = "UPDATE orders SET paymentStatus = :ps WHERE ID = :id";
         int n = jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("id", orderId)
                 .bind("ps", paymentStatus)
@@ -420,8 +510,8 @@ public class OrderDao implements DaoInterface<Order> {
 
     public boolean updateInfoIfProcessing(int orderId, String fullName, String phone, String address) {
         String sql = """
-                    UPDATE Orders o
-                    JOIN Order_Statuses os ON os.ID = o.orderStatusID
+                    UPDATE orders o
+                    JOIN order_statuses os ON os.ID = o.orderStatusID
                     SET o.fullName = :fullName,
                         o.phoneNumber = :phone,
                         o.address = :address
@@ -454,6 +544,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.expectedDeliveryDateText AS expectedDeliveryDateText, " +
                         "       o.ghnOrderCode AS ghnOrderCode, " +
                         "       o.ghnStatus AS ghnStatus, " +
+                        "       o.ghnUpdatedTime AS ghnUpdatedTime, " +
+                        "       o.ghnWarehouse AS ghnWarehouse, " +
                         "       o.totalPrice   AS totalPrice, " +
                         "       o.paymentStatus AS paymentStatus, " +
                         "       o.paymentID     AS paymentId, " +
@@ -465,8 +557,8 @@ public class OrderDao implements DaoInterface<Order> {
                         "       o.note   AS note, " +
                         "       o.cancelReason AS cancelReason, " +
                         "       os.statusName   AS statusName " +
-                        "FROM Orders o " +
-                        "JOIN Order_Statuses os ON os.ID = o.orderStatusID " +
+                        "FROM orders o " +
+                        "JOIN order_statuses os ON os.ID = o.orderStatusID " +
                         "WHERE o.ID = :orderId";
 
         return jdbi.withHandle(handle ->
@@ -479,7 +571,7 @@ public class OrderDao implements DaoInterface<Order> {
     }
     public boolean updateGhnInfo(int orderId, String ghnOrderCode, String ghnStatus) {
         String sql = """
-            UPDATE Orders
+            UPDATE orders
             SET ghnOrderCode = :ghnOrderCode,
                 ghnStatus = :ghnStatus
             WHERE ID = :id
@@ -494,11 +586,43 @@ public class OrderDao implements DaoInterface<Order> {
         return n == 1;
     }
     public boolean updateGhnStatus(int orderId, String ghnStatus) {
-        String sql = "UPDATE Orders SET ghnStatus = :ghnStatus WHERE ID = :id";
+        String sql = "UPDATE orders SET ghnStatus = :ghnStatus WHERE ID = :id";
 
         int n = jdbi.withHandle(h -> h.createUpdate(sql)
                 .bind("id", orderId)
                 .bind("ghnStatus", ghnStatus)
+                .execute());
+
+        return n == 1;
+    }
+    public Order findByGhnOrderCode(String ghnOrderCode) {
+        String sql = "SELECT o.ID AS id, o.userID AS userId, o.fullName AS fullName, " +
+                "o.email AS email, o.phoneNumber AS phoneNumber, o.address AS address, " +
+                "o.ghnOrderCode AS ghnOrderCode, o.ghnStatus AS ghnStatus, " +
+                "o.ghnUpdatedTime AS ghnUpdatedTime, o.ghnWarehouse AS ghnWarehouse, " +
+                "o.totalPrice AS totalPrice, o.paymentStatus AS paymentStatus, " +
+                "o.paymentID AS paymentId, o.orderStatusID AS orderStatusId, " +
+                "os.statusName AS statusName " +
+                "FROM orders o " +
+                "JOIN order_statuses os ON os.ID = o.orderStatusID " +
+                "WHERE o.ghnOrderCode = :ghnOrderCode";
+
+        return jdbi.withHandle(handle -> handle.createQuery(sql)
+                .bind("ghnOrderCode", ghnOrderCode)
+                .mapToBean(Order.class)
+                .findOne()
+                .orElse(null));
+    }
+
+    public boolean updateGhnWebhookInfo(String ghnOrderCode, String ghnStatus, String ghnUpdatedTime, String ghnWarehouse) {
+        String sql = "UPDATE orders SET ghnStatus = :ghnStatus, ghnUpdatedTime = :ghnUpdatedTime, " +
+                "ghnWarehouse = :ghnWarehouse WHERE ghnOrderCode = :ghnOrderCode";
+
+        int n = jdbi.withHandle(handle -> handle.createUpdate(sql)
+                .bind("ghnStatus", ghnStatus)
+                .bind("ghnUpdatedTime", ghnUpdatedTime)
+                .bind("ghnWarehouse", ghnWarehouse)
+                .bind("ghnOrderCode", ghnOrderCode)
                 .execute());
 
         return n == 1;
