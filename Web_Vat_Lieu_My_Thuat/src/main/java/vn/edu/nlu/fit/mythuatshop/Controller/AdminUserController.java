@@ -7,8 +7,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import vn.edu.nlu.fit.mythuatshop.Model.GroupRole;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.AdminUserService;
+import vn.edu.nlu.fit.mythuatshop.Service.GroupRoleService;
 import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 
 import java.io.IOException;
@@ -26,6 +28,7 @@ public class AdminUserController extends HttpServlet {
     private final AdminUserService adminUserService = new AdminUserService();
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
     private final LogService logService = new LogService();
+    private final GroupRoleService groupRoleService = new GroupRoleService();
 
 
     @Override
@@ -51,6 +54,7 @@ public class AdminUserController extends HttpServlet {
 
         List<Users> users = adminUserService.listUsers(page, pageSize, q);
         int totalPages = adminUserService.totalPages(pageSize, q);
+        List<GroupRole> groups = groupRoleService.getAllGroup();
 
         String ajax = request.getParameter("ajax");
         String requestedWith = request.getHeader("X-Requested-With");
@@ -75,6 +79,7 @@ public class AdminUserController extends HttpServlet {
 
 
         request.setAttribute("users", users);
+        request.setAttribute("groups", groups);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("q",q);
@@ -106,11 +111,12 @@ public class AdminUserController extends HttpServlet {
             String dob = request.getParameter("dob");
             String address = request.getParameter("address");
             String role = request.getParameter("role");
+            Integer groupId = getIntParam(request, "groupId");
 
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
                     + request.getContextPath();
 
-            result = adminUserService.createUser(fullName, email, phoneNumber, dob, address, role, baseUrl);
+            result = adminUserService.createUser(fullName, email, phoneNumber, dob, address, role, groupId, baseUrl);
             if (result) {
                 Users after = new Users();
                 after.setFullName(fullName);
@@ -118,6 +124,7 @@ public class AdminUserController extends HttpServlet {
                 after.setPhoneNumber(phoneNumber);
                 after.setAddress(address);
                 after.setRole(role);
+                after.setGroupId(groupId);
                 writeLog(request, "Tạo người dùng", "Quản lý người dùng", null, after);
             }
 
@@ -128,9 +135,10 @@ public class AdminUserController extends HttpServlet {
             String dob = request.getParameter("dob");
             String address = request.getParameter("address");
             String role = request.getParameter("role");
+            Integer groupId = getIntParam(request, "groupId");
 
             Users before = adminUserService.getUserById(id);
-            result = adminUserService.updateUser(id, fullName, phoneNumber, dob, address, role);
+            result = adminUserService.updateUser(id, fullName, phoneNumber, dob, address, role, groupId);
             if (result) {
                 Users after = adminUserService.getUserById(id);
                 writeLog(request, "Cập nhật người dùng", "Quản lý người dùng", before, after);
@@ -179,8 +187,20 @@ public class AdminUserController extends HttpServlet {
         row.put("createAt", user.getCreateAt() == null ? "" : user.getCreateAt().toString());
         row.put("dob", user.getDob() == null ? "" : user.getDob().toString());
         row.put("role", user.getRole());
+        row.put("groupId", user.getGroupId());
         row.put("isActive", user.getIsActive());
         return row;
+    }
+    private Integer getIntParam(HttpServletRequest request, String name) {
+        try {
+            String value = request.getParameter(name);
+            if(value == null || value.isBlank()) {
+                return null;
+            }
+            return Integer.parseInt(value);
+        }catch (Exception e) {
+            return null;
+        }
     }
     private Integer getCurrentUserId(HttpServletRequest request) {
         Object obj = request.getSession().getAttribute("currentUser");
