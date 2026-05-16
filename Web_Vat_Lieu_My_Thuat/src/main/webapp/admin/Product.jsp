@@ -196,6 +196,23 @@
         flex-wrap: wrap;
       }
     }
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border-left: 4px solid #28a745;
+    }
+
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border-left: 4px solid #dc3545;
+    }
   </style>
 </head>
 
@@ -222,6 +239,27 @@
   <div class="right">
     <div class="container">
       <div class="list-sanpham-container">
+        <c:if test="${not empty sessionScope.productMessage}">
+          <div class="alert-success">${sessionScope.productMessage}</div>
+          <c:remove var="productMessage" scope="session"/>
+        </c:if>
+
+        <c:if test="${not empty sessionScope.productError}">
+          <div class="alert-error">${sessionScope.productError}</div>
+          <c:remove var="productError" scope="session"/>
+        </c:if>
+
+        <c:if test="${not empty sessionScope.productImportErrors}">
+          <div class="alert-error">
+            <strong>Import Excel thất bại:</strong>
+            <ul style="margin:8px 0 0 20px;">
+              <c:forEach var="err" items="${sessionScope.productImportErrors}">
+                <li>${err}</li>
+              </c:forEach>
+            </ul>
+          </div>
+          <c:remove var="productImportErrors" scope="session"/>
+        </c:if>
         <div class="sanpham-header">
           <h1>Danh sách sản phẩm</h1>
           <div>
@@ -475,6 +513,7 @@
   const qtyInput = document.getElementById("quantity");
   const brandInput = document.getElementById("brand");
   const sizeInput = document.getElementById("size");
+  const standardInput = document.getElementById("standard");
   const madeInInput = document.getElementById("madeIn");
   const warningInput = document.getElementById("warning");
 
@@ -674,6 +713,7 @@
       qtyInput.value = btn.dataset.quantity || 0;
       brandInput.value = btn.dataset.brand || "";
       sizeInput.value = btn.dataset.size || "";
+      standardInput.value = btn.dataset.standard || "";
       madeInInput.value = btn.dataset.madein || "";
       warningInput.value = btn.dataset.warning || "";
 
