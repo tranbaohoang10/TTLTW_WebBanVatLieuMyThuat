@@ -16,6 +16,8 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
           integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 </head>
 <style>
@@ -568,6 +570,37 @@
     #shippingAreaError {
         color: red;
     }
+    .map-area {
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    .map-area label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .map-note {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+
+    #mapBox {
+        width: 100%;
+        height: 280px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #f3f4f6;
+    }
+
+    #mapAddressText {
+        margin-top: 8px;
+        font-size: 14px;
+        color: #374151;
+    }
 
 
 </style>
@@ -644,7 +677,25 @@
                                    placeholder="123 Nguyễn Văn Cừ"
                                    value="${sessionScope.currentUser.address}" required>
                         </div>
+                        <div class="map-area">
+                            <label>Vị trí giao hàng trên bản đồ</label>
+                            <button type="button" id="btnFindMap" class="btn-apply">
+                                Tìm vị trí trên bản đồ
+                            </button>
+                            <button type="button" id="btnConfirmMap" class="btn-apply" style="margin-left: 8px;">
+                                Xác nhận vị trí
+                            </button>
+                            <div id="mapBox">
+                           </div>
 
+                            <div id="mapAddressText">
+                                Chưa xác nhận vị trí giao hàng
+                             </div>
+                        </div>
+                        <input type="hidden" name="deliveryLatitude" id="deliveryLatitudeInput">
+                        <input type="hidden" name="deliveryLongitude" id="deliveryLongitudeInput">
+                        <input type="hidden" name="deliveryMapAddress" id="deliveryMapAddressInput">
+                        <input type="hidden" name="mapConfirmed" id="mapConfirmedInput" value="0">
                         <div class="note">
                             <label for="content-notes">Ghi chú đơn hàng</label>
                             <textarea class="form-control" id="content-notes" name="note" rows="5"
@@ -774,12 +825,25 @@
 </div>
 
 <%@ include file="Footer.jsp" %>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
     (() => {
         const CTX = "<%=request.getContextPath()%>";
 
         const $ = (id) => document.getElementById(id);
+        const defaultLat = 10.762622;
+        const defaultLng = 106.660172;
+
+        const map = L.map("mapBox").setView([defaultLat, defaultLng], 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19
+        }).addTo(map);
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+
 
         function vnd(n) {
             n = Math.round(Number(n) || 0);
@@ -816,7 +880,18 @@
         const wardSelect = $("wardSelect");
         const shippingFeeText = $("shippingFeeText");
         const expectedDeliveryText = $("expectedDeliveryText");
+        const addressInput = $("address");
 
+        const btnFindMap = $("btnFindMap");
+        const btnConfirmMap = $("btnConfirmMap");
+        const mapAddressText = $("mapAddressText");
+
+        const deliveryLatitudeInput = $("deliveryLatitudeInput");
+        const deliveryLongitudeInput = $("deliveryLongitudeInput");
+        const deliveryMapAddressInput = $("deliveryMapAddressInput");
+        const mapConfirmedInput = $("mapConfirmedInput");
+
+        let deliveryMarker = null;
         const provinceIdInput = $("provinceIdInput");
         const districtIdInput = $("districtIdInput");
         const wardCodeInput = $("wardCodeInput");
@@ -830,6 +905,82 @@
             console.warn("Missing select elements for GHN");
             return;
         }
+
+        function setMapMarker(lat, lon) {
+            map.setView([lat, lon], 17);
+
+            if (deliveryMarker == null) {
+                deliveryMarker = L.marker([lat, lon]).addTo(map);
+            } else {
+                deliveryMarker.setLatLng([lat, lon]);
+            }
+
+            deliveryLatitudeInput.value = lat;
+            deliveryLongitudeInput.value = lon;
+            mapConfirmedInput.value = "0";
+        }
+
+        function getSelectedText(select) {
+            return select.options[select.selectedIndex].textContent;
+        }
+
+        function buildSearchAddress() {
+            const address = addressInput.value.trim();
+            const wardName = getSelectedText(wardSelect);
+            const districtName = getSelectedText(districtSelect);
+            const provinceName = getSelectedText(provinceSelect);
+
+            return address + ", " + wardName + ", " + districtName + ", " + provinceName;
+        }
+
+        async function findLocationByAddress() {
+            const searchAddress = buildSearchAddress();
+
+            mapAddressText.textContent = "Đang tìm vị trí...";
+
+            const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=vn&q="
+                + encodeURIComponent(searchAddress);
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.length === 0) {
+                mapAddressText.textContent = "Không tìm thấy vị trí phù hợp.";
+                return;
+            }
+
+            const lat = data[0].lat;
+            const lon = data[0].lon;
+
+            setMapMarker(lat, lon);
+
+            deliveryMapAddressInput.value = data[0].display_name;
+            mapAddressText.textContent = "Vị trí tìm được: " + data[0].display_name;
+        }
+
+        btnFindMap.addEventListener("click", function () {
+            findLocationByAddress();
+        });
+
+        btnConfirmMap.addEventListener("click", function () {
+            if (deliveryLatitudeInput.value === "" || deliveryLongitudeInput.value === "") {
+                mapAddressText.textContent = "Vui lòng tìm vị trí trên bản đồ trước.";
+                return;
+            }
+
+            mapConfirmedInput.value = "1";
+            mapAddressText.textContent = "Đã xác nhận vị trí giao hàng.";
+        });
+
+        map.on("click", function (event) {
+            const lat = event.latlng.lat.toFixed(7);
+            const lon = event.latlng.lng.toFixed(7);
+
+            setMapMarker(lat, lon);
+
+            deliveryMapAddressInput.value = "";
+            mapAddressText.textContent = "Đã chọn lại vị trí: " + lat + ", " + lon;
+        });
 
         if (btnApplyVoucher) {
             btnApplyVoucher.addEventListener("click", async () => {
@@ -888,6 +1039,7 @@
                 }
             });
         }
+
         function getSelectedText(select) {
             if (!select || select.selectedIndex < 0 || !select.value) {
                 return "";
@@ -1032,6 +1184,7 @@
         }
 
         provinceSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const pid = provinceSelect.value;
             districtSelect.disabled = true;
             wardSelect.disabled = true;
@@ -1044,6 +1197,7 @@
         });
 
         districtSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const did = districtSelect.value;
             if (!did) return;
             wardSelect.disabled = true;
@@ -1054,6 +1208,7 @@
         });
 
         wardSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const did = districtSelect.value;
             const wcode = wardSelect.value;
             updateShippingAreaInputs();
@@ -1066,6 +1221,9 @@
                 return;
             }
             calcFee(did, wcode);
+        });
+        addressInput.addEventListener("input", function () {
+            mapConfirmedInput.value = "0";
         });
         if (checkoutForm) {
             checkoutForm.addEventListener("submit", (event) => {
