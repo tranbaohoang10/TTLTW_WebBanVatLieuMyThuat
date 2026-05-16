@@ -126,6 +126,76 @@
     .dataTables_wrapper .dataTables_paginate .paginate_button.current{
       background:#17479D !important; color:#fff !important; border:1px solid #17479D !important;
     }
+    .sanpham-header > div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .excel-import-form {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: 0;
+    }
+
+    .excel-file-input {
+      display: none;
+    }
+
+    .excel-file-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 220px;
+      padding: 8px 12px;
+      border: 1px solid #28a745;
+      border-radius: 5px;
+      background: #f4fff7;
+      color: #198754;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .excel-file-label:hover {
+      background: #e8f8ee;
+      border-color: #1f8f43;
+    }
+
+    .btn-import-excel {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-import-excel:hover {
+      background-color: #1f8f43;
+    }
+
+    @media (max-width: 900px) {
+      .sanpham-header {
+        align-items: flex-start;
+        gap: 15px;
+        flex-direction: column;
+      }
+
+      .sanpham-header > div,
+      .excel-import-form {
+        flex-wrap: wrap;
+      }
+    }
   </style>
 </head>
 
@@ -156,6 +226,29 @@
           <h1>Danh sách sản phẩm</h1>
           <div>
             <button type="button" id="btnAddProduct" class="them-sanpham">Thêm sản phẩm</button>
+            <form action="${pageContext.request.contextPath}/admin/products"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="excel-import-form">
+
+              <input type="hidden" name="action" value="importExcel">
+
+              <label for="excelFile" class="excel-file-label">
+                <i class="fa-solid fa-file-excel"></i>
+                <span id="excelFileName">Chọn file Excel</span>
+              </label>
+
+              <input type="file"
+                     id="excelFile"
+                     name="excelFile"
+                     accept=".xlsx"
+                     required
+                     class="excel-file-input">
+
+              <button type="submit" class="btn-import-excel">
+                <i class="fa-solid fa-upload"></i> Nhập Excel
+              </button>
+            </form>
           </div>
         </div>
 
@@ -328,6 +421,9 @@
 
             <label>Kích thước</label>
             <input type="text" id="size" name="size">
+
+            <label>Tiêu chuẩn</label>
+            <input type="text" id="standard" name="standard">
 
             <label>Xuất xứ</label>
             <input type="text" id="madeIn" name="madeIn">
@@ -626,6 +722,18 @@
       openModal();
     });
   });
+  const excelFileInput = document.getElementById("excelFile");
+  const excelFileName = document.getElementById("excelFileName");
+
+  if (excelFileInput && excelFileName) {
+    excelFileInput.addEventListener("change", function () {
+      if (this.files && this.files.length > 0) {
+        excelFileName.textContent = this.files[0].name;
+      } else {
+        excelFileName.textContent = "Chọn file Excel";
+      }
+    });
+  }
 </script>
 
 </body>
