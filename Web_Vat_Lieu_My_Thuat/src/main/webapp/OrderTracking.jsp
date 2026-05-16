@@ -129,7 +129,29 @@
                 <span class="tracking-label">Trạng thái:</span>
                 <span class="tracking-status">${trackingStatusText}</span>
             </div>
+            <div class="tracking-row">
+                <span class="tracking-label">Cập nhật lúc:</span>
+                <c:choose>
+                    <c:when test="${not empty trackingUpdatedTimeText}">
+                        ${trackingUpdatedTimeText}
+                    </c:when>
+                    <c:otherwise>
+                        Chưa có thông tin
+                    </c:otherwise>
+                </c:choose>
+            </div>
 
+            <div class="tracking-row">
+                <span class="tracking-label">Kho hiện tại:</span>
+                <c:choose>
+                    <c:when test="${not empty trackingWarehouseText}">
+                        ${trackingWarehouseText}
+                    </c:when>
+                    <c:otherwise>
+                        Chưa có thông tin
+                    </c:otherwise>
+                </c:choose>
+            </div>
             <div class="tracking-row">
                 <span class="tracking-label">Dự kiến giao:</span>
                 <c:choose>
@@ -141,6 +163,7 @@
                     </c:otherwise>
                 </c:choose>
             </div>
+
 
             <div class="tracking-row">
                 <span class="tracking-label">Người nhận:</span>

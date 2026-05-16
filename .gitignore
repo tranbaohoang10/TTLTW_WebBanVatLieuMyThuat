@@ -71,3 +71,7 @@ target/
 out/
 .idea/
 *.iml
+Web_Vat_Lieu_My_Thuat/gradle.properties
+
+Web_Vat_Lieu_My_Thuat/.gradle/
+

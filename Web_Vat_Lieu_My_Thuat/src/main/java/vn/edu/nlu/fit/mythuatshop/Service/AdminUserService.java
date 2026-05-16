@@ -40,7 +40,7 @@ public class AdminUserService {
     }
 
     public boolean createUser(String fullName, String email, String phone,
-                              String dobStr, String address, String role, String baseUrl) {
+                              String dobStr, String address, String role,Integer groupId, String baseUrl) {
         if (email == null || email.isBlank()) {
             return false;
         }
@@ -59,6 +59,7 @@ public class AdminUserService {
             user.setRole("USER");
         } else {
             user.setRole(role.toUpperCase());}
+        user.setGroupId(groupId);
         if (dobStr != null && !dobStr.isBlank()) {
             user.setDob(LocalDate.parse(dobStr));
         }
@@ -93,7 +94,7 @@ public class AdminUserService {
     }
 
     public boolean updateUser(int id, String fullName, String phone,
-                              String dobStr, String address, String role) {
+                              String dobStr, String address, String role, Integer groupId) {
         Users user = userDao.findById(id);
         if (user == null) {
             return false;
@@ -106,6 +107,7 @@ public class AdminUserService {
         if (role != null) {
             user.setRole(role.toUpperCase());
         }
+        user.setGroupId(groupId);
         if (dobStr != null && !dobStr.isBlank()) {
             user.setDob(LocalDate.parse(dobStr));
         } else {

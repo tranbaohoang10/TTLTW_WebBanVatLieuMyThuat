@@ -9,14 +9,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.nlu.fit.mythuatshop.Model.Cart;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Service.PermissionService;
 import vn.edu.nlu.fit.mythuatshop.Service.UserService;
 
 import java.io.IOException;
+import java.util.Set;
 
 
 @WebServlet(name = "LoginController", value = "/login")
 public class LoginController extends HttpServlet {
     private UserService userService;
+    private PermissionService permissionService;
     private static final String loginFailCount = "login_fail_count";
     private static final String login_lock = "login_lock";
     private static final int total_Fail = 5;
@@ -26,6 +29,7 @@ public class LoginController extends HttpServlet {
     @Override
     public void init() throws ServletException {
         userService = new UserService();
+        permissionService = new PermissionService();
     }
 
     @Override
@@ -97,6 +101,9 @@ public class LoginController extends HttpServlet {
         }
         session.removeAttribute(loginFailCount);
         session.setAttribute("currentUser", user1);
+        Set<String> permissions = permissionService.getPermissionsByUserId(user1.getId());
+        session.setAttribute("permissions", permissions);
+        session.setAttribute("loginTime", System.currentTimeMillis());
         session.setMaxInactiveInterval(30*60);
 
         Cart cart;
@@ -111,7 +118,7 @@ public class LoginController extends HttpServlet {
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
         String role = user1.getRole();
-        if(role.equalsIgnoreCase("admin")){
+        if(role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("staff")) {
             resp.sendRedirect(req.getContextPath()+"/admin/overview");
             return;
         }
