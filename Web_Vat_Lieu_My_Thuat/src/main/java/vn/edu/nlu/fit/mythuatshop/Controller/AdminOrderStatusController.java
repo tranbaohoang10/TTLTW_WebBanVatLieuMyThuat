@@ -48,7 +48,7 @@ public class AdminOrderStatusController extends HttpServlet {
                     logService.log(
                             "Cập nhật trạng thái đơn hàng",
                             userId,
-                            "AdminOrderStatusController#updateStatus",
+                            "Quản lý trạng thái đơn hàng",
                             beforeStatus,
                             newStatus
                     );

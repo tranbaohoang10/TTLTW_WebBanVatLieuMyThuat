@@ -3,6 +3,8 @@ package vn.edu.nlu.fit.mythuatshop.Service;
 import vn.edu.nlu.fit.mythuatshop.Dao.ProductDao;
 import vn.edu.nlu.fit.mythuatshop.Model.Product;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ProductService {
@@ -39,16 +41,13 @@ public class ProductService {
     }
 
     public List<Product> getProductSearch(String productName) {
-        if (productName == null) {
-            productName = "";
-        }
+        productName = normalizeKeyword(productName);
         return productDao.getProductSearch(productName);
     }
 
     public List<Product> getProductSearch(String productName, String sort, int offset, int limit) {
-        if (productName == null) {
-            productName = "";
-        }
+        productName = normalizeKeyword(productName);
+
         if (sort == null || sort.trim().isEmpty()) {
             sort = "";
         }
@@ -57,6 +56,7 @@ public class ProductService {
 
 
     public int countProductSearch(String productName) {
+        productName = normalizeKeyword(productName);
         return productDao.countProductSearch(productName);
     }
     public Product getProductById(int productId) {
@@ -78,5 +78,20 @@ public class ProductService {
     public int delete(int id) {
         return productDao.deleteById(id);
     }
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null) {
+            return "";
+        }
+        return keyword.trim().replaceAll("\\s+", " ");
+    }
 
+    private List<String> splitKeywords(String keyword) {
+        keyword = normalizeKeyword(keyword);
+
+        if (keyword.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return Arrays.asList(keyword.split(" "));
+    }
 }

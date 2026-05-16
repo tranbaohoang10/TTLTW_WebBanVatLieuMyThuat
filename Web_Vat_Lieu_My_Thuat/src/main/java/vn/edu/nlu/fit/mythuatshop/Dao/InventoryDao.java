@@ -27,7 +27,7 @@ public class InventoryDao {
                        createAt,
                        brand,
                        isActive
-                FROM Products
+                FROM products
                 ORDER BY quantityStock ASC, ID DESC
                 """;
 
@@ -51,8 +51,8 @@ public class InventoryDao {
                        it.orderID AS orderId,
                        it.createdBy AS createdBy,
                        it.createAt AS createAt
-                FROM Inventory_Transactions it
-                JOIN Products p ON p.ID = it.productID
+                FROM inventory_transactions it
+                JOIN products p ON p.ID = it.productID
                 ORDER BY it.createAt DESC, it.ID DESC
                 LIMIT 200
                 """;
@@ -126,7 +126,7 @@ public class InventoryDao {
     public int getCurrentStockForUpdate(Handle handle, int productId) {
         return handle.createQuery("""
                         SELECT quantityStock
-                        FROM Products
+                        FROM products
                         WHERE ID = :productId
                         FOR UPDATE
                         """)
@@ -138,7 +138,7 @@ public class InventoryDao {
 
     public int updateStockOnly(Handle handle, int productId, int newStock) {
         String sql = """
-                UPDATE Products
+                UPDATE products
                 SET quantityStock = :newStock,
                     status = CASE
                         WHEN :newStock > 0 THEN 'Còn hàng'
@@ -163,7 +163,7 @@ public class InventoryDao {
                                  Integer orderId,
                                  Integer createdBy) {
         String sql = """
-                INSERT INTO Inventory_Transactions
+                INSERT INTO inventory_transactions
                 (productID, type, quantity, beforeStock, afterStock, note, orderID, createdBy)
                 VALUES
                 (:productID, :type, :quantity, :beforeStock, :afterStock, :note, :orderID, :createdBy)
