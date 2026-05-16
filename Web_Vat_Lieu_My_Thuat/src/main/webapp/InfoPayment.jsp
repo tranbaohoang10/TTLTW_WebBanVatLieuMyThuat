@@ -16,6 +16,8 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
           integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 </head>
 <style>
@@ -592,11 +594,6 @@
         border: 1px solid #d1d5db;
         border-radius: 8px;
         background: #f3f4f6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #6b7280;
-        font-size: 14px;
     }
 
     #mapAddressText {
@@ -824,13 +821,24 @@
 </div>
 
 <%@ include file="Footer.jsp" %>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
     (() => {
         const CTX = "<%=request.getContextPath()%>";
 
         const $ = (id) => document.getElementById(id);
+        const defaultLat = 10.762622;
+        const defaultLng = 106.660172;
 
+        const map = L.map("mapBox").setView([defaultLat, defaultLng], 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19
+        }).addTo(map);
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
         function vnd(n) {
             n = Math.round(Number(n) || 0);
             return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "₫";
