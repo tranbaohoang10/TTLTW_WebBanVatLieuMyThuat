@@ -93,7 +93,7 @@ public class OrderDao implements DaoInterface<Order> {
         return jdbi.inTransaction(handle -> {
             String sql = """
                         SELECT ID, userID, fullName, email, phoneNumber, address,
-                               totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note
+                               totalPrice, paymentID, orderStatusID, voucherID, discount,shippingFee, note, paymentStatus
                         FROM orders
                         WHERE ID = :id
                     """;
