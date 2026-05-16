@@ -2,35 +2,29 @@ package vn.edu.nlu.fit.mythuatshop.Service;
 
 import org.apache.poi.ss.usermodel.*;
 import vn.edu.nlu.fit.mythuatshop.Dao.CategoryDao;
-import vn.edu.nlu.fit.mythuatshop.Dao.InventoryDao;
-import vn.edu.nlu.fit.mythuatshop.Dao.ProductDao;
-import vn.edu.nlu.fit.mythuatshop.Dao.SpecificationsDao;
-import vn.edu.nlu.fit.mythuatshop.Dao.SubImagesDao;
+import vn.edu.nlu.fit.mythuatshop.Dao.ProductExcelImportDao;
 import vn.edu.nlu.fit.mythuatshop.Model.Category;
-import vn.edu.nlu.fit.mythuatshop.Model.Product;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelImportData;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelImportResult;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelRow;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.SpecificationExcelRow;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.SubImageExcelRow;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Timestamp;
 import java.util.*;
 
 public class ProductExcelImportService {
-    private final ProductDao productDao;
     private final CategoryDao categoryDao;
-    private final SubImagesDao subImagesDao;
-    private final SpecificationsDao specificationsDao;
-    private final InventoryDao inventoryDao;
+    private final ProductExcelImportDao productExcelImportDao;
 
     public ProductExcelImportService() {
-        this.productDao = new ProductDao();
         this.categoryDao = new CategoryDao();
-        this.subImagesDao = new SubImagesDao();
-        this.specificationsDao = new SpecificationsDao();
-        this.inventoryDao = new InventoryDao();
+        this.productExcelImportDao = new ProductExcelImportDao();
     }
 
-    public ImportResult importExcel(InputStream inputStream, Integer adminId) throws IOException {
-        ImportResult result = new ImportResult();
+    public ProductExcelImportResult importExcel(InputStream inputStream, Integer adminId) throws IOException {
+        ProductExcelImportResult result = new ProductExcelImportResult();
 
         try (Workbook workbook = WorkbookFactory.create(inputStream)) {
             Sheet productSheet = getSheetIgnoreCase(workbook, "Products");
@@ -53,82 +47,44 @@ public class ProductExcelImportService {
             }
 
             Map<String, Integer> categoryMap = buildCategoryMap();
-            Map<String, ProductRow> productRows = readProductSheet(productSheet, categoryMap, result);
 
-            if (!result.isSuccess()) {
+            ProductExcelImportData importData = new ProductExcelImportData();
+
+            Map<String, ProductExcelRow> productRows =
+                    readProductSheet(productSheet, categoryMap, result);
+
+            importData.setProducts(productRows);
+
+            if (productRows.isEmpty() && !result.hasErrors()) {
+                result.addError("Sheet Products không có sản phẩm nào để import.");
                 return result;
             }
 
-            List<SubImageRow> subImageRows = readSubImageSheet(subImageSheet, productRows.keySet(), result);
-            Map<String, SpecRow> specRows = readSpecificationSheet(specificationSheet, productRows.keySet(), result);
+            List<SubImageExcelRow> subImageRows =
+                    readSubImageSheet(subImageSheet, productRows.keySet(), result);
 
-            if (!result.isSuccess()) {
+            importData.setSubImages(subImageRows);
+
+            Map<String, SpecificationExcelRow> specificationRows =
+                    readSpecificationSheet(specificationSheet, productRows.keySet(), result);
+
+            importData.setSpecifications(specificationRows);
+            if (result.hasErrors()) {
                 return result;
             }
 
-            Map<String, Integer> productCodeToId = new HashMap<>();
-
-            for (ProductRow row : productRows.values()) {
-                Product product = new Product();
-                product.setName(row.name);
-                product.setPrice(row.price);
-                product.setDiscountDefault(row.discountDefault);
-                product.setCategoryId(row.categoryId);
-                product.setThumbnail(row.thumbnail);
-                product.setQuantityStock(row.quantityStock);
-                product.setSoldQuantity(0);
-                product.setStatus(row.quantityStock > 0 ? "Còn hàng" : "Hết hàng");
-                product.setCreateAt(new Timestamp(System.currentTimeMillis()));
-                product.setBrand(row.brand);
-                product.setIsActive(row.isActive);
-
-                int productId = productDao.insertReturnId(product);
-                productCodeToId.put(row.productCode, productId);
-
-                if (row.quantityStock > 0) {
-                    inventoryDao.recordInitialStock(
-                            productId,
-                            row.quantityStock,
-                            "Tồn kho ban đầu khi import Excel",
-                            adminId
-                    );
-                }
-
-                result.increaseImportedCount();
-            }
-
-            for (SubImageRow row : subImageRows) {
-                Integer productId = productCodeToId.get(row.productCode);
-                if (productId != null) {
-                    subImagesDao.insert(productId, row.image);
-                }
-            }
-
-            for (Map.Entry<String, SpecRow> entry : specRows.entrySet()) {
-                Integer productId = productCodeToId.get(entry.getKey());
-                SpecRow row = entry.getValue();
-
-                if (productId != null) {
-                    specificationsDao.upsert(
-                            productId,
-                            row.size,
-                            row.standard,
-                            row.madeIn,
-                            row.warning
-                    );
-                }
-            }
+            int importedCount = saveImportData(importData, adminId);
+            result.setImportedCount(importedCount);
 
             return result;
         }
     }
 
-    private Map<String, ProductRow> readProductSheet(Sheet sheet,
-                                                     Map<String, Integer> categoryMap,
-                                                     ImportResult result) {
-        Map<String, ProductRow> rows = new LinkedHashMap<>();
+    private Map<String, ProductExcelRow> readProductSheet(Sheet sheet,
+                                                          Map<String, Integer> categoryMap,
+                                                          ProductExcelImportResult result) {
+        Map<String, ProductExcelRow> rows = new LinkedHashMap<>();
         DataFormatter formatter = new DataFormatter();
-
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
             Row excelRow = sheet.getRow(i);
 
@@ -137,7 +93,7 @@ public class ProductExcelImportService {
             }
 
             int excelLine = i + 1;
-
+            boolean rowHasError = false;
             String productCode = normalizeCode(getString(excelRow, 0, formatter));
             String name = getString(excelRow, 1, formatter);
             String categoryName = getString(excelRow, 2, formatter);
@@ -150,76 +106,78 @@ public class ProductExcelImportService {
 
             if (productCode.isEmpty()) {
                 result.addError("Dòng " + excelLine + " sheet Products: productCode không được rỗng.");
-                continue;
-            }
-
-            if (rows.containsKey(productCode)) {
+                rowHasError = true;
+            } else if (rows.containsKey(productCode)) {
                 result.addError("Dòng " + excelLine + " sheet Products: productCode bị trùng: " + productCode);
-                continue;
+                rowHasError = true;
             }
 
             if (name.isEmpty()) {
                 result.addError("Dòng " + excelLine + " sheet Products: tên sản phẩm không được rỗng.");
+                rowHasError = true;
             }
 
             if (categoryName.isEmpty()) {
                 result.addError("Dòng " + excelLine + " sheet Products: danh mục không được rỗng.");
+                rowHasError = true;
             }
 
             Integer categoryId = categoryMap.get(normalizeKey(categoryName));
             if (categoryId == null) {
                 result.addError("Dòng " + excelLine + " sheet Products: danh mục không tồn tại: " + categoryName);
+                rowHasError = true;
             }
 
             if (price < 0) {
                 result.addError("Dòng " + excelLine + " sheet Products: giá sản phẩm không hợp lệ.");
+                rowHasError = true;
             }
 
             if (discountDefault < 0 || discountDefault > 100) {
                 result.addError("Dòng " + excelLine + " sheet Products: giảm giá phải từ 0 đến 100.");
+                rowHasError = true;
             }
 
             if (quantityStock < 0) {
                 result.addError("Dòng " + excelLine + " sheet Products: số lượng tồn kho không hợp lệ.");
+                rowHasError = true;
             }
 
             if (thumbnail.isEmpty()) {
                 result.addError("Dòng " + excelLine + " sheet Products: ảnh chính không được rỗng.");
+                rowHasError = true;
             }
 
             if (isActive != 0 && isActive != 1) {
                 result.addError("Dòng " + excelLine + " sheet Products: isActive chỉ được nhập 0 hoặc 1.");
+                rowHasError = true;
             }
 
-            if (result.hasErrors()) {
+            if (rowHasError) {
                 continue;
             }
 
-            ProductRow row = new ProductRow();
-            row.productCode = productCode;
-            row.name = name;
-            row.categoryId = categoryId;
-            row.price = price;
-            row.discountDefault = discountDefault;
-            row.quantityStock = quantityStock;
-            row.brand = brand;
-            row.thumbnail = thumbnail;
-            row.isActive = isActive;
+            ProductExcelRow row = new ProductExcelRow();
+            row.setProductCode(productCode);
+            row.setName(name);
+            row.setCategoryId(categoryId);
+            row.setPrice(price);
+            row.setDiscountDefault(discountDefault);
+            row.setQuantityStock(quantityStock);
+            row.setBrand(brand);
+            row.setThumbnail(thumbnail);
+            row.setIsActive(isActive);
 
             rows.put(productCode, row);
-        }
-
-        if (rows.isEmpty() && !result.hasErrors()) {
-            result.addError("Sheet Products không có sản phẩm nào để import.");
         }
 
         return rows;
     }
 
-    private List<SubImageRow> readSubImageSheet(Sheet sheet,
-                                                Set<String> productCodes,
-                                                ImportResult result) {
-        List<SubImageRow> rows = new ArrayList<>();
+    private List<SubImageExcelRow> readSubImageSheet(Sheet sheet,
+                                                     Set<String> productCodes,
+                                                     ProductExcelImportResult result) {
+        List<SubImageExcelRow> rows = new ArrayList<>();
         Map<String, Integer> imageCountByProductCode = new HashMap<>();
         DataFormatter formatter = new DataFormatter();
 
@@ -231,46 +189,49 @@ public class ProductExcelImportService {
             }
 
             int excelLine = i + 1;
-
+            boolean rowHasError = false;
             String productCode = normalizeCode(getString(excelRow, 0, formatter));
             String image = normalizeImagePath(getString(excelRow, 1, formatter));
 
             if (productCode.isEmpty()) {
                 result.addError("Dòng " + excelLine + " sheet Subimages: productCode không được rỗng.");
-                continue;
-            }
-
-            if (!productCodes.contains(productCode)) {
+                rowHasError = true;
+            } else if (!productCodes.contains(productCode)) {
                 result.addError("Dòng " + excelLine + " sheet Subimages: productCode không tồn tại trong sheet Products: " + productCode);
-                continue;
+                rowHasError = true;
             }
 
             if (image.isEmpty()) {
                 result.addError("Dòng " + excelLine + " sheet Subimages: image không được rỗng.");
-                continue;
+                rowHasError = true;
             }
 
             int currentCount = imageCountByProductCode.getOrDefault(productCode, 0);
             if (currentCount >= 3) {
-                result.addError("Dòng " + excelLine + " sheet Subimages: mỗi sản phẩm chỉ nên có tối đa 3 ảnh phụ.");
+                result.addError("Dòng " + excelLine + " sheet Subimages: mỗi sản phẩm chỉ được tối đa 3 ảnh phụ.");
+                rowHasError = true;
+            }
+
+            if (rowHasError) {
                 continue;
             }
 
             imageCountByProductCode.put(productCode, currentCount + 1);
 
-            SubImageRow row = new SubImageRow();
-            row.productCode = productCode;
-            row.image = image;
+            SubImageExcelRow row = new SubImageExcelRow();
+            row.setProductCode(productCode);
+            row.setImage(image);
+
             rows.add(row);
         }
 
         return rows;
     }
 
-    private Map<String, SpecRow> readSpecificationSheet(Sheet sheet,
-                                                        Set<String> productCodes,
-                                                        ImportResult result) {
-        Map<String, SpecRow> rows = new HashMap<>();
+    private Map<String, SpecificationExcelRow> readSpecificationSheet(Sheet sheet,
+                                                                      Set<String> productCodes,
+                                                                      ProductExcelImportResult result) {
+        Map<String, SpecificationExcelRow> rows = new LinkedHashMap<>();
         DataFormatter formatter = new DataFormatter();
 
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
@@ -281,7 +242,7 @@ public class ProductExcelImportService {
             }
 
             int excelLine = i + 1;
-
+            boolean rowHasError = false;
             String productCode = normalizeCode(getString(excelRow, 0, formatter));
             String size = getString(excelRow, 1, formatter);
             String standard = getString(excelRow, 2, formatter);
@@ -290,25 +251,24 @@ public class ProductExcelImportService {
 
             if (productCode.isEmpty()) {
                 result.addError("Dòng " + excelLine + " sheet Specifications: productCode không được rỗng.");
-                continue;
-            }
-
-            if (!productCodes.contains(productCode)) {
+                rowHasError = true;
+            } else if (!productCodes.contains(productCode)) {
                 result.addError("Dòng " + excelLine + " sheet Specifications: productCode không tồn tại trong sheet Products: " + productCode);
+                rowHasError = true;
+            } else if (rows.containsKey(productCode)) {
+                result.addError("Dòng " + excelLine + " sheet Specifications: mỗi sản phẩm chỉ được có 1 dòng thông số kỹ thuật.");
+                rowHasError = true;
+            }
+            if (rowHasError) {
                 continue;
             }
 
-            if (rows.containsKey(productCode)) {
-                result.addError("Dòng " + excelLine + " sheet Specifications: mỗi sản phẩm chỉ nên có 1 dòng thông số kỹ thuật.");
-                continue;
-            }
-
-            SpecRow row = new SpecRow();
-            row.productCode = productCode;
-            row.size = size;
-            row.standard = standard;
-            row.madeIn = madeIn;
-            row.warning = warning;
+            SpecificationExcelRow row = new SpecificationExcelRow();
+            row.setProductCode(productCode);
+            row.setSize(size);
+            row.setStandard(standard);
+            row.setMadeIn(madeIn);
+            row.setWarning(warning);
 
             rows.put(productCode, row);
         }
@@ -436,58 +396,56 @@ public class ProductExcelImportService {
 
         return value;
     }
+    private int saveImportData(ProductExcelImportData data, Integer adminId) {
+        return productExcelImportDao.getJdbi().inTransaction(handle -> {
+            Map<String, Integer> productCodeToId = new HashMap<>();
+            int importedCount = 0;
 
-    private static class ProductRow {
-        String productCode;
-        String name;
-        int categoryId;
-        double price;
-        int discountDefault;
-        int quantityStock;
-        String brand;
-        String thumbnail;
-        int isActive;
-    }
+            for (ProductExcelRow row : data.getProducts().values()) {
+                int productId = productExcelImportDao.insertProduct(handle, row);
 
-    private static class SubImageRow {
-        String productCode;
-        String image;
-    }
+                productCodeToId.put(row.getProductCode(), productId);
 
-    private static class SpecRow {
-        String productCode;
-        String size;
-        String standard;
-        String madeIn;
-        String warning;
-    }
+                if (row.getQuantityStock() > 0) {
+                    productExcelImportDao.recordInitialStock(
+                            handle,
+                            productId,
+                            row.getQuantityStock(),
+                            adminId
+                    );
+                }
 
-    public static class ImportResult {
-        private final List<String> errors = new ArrayList<>();
-        private int importedCount;
+                importedCount++;
+            }
 
-        public boolean isSuccess() {
-            return errors.isEmpty();
-        }
+            for (SubImageExcelRow row : data.getSubImages()) {
+                Integer productId = productCodeToId.get(row.getProductCode());
 
-        public boolean hasErrors() {
-            return !errors.isEmpty();
-        }
+                if (productId != null) {
+                    productExcelImportDao.insertSubImage(
+                            handle,
+                            productId,
+                            row.getImage()
+                    );
+                }
+            }
 
-        public List<String> getErrors() {
-            return errors;
-        }
+            for (Map.Entry<String, SpecificationExcelRow> entry : data.getSpecifications().entrySet()) {
+                String productCode = entry.getKey();
+                SpecificationExcelRow row = entry.getValue();
 
-        public int getImportedCount() {
+                Integer productId = productCodeToId.get(productCode);
+
+                if (productId != null) {
+                    productExcelImportDao.upsertSpecification(
+                            handle,
+                            productId,
+                            row
+                    );
+                }
+            }
+
             return importedCount;
-        }
-
-        public void addError(String error) {
-            errors.add(error);
-        }
-
-        public void increaseImportedCount() {
-            importedCount++;
-        }
+        });
     }
 }

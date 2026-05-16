@@ -1,84 +1,102 @@
 package vn.edu.nlu.fit.mythuatshop.Dao;
 
-import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelImportData;
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.Jdbi;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelRow;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.SpecificationExcelRow;
-import vn.edu.nlu.fit.mythuatshop.Model.Excel.SubImageExcelRow;
-import vn.edu.nlu.fit.mythuatshop.Model.Product;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ProductExcelImportDao {
-    private final ProductDao productDao;
-    private final SubImagesDao subImagesDao;
-    private final SpecificationsDao specificationsDao;
-    private final InventoryDao inventoryDao;
+    private final Jdbi jdbi;
 
     public ProductExcelImportDao() {
-        this.productDao = new ProductDao();
-        this.subImagesDao = new SubImagesDao();
-        this.specificationsDao = new SpecificationsDao();
-        this.inventoryDao = new InventoryDao();
+        this.jdbi = JDBIConnector.getJdbi();
     }
 
-    public int saveImportData(ProductExcelImportData data, Integer adminId) {
-        Map<String, Integer> productCodeToId = new HashMap<>();
-        int importedCount = 0;
-        for (ProductExcelRow row : data.getProducts().values()) {
-            Product product = new Product();
+    public Jdbi getJdbi() {
+        return jdbi;
+    }
 
-            product.setName(row.getName());
-            product.setPrice(row.getPrice());
-            product.setDiscountDefault(row.getDiscountDefault());
-            product.setCategoryId(row.getCategoryId());
-            product.setThumbnail(row.getThumbnail());
-            product.setQuantityStock(row.getQuantityStock());
-            product.setSoldQuantity(0);
-            product.setStatus(row.getQuantityStock() > 0 ? "Còn hàng" : "Hết hàng");
-            product.setCreateAt(new Timestamp(System.currentTimeMillis()));
-            product.setBrand(row.getBrand());
-            product.setIsActive(row.getIsActive());
+    public int insertProduct(Handle handle, ProductExcelRow row) {
+        String sql = """
+                INSERT INTO products
+                (name, price, discountDefault, categoryID, thumbnail,
+                 quantityStock, soldQuantity, status, createAt, brand, isActive)
+                VALUES
+                (:name, :price, :discountDefault, :categoryID, :thumbnail,
+                 :quantityStock, :soldQuantity, :status, :createAt, :brand, :isActive)
+                """;
 
-            int productId = productDao.insertReturnId(product);
+        return handle.createUpdate(sql)
+                .bind("name", row.getName())
+                .bind("price", row.getPrice())
+                .bind("discountDefault", row.getDiscountDefault())
+                .bind("categoryID", row.getCategoryId())
+                .bind("thumbnail", row.getThumbnail())
+                .bind("quantityStock", row.getQuantityStock())
+                .bind("soldQuantity", 0)
+                .bind("status", row.getQuantityStock() > 0 ? "Còn hàng" : "Hết hàng")
+                .bind("createAt", new Timestamp(System.currentTimeMillis()))
+                .bind("brand", row.getBrand())
+                .bind("isActive", row.getIsActive())
+                .executeAndReturnGeneratedKeys("ID")
+                .mapTo(Integer.class)
+                .one();
+    }
 
-            productCodeToId.put(row.getProductCode(), productId);
-            if (row.getQuantityStock() > 0) {
-                inventoryDao.recordInitialStock(
-                        productId,
-                        row.getQuantityStock(),
-                        "Tồn kho ban đầu khi import Excel",
-                        adminId
-                );
-            }
+    public void insertSubImage(Handle handle, int productId, String image) {
+        String sql = """
+                INSERT INTO subimages(productID, image)
+                VALUES (:productID, :image)
+                """;
 
-            importedCount++;
+        handle.createUpdate(sql)
+                .bind("productID", productId)
+                .bind("image", image)
+                .execute();
+    }
+
+    public void upsertSpecification(Handle handle, int productId, SpecificationExcelRow row) {
+        String sql = """
+                INSERT INTO specifications(productID, Size, Standard, MadeIn, Warning)
+                VALUES (:productID, :size, :standard, :madeIn, :warning)
+                ON DUPLICATE KEY UPDATE
+                    Size = VALUES(Size),
+                    Standard = VALUES(Standard),
+                    MadeIn = VALUES(MadeIn),
+                    Warning = VALUES(Warning)
+                """;
+
+        handle.createUpdate(sql)
+                .bind("productID", productId)
+                .bind("size", row.getSize())
+                .bind("standard", row.getStandard())
+                .bind("madeIn", row.getMadeIn())
+                .bind("warning", row.getWarning())
+                .execute();
+    }
+
+    public void recordInitialStock(Handle handle,
+                                   int productId,
+                                   int quantity,
+                                   Integer adminId) {
+        if (productId < 0 || quantity <= 0) {
+            return;
         }
-        for (SubImageExcelRow row : data.getSubImages()) {
-            Integer productId = productCodeToId.get(row.getProductCode());
 
-            if (productId != null) {
-                subImagesDao.insert(productId, row.getImage());
-            }
-        }
-        for (Map.Entry<String, SpecificationExcelRow> entry : data.getSpecifications().entrySet()) {
-            String productCode = entry.getKey();
-            SpecificationExcelRow row = entry.getValue();
+        String sql = """
+                INSERT INTO inventory_transactions
+                (productID, type, quantity, beforeStock, afterStock, note, orderID, createdBy)
+                VALUES
+                (:productID, 'IMPORT', :quantity, 0, :quantity, :note, NULL, :createdBy)
+                """;
 
-            Integer productId = productCodeToId.get(productCode);
-
-            if (productId != null) {
-                specificationsDao.upsert(
-                        productId,
-                        row.getSize(),
-                        row.getStandard(),
-                        row.getMadeIn(),
-                        row.getWarning()
-                );
-            }
-        }
-
-        return importedCount;
+        handle.createUpdate(sql)
+                .bind("productID", productId)
+                .bind("quantity", quantity)
+                .bind("note", "Tồn kho ban đầu khi import Excel")
+                .bind("createdBy", adminId)
+                .execute();
     }
 }
