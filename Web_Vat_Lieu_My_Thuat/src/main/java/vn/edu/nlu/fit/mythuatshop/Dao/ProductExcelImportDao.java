@@ -21,14 +21,15 @@ public class ProductExcelImportDao {
     public int insertProduct(Handle handle, ProductExcelRow row) {
         String sql = """
                 INSERT INTO products
-                (name, price, discountDefault, categoryID, thumbnail,
+                (productCode, name, price, discountDefault, categoryID, thumbnail,
                  quantityStock, soldQuantity, status, createAt, brand, isActive)
                 VALUES
-                (:name, :price, :discountDefault, :categoryID, :thumbnail,
+                (:productCode, :name, :price, :discountDefault, :categoryID, :thumbnail,
                  :quantityStock, :soldQuantity, :status, :createAt, :brand, :isActive)
                 """;
 
         return handle.createUpdate(sql)
+                .bind("productCode", row.getProductCode())
                 .bind("name", row.getName())
                 .bind("price", row.getPrice())
                 .bind("discountDefault", row.getDiscountDefault())
@@ -97,6 +98,57 @@ public class ProductExcelImportDao {
                 .bind("quantity", quantity)
                 .bind("note", "Tồn kho ban đầu khi import Excel")
                 .bind("createdBy", adminId)
+                .execute();
+    }
+    public Integer findProductIdByCode(Handle handle, String productCode) {
+        String sql = """
+            SELECT ID
+            FROM products
+            WHERE productCode = :productCode
+            """;
+
+        return handle.createQuery(sql)
+                .bind("productCode", productCode)
+                .mapTo(Integer.class)
+                .findOne()
+                .orElse(null);
+    }
+    public void updateProductByCode(Handle handle, ProductExcelRow row) {
+        String sql = """
+            UPDATE products
+            SET name = :name,
+                price = :price,
+                discountDefault = :discountDefault,
+                categoryID = :categoryID,
+                thumbnail = :thumbnail,
+                quantityStock = :quantityStock,
+                status = :status,
+                brand = :brand,
+                isActive = :isActive
+            WHERE productCode = :productCode
+            """;
+
+        handle.createUpdate(sql)
+                .bind("productCode", row.getProductCode())
+                .bind("name", row.getName())
+                .bind("price", row.getPrice())
+                .bind("discountDefault", row.getDiscountDefault())
+                .bind("categoryID", row.getCategoryId())
+                .bind("thumbnail", row.getThumbnail())
+                .bind("quantityStock", row.getQuantityStock())
+                .bind("status", row.getQuantityStock() > 0 ? "Còn hàng" : "Hết hàng")
+                .bind("brand", row.getBrand())
+                .bind("isActive", row.getIsActive())
+                .execute();
+    }
+    public void deleteSubImagesByProductId(Handle handle, int productId) {
+        String sql = """
+            DELETE FROM subimages
+            WHERE productID = :productID
+            """;
+
+        handle.createUpdate(sql)
+                .bind("productID", productId)
                 .execute();
     }
 }
