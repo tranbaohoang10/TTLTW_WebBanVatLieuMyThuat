@@ -151,6 +151,34 @@ public class ProductExcelImportDao {
                 .bind("createdBy", adminId)
                 .execute();
     }
+    public void recordStockAdjustment(Handle handle,
+                                      int productId,
+                                      int beforeStock,
+                                      int afterStock,
+                                      String productCode,
+                                      Integer adminId) {
+        if (productId < 0 || beforeStock == afterStock) {
+            return;
+        }
+
+        int changedQuantity = afterStock - beforeStock;
+
+        String sql = """
+            INSERT INTO inventory_transactions
+            (productID, type, quantity, beforeStock, afterStock, note, orderID, createdBy)
+            VALUES
+            (:productID, 'ADJUST', :quantity, :beforeStock, :afterStock, :note, NULL, :createdBy)
+            """;
+
+        handle.createUpdate(sql)
+                .bind("productID", productId)
+                .bind("quantity", changedQuantity)
+                .bind("beforeStock", beforeStock)
+                .bind("afterStock", afterStock)
+                .bind("note", "Điều chỉnh tồn kho khi cập nhật Excel - productCode: " + productCode)
+                .bind("createdBy", adminId)
+                .execute();
+    }
     public Integer findProductIdByCode(Handle handle, String productCode) {
         String sql = """
             SELECT ID
