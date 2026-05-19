@@ -9,6 +9,7 @@ import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelImportResult;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelRow;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.SpecificationExcelRow;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.SubImageExcelRow;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.ExistingProductExcelRow;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,8 +74,7 @@ public class ProductExcelImportService {
                 return result;
             }
 
-            int importedCount = saveImportData(importData, adminId);
-            result.setImportedCount(importedCount);
+            saveImportData(importData, adminId, result);
 
             return result;
         }
@@ -396,21 +396,28 @@ public class ProductExcelImportService {
 
         return value;
     }
-    private int saveImportData(ProductExcelImportData data, Integer adminId) {
-        return productExcelImportDao.getJdbi().inTransaction(handle -> {
+    private void saveImportData(ProductExcelImportData data,
+                                Integer adminId,
+                                ProductExcelImportResult result) {
+        productExcelImportDao.getJdbi().useTransaction(handle -> {
             Map<String, Integer> productCodeToId = new HashMap<>();
-            int importedCount = 0;
+            Set<String> insertedCodes = new HashSet<>();
+            Set<String> updatedCodes = new HashSet<>();
 
+            int stockChangedCount = 0;
 
             for (ProductExcelRow row : data.getProducts().values()) {
-                Integer productId = productExcelImportDao.findProductIdByCode(
-                        handle,
-                        row.getProductCode()
-                );
+                ExistingProductExcelRow existing =
+                        productExcelImportDao.findProductByCodeForUpdate(
+                                handle,
+                                row.getProductCode()
+                        );
 
-                if (productId == null) {
-                    // productCode chưa tồn tại -> thêm sản phẩm mới
+                int productId;
+
+                if (existing == null) {
                     productId = productExcelImportDao.insertProduct(handle, row);
+                    insertedCodes.add(row.getProductCode());
 
                     if (row.getQuantityStock() > 0) {
                         productExcelImportDao.recordInitialStock(
@@ -421,52 +428,156 @@ public class ProductExcelImportService {
                         );
                     }
                 } else {
-                    // productCode đã tồn tại -> cập nhật sản phẩm cũ
-                    productExcelImportDao.updateProductByCode(handle, row);
+                    productId = existing.getId();
+
+                    boolean productChanged = isMainProductChanged(existing, row);
+
+                    if (productChanged) {
+                        productExcelImportDao.updateProductByCode(handle, row);
+                        updatedCodes.add(row.getProductCode());
+                    }
+
+                    if (existing.getQuantityStock() != row.getQuantityStock()) {
+                        productExcelImportDao.recordStockAdjustment(
+                                handle,
+                                productId,
+                                existing.getQuantityStock(),
+                                row.getQuantityStock(),
+                                row.getProductCode(),
+                                adminId
+                        );
+
+                        stockChangedCount++;
+                    }
                 }
+
                 productCodeToId.put(row.getProductCode(), productId);
-                importedCount++;
-            }
-            Set<Integer> productIdsNeedRefreshSubImages = new HashSet<>();
-
-            for (SubImageExcelRow row : data.getSubImages()) {
-                Integer productId = productCodeToId.get(row.getProductCode());
-
-                if (productId != null) {
-                    productIdsNeedRefreshSubImages.add(productId);
-                }
             }
 
-            for (Integer productId : productIdsNeedRefreshSubImages) {
-                productExcelImportDao.deleteSubImagesByProductId(handle, productId);
-            }
-            for (SubImageExcelRow row : data.getSubImages()) {
-                Integer productId = productCodeToId.get(row.getProductCode());
+            Map<String, List<String>> subImagesByProductCode =
+                    groupSubImagesByProductCode(data.getSubImages());
 
-                if (productId != null) {
-                    productExcelImportDao.insertSubImage(
-                            handle,
-                            productId,
-                            row.getImage()
-                    );
-                }
-            }
-            for (Map.Entry<String, SpecificationExcelRow> entry : data.getSpecifications().entrySet()) {
+            for (Map.Entry<String, List<String>> entry : subImagesByProductCode.entrySet()) {
                 String productCode = entry.getKey();
-                SpecificationExcelRow row = entry.getValue();
+                List<String> newImages = entry.getValue();
 
                 Integer productId = productCodeToId.get(productCode);
 
-                if (productId != null) {
-                    productExcelImportDao.upsertSpecification(
-                            handle,
-                            productId,
-                            row
-                    );
+                if (productId == null) {
+                    continue;
+                }
+
+                List<String> oldImages =
+                        productExcelImportDao.findSubImagesByProductId(handle, productId);
+
+                if (!oldImages.equals(newImages)) {
+                    productExcelImportDao.deleteSubImagesByProductId(handle, productId);
+
+                    for (String image : newImages) {
+                        productExcelImportDao.insertSubImage(handle, productId, image);
+                    }
+
+                    if (!insertedCodes.contains(productCode)) {
+                        updatedCodes.add(productCode);
+                    }
                 }
             }
 
-            return importedCount;
+            for (Map.Entry<String, SpecificationExcelRow> entry : data.getSpecifications().entrySet()) {
+                String productCode = entry.getKey();
+                SpecificationExcelRow newSpec = entry.getValue();
+
+                Integer productId = productCodeToId.get(productCode);
+
+                if (productId == null) {
+                    continue;
+                }
+
+                SpecificationExcelRow oldSpec =
+                        productExcelImportDao.findSpecificationByProductId(handle, productId);
+
+                if (!isSameSpecification(oldSpec, newSpec)) {
+                    productExcelImportDao.upsertSpecification(handle, productId, newSpec);
+
+                    if (!insertedCodes.contains(productCode)) {
+                        updatedCodes.add(productCode);
+                    }
+                }
+            }
+
+            int processedCount = data.getProducts().size();
+            int insertedCount = insertedCodes.size();
+            int updatedCount = updatedCodes.size();
+            int unchangedCount = processedCount - insertedCount - updatedCount;
+
+            result.setProcessedCount(processedCount);
+            result.setInsertedCount(insertedCount);
+            result.setUpdatedCount(updatedCount);
+            result.setUnchangedCount(Math.max(unchangedCount, 0));
+            result.setStockChangedCount(stockChangedCount);
         });
+    }
+    private boolean isMainProductChanged(ExistingProductExcelRow oldRow,
+                                         ProductExcelRow newRow) {
+        if (!safe(oldRow.getName()).equals(safe(newRow.getName()))) {
+            return true;
+        }
+
+        if (oldRow.getCategoryId() != newRow.getCategoryId()) {
+            return true;
+        }
+
+        if (Math.abs(oldRow.getPrice() - newRow.getPrice()) > 0.0001) {
+            return true;
+        }
+
+        if (oldRow.getDiscountDefault() != newRow.getDiscountDefault()) {
+            return true;
+        }
+
+        if (oldRow.getQuantityStock() != newRow.getQuantityStock()) {
+            return true;
+        }
+
+        if (!safe(oldRow.getBrand()).equals(safe(newRow.getBrand()))) {
+            return true;
+        }
+
+        if (!safe(oldRow.getThumbnail()).equals(safe(newRow.getThumbnail()))) {
+            return true;
+        }
+
+        return oldRow.getIsActive() != newRow.getIsActive();
+    }
+
+    private Map<String, List<String>> groupSubImagesByProductCode(List<SubImageExcelRow> subImages) {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+
+        for (SubImageExcelRow row : subImages) {
+            map.computeIfAbsent(row.getProductCode(), key -> new ArrayList<>())
+                    .add(row.getImage());
+        }
+
+        return map;
+    }
+
+    private boolean isSameSpecification(SpecificationExcelRow oldSpec,
+                                        SpecificationExcelRow newSpec) {
+        if (oldSpec == null) {
+            return false;
+        }
+
+        return safe(oldSpec.getSize()).equals(safe(newSpec.getSize()))
+                && safe(oldSpec.getStandard()).equals(safe(newSpec.getStandard()))
+                && safe(oldSpec.getMadeIn()).equals(safe(newSpec.getMadeIn()))
+                && safe(oldSpec.getWarning()).equals(safe(newSpec.getWarning()));
+    }
+
+    private String safe(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value.trim();
     }
 }
