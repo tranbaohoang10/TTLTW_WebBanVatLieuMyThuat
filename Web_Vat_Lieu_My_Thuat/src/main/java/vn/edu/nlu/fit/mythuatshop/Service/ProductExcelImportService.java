@@ -401,23 +401,45 @@ public class ProductExcelImportService {
             Map<String, Integer> productCodeToId = new HashMap<>();
             int importedCount = 0;
 
+
             for (ProductExcelRow row : data.getProducts().values()) {
-                int productId = productExcelImportDao.insertProduct(handle, row);
+                Integer productId = productExcelImportDao.findProductIdByCode(
+                        handle,
+                        row.getProductCode()
+                );
 
-                productCodeToId.put(row.getProductCode(), productId);
+                if (productId == null) {
+                    // productCode chưa tồn tại -> thêm sản phẩm mới
+                    productId = productExcelImportDao.insertProduct(handle, row);
 
-                if (row.getQuantityStock() > 0) {
-                    productExcelImportDao.recordInitialStock(
-                            handle,
-                            productId,
-                            row.getQuantityStock(),
-                            adminId
-                    );
+                    if (row.getQuantityStock() > 0) {
+                        productExcelImportDao.recordInitialStock(
+                                handle,
+                                productId,
+                                row.getQuantityStock(),
+                                adminId
+                        );
+                    }
+                } else {
+                    // productCode đã tồn tại -> cập nhật sản phẩm cũ
+                    productExcelImportDao.updateProductByCode(handle, row);
                 }
-
+                productCodeToId.put(row.getProductCode(), productId);
                 importedCount++;
             }
+            Set<Integer> productIdsNeedRefreshSubImages = new HashSet<>();
 
+            for (SubImageExcelRow row : data.getSubImages()) {
+                Integer productId = productCodeToId.get(row.getProductCode());
+
+                if (productId != null) {
+                    productIdsNeedRefreshSubImages.add(productId);
+                }
+            }
+
+            for (Integer productId : productIdsNeedRefreshSubImages) {
+                productExcelImportDao.deleteSubImagesByProductId(handle, productId);
+            }
             for (SubImageExcelRow row : data.getSubImages()) {
                 Integer productId = productCodeToId.get(row.getProductCode());
 
@@ -429,7 +451,6 @@ public class ProductExcelImportService {
                     );
                 }
             }
-
             for (Map.Entry<String, SpecificationExcelRow> entry : data.getSpecifications().entrySet()) {
                 String productCode = entry.getKey();
                 SpecificationExcelRow row = entry.getValue();
