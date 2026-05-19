@@ -477,6 +477,53 @@
     a {
         text-decoration: none;
     }
+    .map-button-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 14px;
+        margin-top: 8px;
+    }
+
+    .btn-map {
+        background: #2659F3;
+        color: white;
+        padding: 12px 22px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .btn-map:hover {
+        background: #17479d;
+    }
+
+    #mapBox {
+        width: 100%;
+        height: 280px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #f3f4f6;
+        margin-top: 6px;
+    }
+    #mapAddressText {
+        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    #mapAddressText.success {
+        color: #16a34a;
+    }
+
+    #mapAddressText.error {
+        color: #dc2626;
+    }
+
+    #mapAddressText.normal {
+        color: #374151;
+    }
 
     /* Responsive Design */
     @media (max-width: 992px) {
@@ -679,12 +726,15 @@
                         </div>
                         <div class="map-area">
                             <label>Vị trí giao hàng trên bản đồ</label>
-                            <button type="button" id="btnFindMap" class="btn-apply">
+                            <div class="map-button-group">
+                            <button type="button" id="btnFindMap" class="btn-map">
                                 Tìm vị trí trên bản đồ
                             </button>
-                            <button type="button" id="btnConfirmMap" class="btn-apply" style="margin-left: 8px;">
+                            <button type="button" id="btnConfirmMap" class="btn-map" style="margin-left: 8px;">
                                 Xác nhận vị trí
                             </button>
+                            </div>
+
                             <div id="mapBox">
                            </div>
 
@@ -905,6 +955,11 @@
             console.warn("Missing select elements for GHN");
             return;
         }
+        function showMapMessage(message, type) {
+            mapAddressText.textContent = message;
+            mapAddressText.classList.remove("success", "error", "normal");
+            mapAddressText.classList.add(type);
+        }
 
         function setMapMarker(lat, lon) {
             map.setView([lat, lon], 17);
@@ -936,8 +991,7 @@
         async function findLocationByAddress() {
             const searchAddress = buildSearchAddress();
 
-            mapAddressText.textContent = "Đang tìm vị trí...";
-
+            showMapMessage("Đang tìm vị trí...", "normal");
             const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=vn&q="
                 + encodeURIComponent(searchAddress);
 
@@ -945,7 +999,7 @@
             const data = await res.json();
 
             if (data.length === 0) {
-                mapAddressText.textContent = "Không tìm thấy vị trí phù hợp.";
+                showMapMessage("Không tìm thấy vị trí phù hợp.", "error");
                 return;
             }
 
@@ -955,7 +1009,7 @@
             setMapMarker(lat, lon);
 
             deliveryMapAddressInput.value = data[0].display_name;
-            mapAddressText.textContent = "Vị trí tìm được: " + data[0].display_name;
+            showMapMessage("Vị trí tìm được: " + data[0].display_name, "success");
         }
 
         btnFindMap.addEventListener("click", function () {
@@ -964,12 +1018,12 @@
 
         btnConfirmMap.addEventListener("click", function () {
             if (deliveryLatitudeInput.value === "" || deliveryLongitudeInput.value === "") {
-                mapAddressText.textContent = "Vui lòng tìm vị trí trên bản đồ trước.";
+                showMapMessage("Vui lòng tìm vị trí trên bản đồ trước.", "error");
                 return;
             }
 
             mapConfirmedInput.value = "1";
-            mapAddressText.textContent = "Đã xác nhận vị trí giao hàng.";
+            showMapMessage("Đã xác nhận vị trí giao hàng.", "success");
         });
 
         map.on("click", function (event) {
@@ -979,7 +1033,7 @@
             setMapMarker(lat, lon);
 
             deliveryMapAddressInput.value = "";
-            mapAddressText.textContent = "Đã chọn lại vị trí: " + lat + ", " + lon;
+            showMapMessage("Đã chọn lại vị trí: " + lat + ", " + lon, "success");
         });
 
         if (btnApplyVoucher) {
@@ -1244,6 +1298,12 @@
 
                     return;
                 }
+                if (mapConfirmedInput.value !== "1") {
+                    event.preventDefault();
+                    showMapMessage("Vui lòng tìm và xác nhận vị trí giao hàng trước khi thanh toán.", "error");                    return;
+                }
+
+
                 if (shippingAreaError) {
                     shippingAreaError.textContent = "";
                 }
