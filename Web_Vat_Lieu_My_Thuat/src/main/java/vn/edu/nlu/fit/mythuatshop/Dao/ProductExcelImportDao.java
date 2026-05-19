@@ -2,10 +2,12 @@ package vn.edu.nlu.fit.mythuatshop.Dao;
 
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
+import vn.edu.nlu.fit.mythuatshop.Model.Excel.ExistingProductExcelRow;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelRow;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.SpecificationExcelRow;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public class ProductExcelImportDao {
     private final Jdbi jdbi;
@@ -17,7 +19,29 @@ public class ProductExcelImportDao {
     public Jdbi getJdbi() {
         return jdbi;
     }
+    public ExistingProductExcelRow findProductByCodeForUpdate(Handle handle, String productCode) {
+        String sql = """
+            SELECT ID AS id,
+                   productCode AS productCode,
+                   name,
+                   price,
+                   discountDefault,
+                   categoryID AS categoryId,
+                   thumbnail,
+                   quantityStock,
+                   brand,
+                   isActive
+            FROM products
+            WHERE productCode = :productCode
+            FOR UPDATE
+            """;
 
+        return handle.createQuery(sql)
+                .bind("productCode", productCode)
+                .mapToBean(ExistingProductExcelRow.class)
+                .findOne()
+                .orElse(null);
+    }
     public int insertProduct(Handle handle, ProductExcelRow row) {
         String sql = """
                 INSERT INTO products
@@ -57,7 +81,19 @@ public class ProductExcelImportDao {
                 .bind("image", image)
                 .execute();
     }
+    public List<String> findSubImagesByProductId(Handle handle, int productId) {
+        String sql = """
+            SELECT image
+            FROM subimages
+            WHERE productID = :productID
+            ORDER BY ID ASC
+            """;
 
+        return handle.createQuery(sql)
+                .bind("productID", productId)
+                .mapTo(String.class)
+                .list();
+    }
     public void upsertSpecification(Handle handle, int productId, SpecificationExcelRow row) {
         String sql = """
                 INSERT INTO specifications(productID, Size, Standard, MadeIn, Warning)
@@ -77,7 +113,22 @@ public class ProductExcelImportDao {
                 .bind("warning", row.getWarning())
                 .execute();
     }
+    public SpecificationExcelRow findSpecificationByProductId(Handle handle, int productId) {
+        String sql = """
+            SELECT Size AS size,
+                   Standard AS standard,
+                   MadeIn AS madeIn,
+                   Warning AS warning
+            FROM specifications
+            WHERE productID = :productID
+            """;
 
+        return handle.createQuery(sql)
+                .bind("productID", productId)
+                .mapToBean(SpecificationExcelRow.class)
+                .findOne()
+                .orElse(null);
+    }
     public void recordInitialStock(Handle handle,
                                    int productId,
                                    int quantity,
