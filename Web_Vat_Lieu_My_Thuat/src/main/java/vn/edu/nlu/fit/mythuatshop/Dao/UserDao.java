@@ -196,5 +196,18 @@ public class UserDao {
                         .one()
         );
     }
+    public List<Users> findAllUsers() {
+        String sql = """
+            SELECT id, fullName, email, phoneNumber, dob, address, role,
+                   group_id AS groupId, createAt, isActive
+            FROM users
+            ORDER BY createAt DESC
+            """;
 
+        return jdbi.withHandle(h ->
+                h.createQuery(sql)
+                        .mapToBean(Users.class)
+                        .list()
+        );
+    }
 }
