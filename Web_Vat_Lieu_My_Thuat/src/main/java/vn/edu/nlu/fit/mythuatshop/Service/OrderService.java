@@ -24,7 +24,8 @@ public class OrderService {
     }
 
     public Order createOrder(Users user, Cart cart, String fullName, String email, String phone,
-                             String address, String note, String paymentName, Integer voucherId,String provinceId, String districtId, String wardCode) {
+                             String address, String note, String paymentName, Integer voucherId,String provinceId, String districtId, String wardCode
+                                  , Double deliveryLatitude, Double deliveryLongitude, String deliveryMapAddress) {
 
         if (user == null || cart == null || cart.cartSize() == 0)
             return null;
@@ -47,8 +48,12 @@ public class OrderService {
         }
 
         order.setDeliveryWardCode(wardCode);
+        order.setDeliveryLatitude(deliveryLatitude);
+        order.setDeliveryLongitude(deliveryLongitude);
+        order.setDeliveryMapAddress(deliveryMapAddress);
         order.setExpectedDeliveryTime(cart.getExpectedDeliveryTime());
         order.setExpectedDeliveryDateText(cart.getExpectedDeliveryDateText());
+
 
         Payment payment = paymentDao.findByName(paymentName);
         if (payment == null) {
