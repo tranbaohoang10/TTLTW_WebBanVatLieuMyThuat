@@ -21,14 +21,15 @@ public class ProductExcelImportDao {
     public int insertProduct(Handle handle, ProductExcelRow row) {
         String sql = """
                 INSERT INTO products
-                (name, price, discountDefault, categoryID, thumbnail,
+                (productCode, name, price, discountDefault, categoryID, thumbnail,
                  quantityStock, soldQuantity, status, createAt, brand, isActive)
                 VALUES
-                (:name, :price, :discountDefault, :categoryID, :thumbnail,
+                (:productCode, :name, :price, :discountDefault, :categoryID, :thumbnail,
                  :quantityStock, :soldQuantity, :status, :createAt, :brand, :isActive)
                 """;
 
         return handle.createUpdate(sql)
+                .bind("productCode", row.getProductCode())
                 .bind("name", row.getName())
                 .bind("price", row.getPrice())
                 .bind("discountDefault", row.getDiscountDefault())
