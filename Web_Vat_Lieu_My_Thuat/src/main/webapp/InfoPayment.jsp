@@ -1244,6 +1244,13 @@
 
                     return;
                 }
+                if (mapConfirmedInput.value !== "1") {
+                    event.preventDefault();
+                    mapAddressText.textContent = "Vui lòng tìm và xác nhận vị trí giao hàng trước khi thanh toán.";
+                    return;
+                }
+
+
                 if (shippingAreaError) {
                     shippingAreaError.textContent = "";
                 }
