@@ -26,7 +26,7 @@
 
     #main .left {
         background-color: #17479D;
-        height: 100vh;
+        height: auto;
         width: 17%;
     }
 
@@ -448,12 +448,6 @@
             opacity: 1;
             transform: scale(1);
         }
-    }
-
-    /* css phân trang datatable */
-    .dataTables_paginate {
-        margin-top: 20px;
-        text-align: center;
     }
 
     .dataTables_paginate .paginate_button {
