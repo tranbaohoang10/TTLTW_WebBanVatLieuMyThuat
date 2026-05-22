@@ -16,7 +16,8 @@ public class UserDao {
 
     public Users findByEmail(String email) {
 
-        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, group_id AS groupId, createAt, isActive" +
+        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, group_id AS groupId, permission_updated_at AS permissionUpdatedAt," +
+                " status_updated_at AS statusUpdatedAt, createAt, isActive" +
                 " FROM users WHERE email = :email ";
         return jdbi.withHandle(handle -> handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
     }
@@ -55,7 +56,8 @@ public class UserDao {
     }
 
     public Users findById(int id) {
-        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, group_id AS groupId, createAt, isActive " +
+        String sql = "SELECT id, fullName, email, `password`, phoneNumber, dob, address, role, group_id AS groupId, permission_updated_at AS permissionUpdatedAt," +
+                " status_updated_at AS statusUpdatedAt, createAt, isActive " +
                 "  FROM users WHERE id = :id";
         return jdbi.withHandle(handle ->
                 handle.createQuery(sql)
@@ -76,7 +78,8 @@ public class UserDao {
     }
 
     public Users findByEmailFp(String email) {
-        String sql = "SELECT id, fullName, email, password, phoneNumber, dob, address, role, group_id AS groupId, createAt, isActive" +
+        String sql = "SELECT id, fullName, email, password, phoneNumber, dob, address, role, group_id AS groupId, permission_updated_at AS permissionUpdatedAt," +
+                " status_updated_at AS statusUpdatedAt, createAt, isActive" +
                 " FROM users WHERE email = :email ";
         return jdbi.withHandle(handle -> handle.createQuery(sql).bind("email", email).mapToBean(Users.class).findOne().orElse(null));
     }
@@ -152,7 +155,8 @@ public class UserDao {
                         dob = :dob,
                         address = :address,
                         role = :role,
-                        group_id = :groupId
+                        group_id = :groupId,
+                        permission_updated_at = NOW()
                     WHERE id = :id
                 """;
 
@@ -169,7 +173,7 @@ public class UserDao {
 
 
     public int setActive(int userId, int isActive) {
-        String sql = "UPDATE users SET isActive = :isActive WHERE ID = :id";
+        String sql = "UPDATE users SET isActive = :isActive, status_updated_at = NOW() WHERE ID = :id";
         return jdbi.withHandle(h ->
                 h.createUpdate(sql)
                         .bind("isActive", isActive)
