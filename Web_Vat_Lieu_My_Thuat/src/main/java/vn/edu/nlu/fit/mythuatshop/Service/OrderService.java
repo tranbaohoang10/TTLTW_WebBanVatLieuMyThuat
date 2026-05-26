@@ -15,7 +15,9 @@ public class OrderService {
     private final PaymentDao paymentDao;
     private final OrderStatusDao orderStatusDao;
     private final GhnService ghnService;
+    private final ProductInteractionService interactionService;
     public OrderService() {
+        this.interactionService = new ProductInteractionService();
         this.orderDao = new OrderDao();
         this.paymentDao = new PaymentDao();
         this.orderStatusDao = new OrderStatusDao();
@@ -91,6 +93,9 @@ public class OrderService {
                 return null;
 
             order.setId(newId);
+            if (!isVnpay) {
+                savePurchaseInteractions(user.getId(), details);
+            }
             if (!isVnpay && voucherId != null) {
                 try {
                     VoucherDao voucherDao = new VoucherDao();
@@ -121,6 +126,7 @@ public class OrderService {
         try {
             Order order = orderDao.confirmVnpayPaid(orderId, amountVnd);
             if (order != null) {
+                savePurchaseInteractions(order.getUserId(), order.getItems());
                 Integer vid = order.getVoucherId();
                 if (vid != null) {
                     try {
@@ -432,6 +438,15 @@ public class OrderService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+    private void savePurchaseInteractions(int userId, List<OrderDetail> details) {
+        if (details == null) {
+            return;
+        }
+
+        for (OrderDetail item : details) {
+            interactionService.savePurchase(userId, item.getProductId());
         }
     }
 
