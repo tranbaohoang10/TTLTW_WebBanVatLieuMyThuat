@@ -306,10 +306,18 @@ public class AdminProductController extends HttpServlet {
                     productExcelImportService.importExcel(inputStream, getCurrentUserId(request));
 
             if (result.isSuccess()) {
-                request.getSession().setAttribute(
-                        "productMessage",
-                        "Import Excel thành công " + result.getImportedCount() + " sản phẩm."
-                );
+                String message = "Import Excel hoàn tất. "
+                        + "Đọc " + result.getProcessedCount() + " dòng: "
+                        + "thêm mới " + result.getInsertedCount() + ", "
+                        + "cập nhật " + result.getUpdatedCount() + ", "
+                        + "không đổi " + result.getUnchangedCount() + ".";
+
+                if (result.getStockChangedCount() > 0) {
+                    message += " Đã ghi lịch sử điều chỉnh tồn kho cho "
+                            + result.getStockChangedCount() + " sản phẩm.";
+                }
+
+                request.getSession().setAttribute("productMessage", message);
             } else {
                 request.getSession().setAttribute("productImportErrors", result.getErrors());
             }

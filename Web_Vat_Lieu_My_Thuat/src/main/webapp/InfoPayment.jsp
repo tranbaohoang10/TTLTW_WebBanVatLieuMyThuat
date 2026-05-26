@@ -16,6 +16,8 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
           integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 </head>
 <style>
@@ -475,6 +477,53 @@
     a {
         text-decoration: none;
     }
+    .map-button-group {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 14px;
+        margin-top: 8px;
+    }
+
+    .btn-map {
+        background: #2659F3;
+        color: white;
+        padding: 12px 22px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .btn-map:hover {
+        background: #17479d;
+    }
+
+    #mapBox {
+        width: 100%;
+        height: 280px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #f3f4f6;
+        margin-top: 6px;
+    }
+    #mapAddressText {
+        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    #mapAddressText.success {
+        color: #16a34a;
+    }
+
+    #mapAddressText.error {
+        color: #dc2626;
+    }
+
+    #mapAddressText.normal {
+        color: #374151;
+    }
 
     /* Responsive Design */
     @media (max-width: 992px) {
@@ -568,6 +617,37 @@
     #shippingAreaError {
         color: red;
     }
+    .map-area {
+        margin-top: 16px;
+        margin-bottom: 16px;
+    }
+
+    .map-area label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .map-note {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+
+    #mapBox {
+        width: 100%;
+        height: 280px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #f3f4f6;
+    }
+
+    #mapAddressText {
+        margin-top: 8px;
+        font-size: 14px;
+        color: #374151;
+    }
 
 
 </style>
@@ -639,12 +719,33 @@
                         <div id="shippingAreaError" class="text-danger mt-2"></div>
 
                         <div class="input-group">
-                            <label for="address">Địa chỉ</label>
+                            <label for="address">Số nhà, tên đường</label>
                             <input type="text" class="form-input-item" id="address" name="address"
-                                   placeholder="Địa chỉ"
+                                   placeholder="123 Nguyễn Văn Cừ"
                                    value="${sessionScope.currentUser.address}" required>
                         </div>
+                        <div class="map-area">
+                            <label>Vị trí giao hàng trên bản đồ</label>
+                            <div class="map-button-group">
+                            <button type="button" id="btnFindMap" class="btn-map">
+                                Tìm vị trí trên bản đồ
+                            </button>
+                            <button type="button" id="btnConfirmMap" class="btn-map" style="margin-left: 8px;">
+                                Xác nhận vị trí
+                            </button>
+                            </div>
 
+                            <div id="mapBox">
+                           </div>
+
+                            <div id="mapAddressText">
+                                Chưa xác nhận vị trí giao hàng
+                             </div>
+                        </div>
+                        <input type="hidden" name="deliveryLatitude" id="deliveryLatitudeInput">
+                        <input type="hidden" name="deliveryLongitude" id="deliveryLongitudeInput">
+                        <input type="hidden" name="deliveryMapAddress" id="deliveryMapAddressInput">
+                        <input type="hidden" name="mapConfirmed" id="mapConfirmedInput" value="0">
                         <div class="note">
                             <label for="content-notes">Ghi chú đơn hàng</label>
                             <textarea class="form-control" id="content-notes" name="note" rows="5"
@@ -720,6 +821,10 @@
                         <input type="hidden" name="provinceId" id="provinceIdInput">
                         <input type="hidden" name="districtId" id="districtIdInput">
                         <input type="hidden" name="wardCode" id="wardCodeInput">
+
+                        <input type="hidden" name="provinceName" id="provinceNameInput">
+                        <input type="hidden" name="districtName" id="districtNameInput">
+                        <input type="hidden" name="wardName" id="wardNameInput">
                         <div class="price-summary">
                             <div class="price-row">
                                 <span>Tạm tính</span>
@@ -770,12 +875,25 @@
 </div>
 
 <%@ include file="Footer.jsp" %>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
     (() => {
         const CTX = "<%=request.getContextPath()%>";
 
         const $ = (id) => document.getElementById(id);
+        const defaultLat = 10.762622;
+        const defaultLng = 106.660172;
+
+        const map = L.map("mapBox").setView([defaultLat, defaultLng], 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19
+        }).addTo(map);
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 300);
+
 
         function vnd(n) {
             n = Math.round(Number(n) || 0);
@@ -812,10 +930,24 @@
         const wardSelect = $("wardSelect");
         const shippingFeeText = $("shippingFeeText");
         const expectedDeliveryText = $("expectedDeliveryText");
+        const addressInput = $("address");
 
+        const btnFindMap = $("btnFindMap");
+        const btnConfirmMap = $("btnConfirmMap");
+        const mapAddressText = $("mapAddressText");
+
+        const deliveryLatitudeInput = $("deliveryLatitudeInput");
+        const deliveryLongitudeInput = $("deliveryLongitudeInput");
+        const deliveryMapAddressInput = $("deliveryMapAddressInput");
+        const mapConfirmedInput = $("mapConfirmedInput");
+
+        let deliveryMarker = null;
         const provinceIdInput = $("provinceIdInput");
         const districtIdInput = $("districtIdInput");
         const wardCodeInput = $("wardCodeInput");
+        const provinceNameInput = $("provinceNameInput");
+        const districtNameInput = $("districtNameInput");
+        const wardNameInput = $("wardNameInput")
         const shippingAreaError = $("shippingAreaError");
         const checkoutForm = $("checkoutForm");
 
@@ -823,6 +955,86 @@
             console.warn("Missing select elements for GHN");
             return;
         }
+        function showMapMessage(message, type) {
+            mapAddressText.textContent = message;
+            mapAddressText.classList.remove("success", "error", "normal");
+            mapAddressText.classList.add(type);
+        }
+
+        function setMapMarker(lat, lon) {
+            map.setView([lat, lon], 17);
+
+            if (deliveryMarker == null) {
+                deliveryMarker = L.marker([lat, lon]).addTo(map);
+            } else {
+                deliveryMarker.setLatLng([lat, lon]);
+            }
+
+            deliveryLatitudeInput.value = lat;
+            deliveryLongitudeInput.value = lon;
+            mapConfirmedInput.value = "0";
+        }
+
+        function getSelectedText(select) {
+            return select.options[select.selectedIndex].textContent;
+        }
+
+        function buildSearchAddress() {
+            const address = addressInput.value.trim();
+            const wardName = getSelectedText(wardSelect);
+            const districtName = getSelectedText(districtSelect);
+            const provinceName = getSelectedText(provinceSelect);
+
+            return address + ", " + wardName + ", " + districtName + ", " + provinceName;
+        }
+
+        async function findLocationByAddress() {
+            const searchAddress = buildSearchAddress();
+
+            showMapMessage("Đang tìm vị trí...", "normal");
+            const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=vn&q="
+                + encodeURIComponent(searchAddress);
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.length === 0) {
+                showMapMessage("Không tìm thấy vị trí phù hợp.", "error");
+                return;
+            }
+
+            const lat = data[0].lat;
+            const lon = data[0].lon;
+
+            setMapMarker(lat, lon);
+
+            deliveryMapAddressInput.value = data[0].display_name;
+            showMapMessage("Vị trí tìm được: " + data[0].display_name, "success");
+        }
+
+        btnFindMap.addEventListener("click", function () {
+            findLocationByAddress();
+        });
+
+        btnConfirmMap.addEventListener("click", function () {
+            if (deliveryLatitudeInput.value === "" || deliveryLongitudeInput.value === "") {
+                showMapMessage("Vui lòng tìm vị trí trên bản đồ trước.", "error");
+                return;
+            }
+
+            mapConfirmedInput.value = "1";
+            showMapMessage("Đã xác nhận vị trí giao hàng.", "success");
+        });
+
+        map.on("click", function (event) {
+            const lat = event.latlng.lat.toFixed(7);
+            const lon = event.latlng.lng.toFixed(7);
+
+            setMapMarker(lat, lon);
+
+            deliveryMapAddressInput.value = "";
+            showMapMessage("Đã chọn lại vị trí: " + lat + ", " + lon, "success");
+        });
 
         if (btnApplyVoucher) {
             btnApplyVoucher.addEventListener("click", async () => {
@@ -881,6 +1093,13 @@
                 }
             });
         }
+
+        function getSelectedText(select) {
+            if (!select || select.selectedIndex < 0 || !select.value) {
+                return "";
+            }
+            return select.options[select.selectedIndex].textContent || "";
+        }
         function updateShippingAreaInputs() {
             if (provinceIdInput) {
                 provinceIdInput.value = provinceSelect.value || "";
@@ -890,6 +1109,15 @@
             }
             if (wardCodeInput) {
                 wardCodeInput.value = wardSelect.value || "";
+            }
+            if (provinceNameInput) {
+                provinceNameInput.value = getSelectedText(provinceSelect);
+            }
+            if (districtNameInput) {
+                districtNameInput.value = getSelectedText(districtSelect);
+            }
+            if (wardNameInput) {
+                wardNameInput.value = getSelectedText(wardSelect);
             }
         }
 
@@ -1010,6 +1238,7 @@
         }
 
         provinceSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const pid = provinceSelect.value;
             districtSelect.disabled = true;
             wardSelect.disabled = true;
@@ -1022,6 +1251,7 @@
         });
 
         districtSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const did = districtSelect.value;
             if (!did) return;
             wardSelect.disabled = true;
@@ -1032,6 +1262,7 @@
         });
 
         wardSelect.addEventListener("change", () => {
+            mapConfirmedInput.value = "0";
             const did = districtSelect.value;
             const wcode = wardSelect.value;
             updateShippingAreaInputs();
@@ -1044,6 +1275,9 @@
                 return;
             }
             calcFee(did, wcode);
+        });
+        addressInput.addEventListener("input", function () {
+            mapConfirmedInput.value = "0";
         });
         if (checkoutForm) {
             checkoutForm.addEventListener("submit", (event) => {
@@ -1064,6 +1298,12 @@
 
                     return;
                 }
+                if (mapConfirmedInput.value !== "1") {
+                    event.preventDefault();
+                    showMapMessage("Vui lòng tìm và xác nhận vị trí giao hàng trước khi thanh toán.", "error");                    return;
+                }
+
+
                 if (shippingAreaError) {
                     shippingAreaError.textContent = "";
                 }

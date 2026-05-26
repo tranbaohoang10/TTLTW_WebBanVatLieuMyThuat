@@ -62,7 +62,7 @@ war {
 }
 remotes {
     server {
-        host = '192.168.216.128'
+        host = '192.168.216.129'
         user = 'danghau2512'
         password = 'Hau!25122005'
     }

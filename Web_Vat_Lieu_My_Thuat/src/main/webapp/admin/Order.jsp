@@ -526,8 +526,8 @@
             <c:if test="${role == 'ADMIN' || permissions.contains('PRODUCT_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
-            </c:if> 
-          <c:if test="${sessionScope.currentUser.role eq 'ADMIN'}">
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
               <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
               </c:if>
@@ -825,8 +825,19 @@
         const orderId = btn.dataset.id;
         const statusName = btn.dataset.status;
 
-        if (statusName === "Đã hủy" && !confirm("Bạn chắc chắn muốn hủy đơn hàng này?")) {
-            return;
+        let cancelReason = "";
+
+        if (statusName === "Đã hủy") {
+            if (!confirm("Bạn chắc chắn muốn hủy đơn hàng này?")) {
+                return;
+            }
+
+            cancelReason = prompt("Nhập lý do hủy đơn hàng:");
+
+            if (!cancelReason || cancelReason.trim() === "") {
+                alert("Vui lòng nhập lý do hủy đơn.");
+                return;
+            }
         }
 
         btn.disabled = true;
@@ -835,6 +846,9 @@
             const body = new URLSearchParams();
             body.append("orderId", orderId);
             body.append("statusName", statusName);
+            if (statusName === "Đã hủy") {
+                body.append("cancelReason", cancelReason.trim());
+            }
 
             const res = await fetch("${pageContext.request.contextPath}/admin/orders/status", {
                 method: "POST",

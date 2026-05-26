@@ -36,7 +36,34 @@ public class Order implements Serializable {
     private String ghnStatus;
     private String ghnUpdatedTime;
     private String ghnWarehouse;
+    private Double deliveryLatitude;
+    private Double deliveryLongitude;
+    private String deliveryMapAddress;
     public Order() {
+    }
+
+    public Double getDeliveryLatitude() {
+        return deliveryLatitude;
+    }
+
+    public void setDeliveryLatitude(Double deliveryLatitude) {
+        this.deliveryLatitude = deliveryLatitude;
+    }
+
+    public Double getDeliveryLongitude() {
+        return deliveryLongitude;
+    }
+
+    public void setDeliveryLongitude(Double deliveryLongitude) {
+        this.deliveryLongitude = deliveryLongitude;
+    }
+
+    public String getDeliveryMapAddress() {
+        return deliveryMapAddress;
+    }
+
+    public void setDeliveryMapAddress(String deliveryMapAddress) {
+        this.deliveryMapAddress = deliveryMapAddress;
     }
 
     public String getGhnUpdatedTime() {

@@ -115,6 +115,30 @@
             color: #777;
             font-style: italic;
         }
+        .delivery-location-box {
+            margin-top: 8px;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            font-size: 14px;
+        }
+
+        .delivery-location-box div {
+            margin-bottom: 6px;
+        }
+
+        .delivery-location-link {
+            display: inline-block;
+            margin-top: 4px;
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .delivery-location-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -148,6 +172,28 @@
                 <td class="info-label">Địa chỉ</td>
                 <td>${order.address}</td>
             </tr>
+            <c:if test="${not empty order.deliveryLatitude and not empty order.deliveryLongitude}">
+                <tr>
+                    <td class="info-label">Vị trí giao hàng</td>
+                    <td>
+                        <div class="delivery-location-box">
+                            <c:if test="${not empty order.deliveryMapAddress}">
+                                <div>${order.deliveryMapAddress}</div>
+                            </c:if>
+
+                            <div>
+                                Tọa độ: ${order.deliveryLatitude}, ${order.deliveryLongitude}
+                            </div>
+
+                            <a class="delivery-location-link"
+                               href="https://www.openstreetmap.org/?mlat=${order.deliveryLatitude}&mlon=${order.deliveryLongitude}#map=17/${order.deliveryLatitude}/${order.deliveryLongitude}"
+                               target="_blank">
+                                Mở vị trí giao hàng
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            </c:if>
             <tr>
                 <td class="info-label">Ngày đặt</td>
                 <td>${order.createAt}</td>

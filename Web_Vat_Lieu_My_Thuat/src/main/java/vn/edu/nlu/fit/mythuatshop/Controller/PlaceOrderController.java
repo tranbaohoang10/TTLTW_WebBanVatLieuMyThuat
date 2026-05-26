@@ -68,6 +68,18 @@ public class PlaceOrderController extends HttpServlet {
         String provinceId = req.getParameter("provinceId");
         String districtId = req.getParameter("districtId");
         String wardCode = req.getParameter("wardCode");
+        String provinceName = req.getParameter("provinceName");
+        String districtName = req.getParameter("districtName");
+        String wardName = req.getParameter("wardName");
+        String deliveryLatitude = req.getParameter("deliveryLatitude");
+        String deliveryLongitude = req.getParameter("deliveryLongitude");
+        String deliveryMapAddress = req.getParameter("deliveryMapAddress");
+
+        if (address == null || address.isBlank()) {
+            req.setAttribute("error", "Vui lòng nhập số nhà, tên đường.");
+            req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
+            return;
+        }
 
 
 
@@ -78,8 +90,17 @@ public class PlaceOrderController extends HttpServlet {
             req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
             return;
         }
+        if (deliveryLatitude == null || deliveryLatitude.isBlank()
+                || deliveryLongitude == null || deliveryLongitude.isBlank()) {
+            req.setAttribute("error", "Vui lòng xác nhận vị trí giao hàng trên bản đồ.");
+            req.getRequestDispatcher("/InfoPayment.jsp").forward(req, resp);
+            return;
+        }
+        Double latitude = Double.parseDouble(deliveryLatitude);
+        Double longitude = Double.parseDouble(deliveryLongitude);
+        String fullAddress = buildFullAddress(address, wardName, districtName, provinceName);
         Order order = orderService.createOrder(currentUser, cartTemp, fullName, email, phone,
-                address, note, paymentName, voucherId,provinceId, districtId, wardCode);
+                fullAddress, note, paymentName, voucherId,provinceId, districtId, wardCode,latitude, longitude, deliveryMapAddress);
 
         if (order == null) {
             req.setAttribute("errorMessage", "Đặt hàng thất bại");
@@ -104,5 +125,20 @@ public class PlaceOrderController extends HttpServlet {
         session.removeAttribute("appliedVoucherId");
         resp.sendRedirect(req.getContextPath() + "/payment-success");
     }
+    private String buildFullAddress(String address, String wardName, String districtName, String provinceName) {
+        if (address == null) {
+            address = "";
+        }
+        if (wardName == null) {
+            wardName = "";
+        }
+        if (districtName == null) {
+            districtName = "";
+        }
+        if (provinceName == null) {
+            provinceName = "";
+        }
 
+        return address.trim() + ", " + wardName.trim() + ", " + districtName.trim() + ", " + provinceName.trim();
+    }
 }
