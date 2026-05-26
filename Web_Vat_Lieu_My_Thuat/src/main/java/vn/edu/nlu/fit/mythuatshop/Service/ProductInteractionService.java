@@ -2,6 +2,9 @@ package vn.edu.nlu.fit.mythuatshop.Service;
 
 import vn.edu.nlu.fit.mythuatshop.Dao.ProductInteractionDao;
 import vn.edu.nlu.fit.mythuatshop.Dao.ProductInteractionDao;
+import vn.edu.nlu.fit.mythuatshop.Model.ProductTrainData;
+
+import java.util.List;
 
 public class ProductInteractionService {
     private final ProductInteractionDao interactionDao;
@@ -20,5 +23,8 @@ public class ProductInteractionService {
 
     public void savePurchase(int userId, int productId) {
         interactionDao.insert(userId, productId, "PURCHASE", 10);
+    }
+    public List<ProductTrainData> getTrainingData() {
+        return interactionDao.getTrainingData();
     }
 }
