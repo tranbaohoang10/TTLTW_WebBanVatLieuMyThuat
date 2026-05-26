@@ -350,10 +350,11 @@ public class OrderDao implements DaoInterface<Order> {
 
             int updated = handle.createUpdate("""
             UPDATE orders
-            SET orderStatusID = 4
+            SET orderStatusID = 4,
+            cancelReason = :cancelReason
             WHERE ID = :oid
-              AND userID = :uid
-              AND orderStatusID = 1
+            AND userID = :uid
+            AND orderStatusID = 1
         """)
                     .bind("oid", orderId)
                     .bind("uid", userId)
@@ -443,7 +444,150 @@ public class OrderDao implements DaoInterface<Order> {
             return true;
         });
     }
+    public boolean adminCancelOrder(int orderId, String cancelReason, Integer adminId) {
+        return jdbi.inTransaction(handle -> {
+            Object[] row = handle.createQuery("""
+                SELECT o.ID,
+                       o.userID,
+                       o.voucherID,
+                       o.paymentStatus,
+                       p.paymentName,
+                       os.statusName
+                FROM orders o
+                JOIN payments p ON p.ID = o.paymentID
+                JOIN order_statuses os ON os.ID = o.orderStatusID
+                WHERE o.ID = :oid
+                FOR UPDATE
+                """)
+                    .bind("oid", orderId)
+                    .map((rs, ctx) -> new Object[]{
+                            rs.getInt("ID"),
+                            rs.getInt("userID"),
+                            rs.getObject("voucherID"),
+                            rs.getString("paymentStatus"),
+                            rs.getString("paymentName"),
+                            rs.getString("statusName")
+                    })
+                    .findOne()
+                    .orElse(null);
 
+            if (row == null) {
+                return false;
+            }
+
+            int userId = (int) row[1];
+            Integer voucherId = row[2] == null ? null : ((Number) row[2]).intValue();
+            String paymentStatus = (String) row[3];
+            String paymentName = (String) row[4];
+            String currentStatus = (String) row[5];
+
+            // Chỉ cho admin hủy đơn đang xử lý
+            if (!"Đang xử lý".equalsIgnoreCase(currentStatus)) {
+                return false;
+            }
+
+            int updated = handle.createUpdate("""
+                UPDATE orders
+                SET orderStatusID = (
+                        SELECT ID FROM order_statuses
+                        WHERE statusName = 'Đã hủy'
+                        LIMIT 1
+                    ),
+                    cancelReason = :cancelReason
+                WHERE ID = :oid
+                """)
+                    .bind("oid", orderId)
+                    .bind("cancelReason", cancelReason)
+                    .execute();
+
+            if (updated != 1) {
+                return false;
+            }
+
+            boolean shouldRestoreInventory = false;
+
+            if ("COD".equalsIgnoreCase(paymentName)) {
+                shouldRestoreInventory = true;
+            } else if ("VNPAY".equalsIgnoreCase(paymentName)
+                    && "Đã thanh toán".equalsIgnoreCase(paymentStatus)) {
+                shouldRestoreInventory = true;
+            }
+
+            if (shouldRestoreInventory) {
+                List<OrderDetail> details = handle.createQuery("""
+                    SELECT productID, quantity, price
+                    FROM order_details
+                    WHERE orderID = :oid
+                    """)
+                        .bind("oid", orderId)
+                        .map((rs, ctx) -> {
+                            OrderDetail d = new OrderDetail();
+                            d.setProductId(rs.getInt("productID"));
+                            d.setQuantity(rs.getInt("quantity"));
+                            d.setPrice(rs.getDouble("price"));
+                            return d;
+                        })
+                        .list();
+
+                for (OrderDetail d : details) {
+                    int beforeStock = inventoryDao.getCurrentStockForUpdate(handle, d.getProductId());
+
+                    int affected = productDao.restoreStockAndSold(
+                            handle,
+                            d.getProductId(),
+                            d.getQuantity()
+                    );
+
+                    if (affected == 0) {
+                        throw new IllegalStateException(
+                                "Không thể hoàn tồn kho cho sản phẩm: " + d.getProductId()
+                        );
+                    }
+
+                    int afterStock = beforeStock + d.getQuantity();
+
+                    inventoryDao.insertWithHandle(
+                            handle,
+                            d.getProductId(),
+                            "CANCEL",
+                            d.getQuantity(),
+                            beforeStock,
+                            afterStock,
+                            "Admin hủy đơn #DH" + orderId + " - " + cancelReason,
+                            orderId,
+                            adminId
+                    );
+                }
+            }
+
+            boolean shouldReturnVoucher = false;
+
+            if (voucherId != null) {
+                if ("COD".equalsIgnoreCase(paymentName)) {
+                    shouldReturnVoucher = true;
+                } else if ("VNPAY".equalsIgnoreCase(paymentName)
+                        && "Đã thanh toán".equalsIgnoreCase(paymentStatus)) {
+                    shouldReturnVoucher = true;
+                }
+            }
+
+            if (shouldReturnVoucher) {
+                handle.createUpdate("""
+                    UPDATE vouchers
+                    SET quantityUsed = CASE
+                            WHEN quantityUsed > 0 THEN quantityUsed - 1
+                            ELSE 0
+                        END,
+                        quantity = quantity + 1
+                    WHERE ID = :vid
+                    """)
+                        .bind("vid", voucherId)
+                        .execute();
+            }
+
+            return true;
+        });
+    }
 
 
     public List<Order> findAllForAdmin() {

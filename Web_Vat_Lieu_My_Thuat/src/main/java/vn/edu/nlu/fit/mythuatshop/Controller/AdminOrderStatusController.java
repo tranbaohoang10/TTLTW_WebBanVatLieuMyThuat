@@ -33,14 +33,27 @@ public class AdminOrderStatusController extends HttpServlet {
         try {
             int orderId = Integer.parseInt(req.getParameter("orderId"));
             newStatus = req.getParameter("statusName");
-
+            String cancelReason = req.getParameter("cancelReason");
             String beforeStatus = "";
             Order oldOrder = orderService.getOrderDetailForAdmin(orderId);
             if (oldOrder != null && oldOrder.getStatusName() != null) {
                 beforeStatus = oldOrder.getStatusName();
             }
 
-            success = orderService.adminUpdateOrderStatus(orderId, newStatus);
+            Integer adminId = getCurrentUserId(req);
+
+            if ("Đã hủy".equalsIgnoreCase(newStatus)
+                    && (cancelReason == null || cancelReason.isBlank())) {
+                message = "Vui lòng nhập lý do hủy đơn";
+                success = false;
+            } else {
+                success = orderService.adminUpdateOrderStatus(
+                        orderId,
+                        newStatus,
+                        cancelReason,
+                        adminId
+                );
+            }
 
             if (success) {
                 Integer userId = getCurrentUserId(req);

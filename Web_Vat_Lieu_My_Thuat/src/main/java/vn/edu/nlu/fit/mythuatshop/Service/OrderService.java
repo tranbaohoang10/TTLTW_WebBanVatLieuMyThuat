@@ -287,7 +287,10 @@ public class OrderService {
         return orderDao.findAllForAdmin();
     }
 
-    public boolean adminUpdateOrderStatus(int orderId, String newStatusName) {
+    public boolean adminUpdateOrderStatus(int orderId,
+                                          String newStatusName,
+                                          String cancelReason,
+                                          Integer adminId) {
         Order o = orderDao.findOrderForAdmin(orderId);
         if (o == null) return false;
 
@@ -303,7 +306,8 @@ public class OrderService {
 
         if (isVnpay) {
             if (!"Đã thanh toán".equalsIgnoreCase(payStatus)) {
-                if ("Đang vận chuyển".equalsIgnoreCase(newStatusName) || "Hoàn thành".equalsIgnoreCase(newStatusName)) {
+                if ("Đang vận chuyển".equalsIgnoreCase(newStatusName)
+                        || "Hoàn thành".equalsIgnoreCase(newStatusName)) {
                     return false;
                 }
             }
@@ -311,12 +315,21 @@ public class OrderService {
 
         boolean allowed =
                 ("Đang xử lý".equalsIgnoreCase(current) &&
-                        ("Đang vận chuyển".equalsIgnoreCase(newStatusName) || "Đã hủy".equalsIgnoreCase(newStatusName)))
+                        ("Đang vận chuyển".equalsIgnoreCase(newStatusName)
+                                || "Đã hủy".equalsIgnoreCase(newStatusName)))
                         ||
                         ("Đang vận chuyển".equalsIgnoreCase(current) &&
                                 "Hoàn thành".equalsIgnoreCase(newStatusName));
 
         if (!allowed) return false;
+        if ("Đã hủy".equalsIgnoreCase(newStatusName)) {
+            if (cancelReason == null || cancelReason.isBlank()) {
+                cancelReason = "Admin hủy đơn hàng";
+            }
+
+            return orderDao.adminCancelOrder(orderId, cancelReason, adminId);
+        }
+
         if ("Đang vận chuyển".equalsIgnoreCase(newStatusName)) {
             Order fullOrder = getOrderDetailForAdmin(orderId);
             if (fullOrder == null) {
@@ -325,12 +338,14 @@ public class OrderService {
 
             try {
                 if (fullOrder.getGhnOrderCode() == null || fullOrder.getGhnOrderCode().isBlank()) {
-                    GhnCreateResult result = ghnService.createShippingOrder(fullOrder, fullOrder.getViewItems());
+                    GhnCreateResult result = ghnService.createShippingOrder(
+                            fullOrder,
+                            fullOrder.getViewItems()
+                    );
 
                     if (result == null || result.getOrderCode() == null || result.getOrderCode().isBlank()) {
                         return false;
                     }
-
 
                     boolean saved = orderDao.updateGhnInfo(orderId, result.getOrderCode(), "created");
                     if (!saved) {
@@ -343,6 +358,7 @@ public class OrderService {
                 return false;
             }
         }
+
         boolean ok = orderDao.updateOrderStatusByName(orderId, newStatusName);
         if (!ok) return false;
 
