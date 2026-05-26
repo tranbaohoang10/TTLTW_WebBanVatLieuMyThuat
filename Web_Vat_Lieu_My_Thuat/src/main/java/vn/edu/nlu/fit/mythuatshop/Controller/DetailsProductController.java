@@ -3,11 +3,9 @@ package vn.edu.nlu.fit.mythuatshop.Controller;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
-import vn.edu.nlu.fit.mythuatshop.Model.Product;
-import vn.edu.nlu.fit.mythuatshop.Model.ProductCard;
-import vn.edu.nlu.fit.mythuatshop.Model.Specification;
-import vn.edu.nlu.fit.mythuatshop.Model.Subimages;
+import vn.edu.nlu.fit.mythuatshop.Model.*;
 import vn.edu.nlu.fit.mythuatshop.Service.DetailsProductService;
+import vn.edu.nlu.fit.mythuatshop.Service.ProductInteractionService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,6 +29,13 @@ public class DetailsProductController extends HttpServlet {
            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
            return;
        }
+        HttpSession session = request.getSession();
+        Users currentUser = (Users) session.getAttribute("currentUser");
+
+        if (currentUser != null) {
+            ProductInteractionService interactionService = new ProductInteractionService();
+            interactionService.saveViewDetail(currentUser.getId(), productId);
+        }
         List<Specification> specifications = detailsProductService.getSpecifications(productId);
         List<Subimages> subimages = detailsProductService.getSubImages(productId);
         List<ProductCard> relatedProducts = detailsProductService.getRelatedProductCards(product);

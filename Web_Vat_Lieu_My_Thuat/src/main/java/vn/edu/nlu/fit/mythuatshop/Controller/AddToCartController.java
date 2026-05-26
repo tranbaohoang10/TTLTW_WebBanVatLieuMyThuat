@@ -7,6 +7,7 @@ import vn.edu.nlu.fit.mythuatshop.Model.Cart;
 import vn.edu.nlu.fit.mythuatshop.Model.CartItem;
 import vn.edu.nlu.fit.mythuatshop.Model.Product;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Service.ProductInteractionService;
 import vn.edu.nlu.fit.mythuatshop.Service.ProductService;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.io.PrintWriter;
 @WebServlet(name = "AddToCartController", value = "/AddToCart")
 public class AddToCartController extends HttpServlet {
     private ProductService productService = new ProductService();
+    private ProductInteractionService interactionService = new ProductInteractionService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
@@ -95,6 +97,8 @@ public class AddToCartController extends HttpServlet {
 
         session.setAttribute("cart", cart);
         session.setAttribute("cartCount", cart.getTotalQuantity());
+        Users currentUser = (Users) session.getAttribute("currentUser");
+        interactionService.saveAddToCart(currentUser.getId(), productId);
 
         String ajaxHeader = request.getHeader("X-Requested-With");
         boolean isAjax = "XMLHttpRequest".equals(ajaxHeader);
