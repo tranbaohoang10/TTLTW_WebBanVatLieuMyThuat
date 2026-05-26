@@ -2,10 +2,10 @@ package vn.edu.nlu.fit.mythuatshop.Dao;
 
 import org.jdbi.v3.core.Jdbi;
 
-public class UserProductInteractionDao {
+public class ProductInteractionDao {
     private final Jdbi jdbi;
 
-    public UserProductInteractionDao() {
+    public ProductInteractionDao() {
         this.jdbi = JDBIConnector.getJdbi();
     }
 

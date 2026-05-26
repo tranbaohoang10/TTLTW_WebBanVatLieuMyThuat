@@ -2,7 +2,7 @@ package vn.edu.nlu.fit.mythuatshop.Model;
 
 import java.time.LocalDateTime;
 
-public class UserProductInteraction {
+public class ProductInteraction {
     private int id;
     private int userId;
     private int productId;
@@ -10,10 +10,10 @@ public class UserProductInteraction {
     private int score;
     private LocalDateTime createdAt;
 
-    public UserProductInteraction() {
+    public ProductInteraction() {
     }
 
-    public UserProductInteraction(int userId, int productId, String actionType, int score) {
+    public ProductInteraction(int userId, int productId, String actionType, int score) {
         this.userId = userId;
         this.productId = productId;
         this.actionType = actionType;
