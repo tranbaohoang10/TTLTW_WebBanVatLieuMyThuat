@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpSession;
 import vn.edu.nlu.fit.mythuatshop.Controller.AdminResource;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.UserService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 import java.time.ZoneId;
@@ -68,13 +69,13 @@ public class AdminAuthFilter implements Filter {
 
         String role = currentUser.getRole();
             if(role == null || role.equalsIgnoreCase("USER")){
-                show404(req, resp);
+                PermissionUtil.show404(req, resp);
                 return;
             }
             String path = req.getServletPath() ;
             String permissionCode = AdminResource.getPermissionCode(path);
             if(permissionCode == null){
-                show404(req, resp);
+                PermissionUtil.show404(req, resp);
                 return;
             }
             if(role.equalsIgnoreCase("ADMIN")){
@@ -88,15 +89,11 @@ public class AdminAuthFilter implements Filter {
                 return;
             }
 
-            show404(req, resp);
+                PermissionUtil.show404(req, resp);
             return;
         }
 
-        show404(req, resp);
-    }
-    private void show404(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        req.getRequestDispatcher("/Error404.jsp").forward(req, resp);
+        PermissionUtil.show404(req, resp);
     }
 
 }
