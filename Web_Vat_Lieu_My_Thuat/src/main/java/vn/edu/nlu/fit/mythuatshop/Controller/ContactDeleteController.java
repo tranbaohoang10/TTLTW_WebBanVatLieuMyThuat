@@ -22,7 +22,7 @@ public class ContactDeleteController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idRaw = req.getParameter("id");
         if (!PermissionUtil.hasPermission(req, "CONTACT_DELETE")) {
-            PermissionUtil.show404(req, resp);
+            PermissionUtil.showNoPermission(req, resp);
             return;
         }
 

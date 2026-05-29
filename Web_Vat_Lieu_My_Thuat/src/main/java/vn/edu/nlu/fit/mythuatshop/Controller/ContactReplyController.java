@@ -25,7 +25,7 @@ public class ContactReplyController extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
 
         if (!PermissionUtil.hasPermission(req, "CONTACT_REPLY_VIEW")) {
-            PermissionUtil.show404(req, resp);
+            PermissionUtil.showNoPermission(req, resp);
             return;
         }
 

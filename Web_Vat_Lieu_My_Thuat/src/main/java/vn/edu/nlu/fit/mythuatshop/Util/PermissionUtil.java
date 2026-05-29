@@ -38,4 +38,13 @@ public class PermissionUtil {
         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         req.getRequestDispatcher("/Error404.jsp").forward(req, resp);
     }
+    public static void showNoPermission(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        req.setAttribute("errorCode", "403");
+        req.setAttribute("errorTitle", "Bạn không có quyền thực hiện");
+        req.setAttribute("errorMessage", "Tài khoản của bạn không được cấp quyền để thực hiện thao tác này.");
+        req.getRequestDispatcher("/Error404.jsp").forward(req, resp);
+    }
 }

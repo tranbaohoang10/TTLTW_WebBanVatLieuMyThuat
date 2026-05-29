@@ -111,28 +111,28 @@ public class AdminProductController extends HttpServlet {
             switch (action) {
                 case "create":
                     if(!PermissionUtil.hasPermission(request, "PRODUCT_CREATE")){
-                        PermissionUtil.show404(request, response);
+                        PermissionUtil.showNoPermission(request, response);
                         return;
                     }
                     createProduct(request);
                     break;
                 case "update":
                     if(!PermissionUtil.hasPermission(request, "PRODUCT_UPDATE")){
-                        PermissionUtil.show404(request, response);
+                        PermissionUtil.showNoPermission(request, response);
                         return;
                     }
                     updateProduct(request);
                     break;
                 case "toggleActive":
                     if(!PermissionUtil.hasPermission(request, "PRODUCT_LOCK")){
-                        PermissionUtil.show404(request, response);
+                        PermissionUtil.showNoPermission(request, response);
                         return;
                     }
                     toggleProductActive(request);
                     break;
                 case "importExcel":
                     if(!PermissionUtil.hasPermission(request, "PRODUCT_IMPORT")){
-                        PermissionUtil.show404(request, response);
+                        PermissionUtil.showNoPermission(request, response);
                         return;
                     }
                     importProductsFromExcel(request);

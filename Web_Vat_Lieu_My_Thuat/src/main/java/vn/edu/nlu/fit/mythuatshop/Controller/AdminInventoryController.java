@@ -45,14 +45,14 @@ public class AdminInventoryController extends HttpServlet {
 
         if ("importStock".equals(action)) {
             if (!PermissionUtil.hasPermission(request, "INVENTORY_IMPORT")) {
-                PermissionUtil.show404(request, response);
+                PermissionUtil.showNoPermission(request, response);
                 return;
             }
             int quantity = parseInt(request.getParameter("quantity"), 0);
             ok = inventoryService.importStock(productId, quantity, note, adminId);
         } else if ("adjustStock".equals(action)) {
             if (!PermissionUtil.hasPermission(request, "INVENTORY_ADJUST")) {
-                PermissionUtil.show404(request, response);
+                PermissionUtil.showNoPermission(request, response);
                 return;
             }
             int newStock = parseInt(request.getParameter("newStock"), -1);

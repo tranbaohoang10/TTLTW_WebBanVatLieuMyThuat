@@ -50,21 +50,21 @@ public class AdminCategoryController extends HttpServlet {
             switch (action) {
                 case "create" ->{
                     if (!PermissionUtil.hasPermission(req, "CATEGORY_CREATE")) {
-                        PermissionUtil.show404(req, resp);
+                        PermissionUtil.showNoPermission(req, resp);
                         return;
                     }
                     handleCreate(req);
                 }
                 case "update" ->{
                     if (!PermissionUtil.hasPermission(req, "CATEGORY_UPDATE")) {
-                        PermissionUtil.show404(req, resp);
+                        PermissionUtil.showNoPermission(req, resp);
                         return;
                     }
                     handleUpdate(req);
                 }
                 case "toggleActive" ->{
                     if (!PermissionUtil.hasPermission(req, "CATEGORY_LOCK")) {
-                        PermissionUtil.show404(req, resp);
+                        PermissionUtil.showNoPermission(req, resp);
                         return;
                     }
                     handleToggleActive(req);

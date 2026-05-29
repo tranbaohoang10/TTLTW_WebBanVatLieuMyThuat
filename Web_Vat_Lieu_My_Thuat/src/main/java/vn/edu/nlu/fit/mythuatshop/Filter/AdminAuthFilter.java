@@ -69,10 +69,14 @@ public class AdminAuthFilter implements Filter {
 
         String role = currentUser.getRole();
             if(role == null || role.equalsIgnoreCase("USER")){
-                PermissionUtil.show404(req, resp);
+                PermissionUtil.showNoPermission(req, resp);
                 return;
             }
             String path = req.getServletPath() ;
+            if ("/admin/orders/status".equals(path)) {
+                chain.doFilter(request, response);
+                return;
+            }
             String permissionCode = AdminResource.getPermissionCode(path);
             if(permissionCode == null){
                 PermissionUtil.show404(req, resp);
@@ -89,11 +93,11 @@ public class AdminAuthFilter implements Filter {
                 return;
             }
 
-                PermissionUtil.show404(req, resp);
+                PermissionUtil.showNoPermission(req, resp);
             return;
         }
 
-        PermissionUtil.show404(req, resp);
+        PermissionUtil.showNoPermission(req, resp);
     }
 
 }
