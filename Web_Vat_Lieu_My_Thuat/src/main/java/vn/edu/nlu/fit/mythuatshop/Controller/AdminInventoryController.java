@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.InventoryService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
@@ -31,7 +32,7 @@ public class AdminInventoryController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException,ServletException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
@@ -43,9 +44,17 @@ public class AdminInventoryController extends HttpServlet {
         boolean ok = false;
 
         if ("importStock".equals(action)) {
+            if (!PermissionUtil.hasPermission(request, "INVENTORY_IMPORT")) {
+                PermissionUtil.show404(request, response);
+                return;
+            }
             int quantity = parseInt(request.getParameter("quantity"), 0);
             ok = inventoryService.importStock(productId, quantity, note, adminId);
         } else if ("adjustStock".equals(action)) {
+            if (!PermissionUtil.hasPermission(request, "INVENTORY_ADJUST")) {
+                PermissionUtil.show404(request, response);
+                return;
+            }
             int newStock = parseInt(request.getParameter("newStock"), -1);
             ok = inventoryService.adjustStock(productId, newStock, note, adminId);
         }

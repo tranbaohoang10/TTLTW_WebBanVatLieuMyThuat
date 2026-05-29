@@ -9,6 +9,7 @@ import vn.edu.nlu.fit.mythuatshop.Model.Order;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 import vn.edu.nlu.fit.mythuatshop.Service.OrderService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
@@ -25,6 +26,12 @@ public class AdminOrderStatusController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json; charset=UTF-8");
+
+        if (!PermissionUtil.hasPermission(req, "ORDER_UPDATE_STATUS")) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Bạn không có quyền cập nhật trạng thái đơn hàng\"}");
+            return;
+        }
 
         boolean success = false;
         String message = "Cập nhật trạng thái thất bại";
