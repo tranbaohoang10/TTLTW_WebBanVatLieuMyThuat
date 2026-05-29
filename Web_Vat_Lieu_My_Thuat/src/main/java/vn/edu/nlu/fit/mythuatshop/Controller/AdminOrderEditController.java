@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.nlu.fit.mythuatshop.Service.OrderService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
@@ -22,6 +23,11 @@ public class AdminOrderEditController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
+
+        if (!PermissionUtil.hasPermission(req, "ORDER_UPDATE_INFO")) {
+            PermissionUtil.show404(req, resp);
+            return;
+        }
 
         int orderId = Integer.parseInt(req.getParameter("orderId"));
         String fullName = req.getParameter("fullName");

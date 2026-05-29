@@ -26,7 +26,7 @@
 
     #main .left {
         background-color: #17479D;
-        height: 100vh;
+        height: auto;
         width: 17%;
     }
 

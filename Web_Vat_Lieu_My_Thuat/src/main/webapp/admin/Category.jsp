@@ -21,7 +21,7 @@
 
     <style>
         #main { display:flex; }
-        #main .left{ background-color:#17479D; height:100vh; width:17%; }
+        #main .left{ background-color:#17479D; height:auto; width:17%; }
         #main .left .list-admin{ display:flex; flex-direction:column; gap:15px; }
         #main .left .list-admin a{ display:block; text-decoration:none; color:#fff; padding:10px 20px; }
         #main .left .list-admin a i{ margin-right:20px; }

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.nlu.fit.mythuatshop.Service.ContactService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
@@ -22,6 +23,11 @@ public class ContactReplyController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
+
+        if (!PermissionUtil.hasPermission(req, "CONTACT_REPLY_VIEW")) {
+            PermissionUtil.show404(req, resp);
+            return;
+        }
 
         String idRaw = req.getParameter("id");
         String subject = req.getParameter("subject");
