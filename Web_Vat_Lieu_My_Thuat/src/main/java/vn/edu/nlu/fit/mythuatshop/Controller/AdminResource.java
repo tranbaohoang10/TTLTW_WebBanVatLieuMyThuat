@@ -25,7 +25,7 @@ public class AdminResource {
         resources.put("/admin/sliders", "SLIDER_VIEW");
 
         resources.put("/admin/contacts", "CONTACT_VIEW");
-        resources.put("/admin/contacts/delete", "CONTACT_DELETE_VIEW");
+        resources.put("/admin/contacts/delete", "CONTACT_DELETE");
         resources.put("/admin/contacts/reply", "CONTACT_REPLY_VIEW");
 
         resources.put("/admin/logs", "LOG_VIEW");
