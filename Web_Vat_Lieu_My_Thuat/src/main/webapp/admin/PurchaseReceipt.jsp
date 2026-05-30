@@ -182,7 +182,70 @@
             padding: 10px 16px;
             border-radius: 6px;
         }
+        .receipt-items-table {
+            grid-column: 1 / 3;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+
+        .receipt-items-table th {
+            background: #2659F5;
+            color: white;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .receipt-items-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            background: #fff;
+        }
+
+        .receipt-items-table select,
+        .receipt-items-table input {
+            width: 100%;
+            padding: 7px;
+            box-sizing: border-box;
+        }
+
+        .btn-add-row {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 9px 13px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-remove-row {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 7px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .total-box {
+            grid-column: 1 / 3;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #17479D;
+            margin-top: 10px;
+        }
+
+        .total-box input {
+            width: 180px;
+            text-align: right;
+            font-weight: bold;
+        }
     </style>
+
 </head>
 
 <body>
@@ -336,12 +399,87 @@
 
                     <h2 class="section-title">Danh sách sản phẩm nhập</h2>
 
-                    <div class="product-placeholder">
-                        Khu vực thêm sản phẩm nhập sẽ được phát triển ở issue tiếp theo.
-                        <br>
-                        Mỗi dòng sản phẩm sẽ gồm:
-                        <strong>sản phẩm, số lượng nhập, giá nhập và thành tiền.</strong>
+                    <table class="receipt-items-table">
+                        <thead>
+                        <tr>
+                            <th style="width: 40px;">STT</th>
+                            <th>Sản phẩm</th>
+                            <th style="width: 130px;">Tồn hiện tại</th>
+                            <th style="width: 130px;">Số lượng nhập</th>
+                            <th style="width: 160px;">Giá nhập</th>
+                            <th style="width: 180px;">Thành tiền</th>
+                            <th style="width: 80px;">Xóa</th>
+                        </tr>
+                        </thead>
+
+                        <tbody id="receiptItemsBody">
+                        </tbody>
+                    </table>
+
+                    <div class="form-group full">
+                        <button type="button" class="btn-add-row" id="btnAddProductRow">
+                            <i class="fa-solid fa-plus"></i> Thêm sản phẩm
+                        </button>
                     </div>
+
+                    <div class="total-box">
+                        <span>Tổng tiền phiếu nhập:</span>
+                        <input type="text" id="totalAmountText" value="0" readonly>
+                        <input type="hidden" name="totalAmount" id="totalAmount" value="0">
+                    </div>
+
+                    <template id="productRowTemplate">
+                        <tr>
+                            <td class="row-index"></td>
+
+                            <td>
+                                <select name="productIds" class="product-select" required>
+                                    <option value="">-- Chọn sản phẩm --</option>
+
+                                    <c:forEach var="p" items="${activeProducts}">
+                                        <option value="${p.id}"
+                                                data-stock="${p.quantityStock}">
+                                            ID ${p.id} - ${p.name}
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </td>
+
+                            <td>
+                                <input type="text" class="current-stock" value="0" readonly>
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       name="quantities"
+                                       class="quantity-input"
+                                       min="1"
+                                       value="1"
+                                       required>
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       name="importPrices"
+                                       class="import-price-input"
+                                       min="0"
+                                       step="1000"
+                                       value="0"
+                                       required>
+                            </td>
+
+                            <td>
+                                <input type="text" class="line-total-text" value="0" readonly>
+                                <input type="hidden" name="lineTotals" class="line-total" value="0">
+                            </td>
+
+                            <td>
+                                <button type="button" class="btn-remove-row">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
 
                     <div class="btn-area">
                         <a class="btn-secondary" href="${ctx}/admin/inventory">
@@ -357,6 +495,175 @@
         </div>
     </div>
 </div>
+<script>
+    const receiptItemsBody = document.getElementById("receiptItemsBody");
+    const productRowTemplate = document.getElementById("productRowTemplate");
+    const btnAddProductRow = document.getElementById("btnAddProductRow");
+    const totalAmountText = document.getElementById("totalAmountText");
+    const totalAmountInput = document.getElementById("totalAmount");
+    const receiptForm = document.querySelector(".receipt-form");
 
+    function formatMoney(value) {
+        const numberValue = Number(value) || 0;
+
+        return numberValue.toLocaleString("vi-VN", {
+            maximumFractionDigits: 0
+        });
+    }
+
+    function parseNumber(value) {
+        const numberValue = Number(value);
+
+        if (isNaN(numberValue)) {
+            return 0;
+        }
+
+        return numberValue;
+    }
+
+    function updateRowIndexes() {
+        const rows = receiptItemsBody.querySelectorAll("tr");
+
+        rows.forEach(function (row, index) {
+            row.querySelector(".row-index").innerText = index + 1;
+        });
+    }
+
+    function updateRowStock(row) {
+        const select = row.querySelector(".product-select");
+        const selectedOption = select.options[select.selectedIndex];
+        const stockInput = row.querySelector(".current-stock");
+
+        if (!selectedOption || !selectedOption.dataset.stock) {
+            stockInput.value = "0";
+            return;
+        }
+
+        stockInput.value = selectedOption.dataset.stock;
+    }
+
+    function updateRowTotal(row) {
+        const quantity = parseNumber(row.querySelector(".quantity-input").value);
+        const importPrice = parseNumber(row.querySelector(".import-price-input").value);
+        const lineTotal = quantity * importPrice;
+
+        row.querySelector(".line-total").value = lineTotal;
+        row.querySelector(".line-total-text").value = formatMoney(lineTotal);
+    }
+
+    function updateTotalAmount() {
+        let total = 0;
+
+        receiptItemsBody.querySelectorAll(".line-total").forEach(function (input) {
+            total += parseNumber(input.value);
+        });
+
+        totalAmountInput.value = total;
+        totalAmountText.value = formatMoney(total);
+    }
+
+    function updateAllTotals() {
+        receiptItemsBody.querySelectorAll("tr").forEach(function (row) {
+            updateRowStock(row);
+            updateRowTotal(row);
+        });
+
+        updateRowIndexes();
+        updateTotalAmount();
+    }
+
+    function isDuplicateProduct() {
+        const selectedIds = [];
+        const selects = receiptItemsBody.querySelectorAll(".product-select");
+
+        for (const select of selects) {
+            const productId = select.value;
+
+            if (!productId) {
+                continue;
+            }
+
+            if (selectedIds.includes(productId)) {
+                return true;
+            }
+
+            selectedIds.push(productId);
+        }
+
+        return false;
+    }
+
+    function addProductRow() {
+        const clone = productRowTemplate.content.cloneNode(true);
+        const row = clone.querySelector("tr");
+
+        row.querySelector(".product-select").addEventListener("change", function () {
+            updateRowStock(row);
+            updateRowTotal(row);
+            updateTotalAmount();
+        });
+
+        row.querySelector(".quantity-input").addEventListener("input", function () {
+            updateRowTotal(row);
+            updateTotalAmount();
+        });
+
+        row.querySelector(".import-price-input").addEventListener("input", function () {
+            updateRowTotal(row);
+            updateTotalAmount();
+        });
+
+        row.querySelector(".btn-remove-row").addEventListener("click", function () {
+            row.remove();
+            updateAllTotals();
+        });
+
+        receiptItemsBody.appendChild(row);
+        updateAllTotals();
+    }
+
+    btnAddProductRow.addEventListener("click", addProductRow);
+
+    receiptForm.addEventListener("submit", function (event) {
+        const rows = receiptItemsBody.querySelectorAll("tr");
+
+        if (rows.length === 0) {
+            event.preventDefault();
+            alert("Vui lòng thêm ít nhất một sản phẩm vào phiếu nhập.");
+            return;
+        }
+
+        for (const row of rows) {
+            const productId = row.querySelector(".product-select").value;
+            const quantity = parseNumber(row.querySelector(".quantity-input").value);
+            const importPrice = parseNumber(row.querySelector(".import-price-input").value);
+
+            if (!productId) {
+                event.preventDefault();
+                alert("Vui lòng chọn sản phẩm cho tất cả các dòng.");
+                return;
+            }
+
+            if (quantity <= 0) {
+                event.preventDefault();
+                alert("Số lượng nhập phải lớn hơn 0.");
+                return;
+            }
+
+            if (importPrice < 0) {
+                event.preventDefault();
+                alert("Giá nhập không được âm.");
+                return;
+            }
+        }
+
+        if (isDuplicateProduct()) {
+            event.preventDefault();
+            alert("Không nên chọn trùng sản phẩm trong cùng một phiếu nhập.");
+        }
+    });
+
+    addProductRow();
+</script>
 </body>
 </html>
