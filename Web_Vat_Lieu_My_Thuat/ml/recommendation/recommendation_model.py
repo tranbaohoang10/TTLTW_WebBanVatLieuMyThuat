@@ -55,6 +55,38 @@ def train_model(matrix):
     return predicted_matrix
 
 
+def export_recommendations(matrix, predicted_matrix, top_n=5):
+    results = []
+
+    for user_id in predicted_matrix.index:
+        user_scores = predicted_matrix.loc[user_id].sort_values(ascending=False)
+
+        bought_products = matrix.loc[user_id]
+        bought_products = bought_products[bought_products > 0].index
+
+        user_scores = user_scores.drop(bought_products, errors="ignore")
+        user_scores =user_scores[user_scores > 0]
+
+        if user_scores.empty:
+            user_scores = predicted_matrix.loc[user_id].sort_values(ascending=False)
+
+        top_products = user_scores.head(top_n)
+
+        for product_id, score in top_products.items():
+            results.append({
+                "userID": user_id,
+                "productID": product_id,
+                "predictedScore": round(float(score), 4)
+            })
+
+    result_data = pd.DataFrame(results)
+
+    output_path = os.path.join(OUTPUT_DIR, "recommendation_results.csv")
+    result_data.to_csv(output_path, index=False)
+
+    print("Da xuat ket qua goi y:", output_path)
+    print(result_data.head())
+
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -63,6 +95,8 @@ def main():
 
     print("So user:", matrix.shape[0])
     print("So san pham:", matrix.shape[1])
+    predicted_matrix = train_model(matrix)
+    export_recommendations(matrix, predicted_matrix)
 
 if __name__ == "__main__":
     main()
