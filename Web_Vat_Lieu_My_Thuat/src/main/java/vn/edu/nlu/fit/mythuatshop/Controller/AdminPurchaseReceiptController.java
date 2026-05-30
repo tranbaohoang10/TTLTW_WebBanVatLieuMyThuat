@@ -30,6 +30,10 @@ public class AdminPurchaseReceiptController extends HttpServlet {
                 "activeSuppliers",
                 purchaseReceiptService.getActiveSuppliersForCreateForm()
         );
+        request.setAttribute(
+                "activeProducts",
+                purchaseReceiptService.getActiveProductsForCreateForm()
+        );
 
         request.setAttribute(
                 "currentImporterName",

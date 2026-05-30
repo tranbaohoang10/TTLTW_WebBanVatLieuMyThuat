@@ -2,6 +2,7 @@ package vn.edu.nlu.fit.mythuatshop.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import vn.edu.nlu.fit.mythuatshop.Dao.PurchaseReceiptDao;
+import vn.edu.nlu.fit.mythuatshop.Model.Product;
 import vn.edu.nlu.fit.mythuatshop.Model.Supplier;
 
 import java.lang.reflect.Method;
@@ -17,7 +18,9 @@ public class PurchaseReceiptService {
     public List<Supplier> getActiveSuppliersForCreateForm() {
         return purchaseReceiptDao.findActiveSuppliersForCreateForm();
     }
-
+    public List<Product> getActiveProductsForCreateForm() {
+        return purchaseReceiptDao.findActiveProductsForCreateForm();
+    }
     public String getCurrentImporterName(HttpServletRequest request) {
         Object currentUser = request.getSession().getAttribute("currentUser");
 
@@ -47,4 +50,5 @@ public class PurchaseReceiptService {
 
         return "Admin";
     }
+
 }
