@@ -171,7 +171,7 @@ public class AdminSliderShowController extends HttpServlet {
         s.setThumbnail(thumbnail);
 
         service.create(s);
-        writeLog(req, "Tạo slider", "AdminSliderShowController#create", null, s);
+        writeLog(req, "Tạo slider", "Quản lý Slider Show", null, s);
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=created");
     }
 
@@ -215,7 +215,7 @@ public class AdminSliderShowController extends HttpServlet {
         s.setThumbnail(thumbnail);
 
         service.update(s);
-        writeLog(req, "Cập nhật slider", "AdminSliderShowController#update", old, s);
+        writeLog(req, "Cập nhật slider", "Quản lý Slider Show", old, s);
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=updated");
     }
 
@@ -228,7 +228,7 @@ public class AdminSliderShowController extends HttpServlet {
             Optional<SliderShow> newOpt = service.findById(id);
 
             if (oldOpt.isPresent() && newOpt.isPresent()) {
-                writeLog(req, "Đổi trạng thái slider", "AdminSliderShowController#toggle", oldOpt.get(), newOpt.get());
+                writeLog(req, "Đổi trạng thái slider", "Quản lý Slider Show", oldOpt.get(), newOpt.get());
             }
         }
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=toggled");
@@ -241,7 +241,7 @@ public class AdminSliderShowController extends HttpServlet {
             service.delete(id);
 
             if (oldOpt.isPresent()) {
-                writeLog(req, "Xóa slider", "AdminSliderShowController#delete", oldOpt.get(), null);
+                writeLog(req, "Xóa slider", "Quản lý Slider Show", oldOpt.get(), null);
             }
         }
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=deleted");
