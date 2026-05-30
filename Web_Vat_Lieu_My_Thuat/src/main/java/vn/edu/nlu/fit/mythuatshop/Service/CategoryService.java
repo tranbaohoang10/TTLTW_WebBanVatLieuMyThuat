@@ -7,9 +7,15 @@ import java.util.List;
 
 public class CategoryService {
     private final CategoryDao categoryDao;
+    private static List<Category> categoryCache = null;
+    private static long categoryCacheTime = 0;
+    private static final long CACHE_TIME = 5*60*1000;
 
     public CategoryService() {
         this.categoryDao = new CategoryDao();
+    }
+    public CategoryService(CategoryDao categoryDao) {
+        this.categoryDao = categoryDao;
     }
 
     // Admin
@@ -19,8 +25,26 @@ public class CategoryService {
 
     // Client
     public List<Category> getAllcategoriesActive() {
-        return categoryDao.findAllActive();
+        return getAllCategoriesByCache();
     }
+
+    public List<Category> getAllCategoriesByCache() {
+        long now = System.currentTimeMillis();
+        if (categoryCache != null && now - categoryCacheTime < CACHE_TIME) {
+            return categoryCache;
+        }
+        categoryCache = categoryDao.findAllActive();
+        categoryCacheTime = now;
+
+        return categoryCache;
+    }
+
+    public void clearCategoryCache() {
+        categoryCache = null;
+        categoryCacheTime = 0;
+    }
+
+
 
     public Category getCategoryById(int id) {
         return categoryDao.findById(id);
@@ -31,19 +55,25 @@ public class CategoryService {
     }
 
     public int create(Category c) {
-        return categoryDao.insertReturnId(c);
+        int id = categoryDao.insertReturnId(c);
+        clearCategoryCache();
+        return id;
     }
 
     public int update(Category c) {
-        return categoryDao.update(c);
+        int result = categoryDao.update(c);
+        clearCategoryCache();
+        return result;
     }
 
     public int toggleActive(int id, int currentIsActive) {
         int newValue = (currentIsActive == 1) ? 0 : 1;
-        return categoryDao.updateActive(id, newValue);
+        int result = categoryDao.updateActive(id, newValue);
+        clearCategoryCache();
+        return result;
     }
     public List<Category> getAllActiveCategories() {
-        return categoryDao.findAllActive();
+        return getAllCategoriesByCache();
     }
 
 }
