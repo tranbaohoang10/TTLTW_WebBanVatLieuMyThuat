@@ -33,6 +33,27 @@ def create_user_product_matrix(data):
 
     return matrix
 
+def train_model(matrix):
+    rows, cols = matrix.shape
+
+    if rows < 2 or cols < 2:
+        print("Du lieu chua du de train")
+        return None
+
+    n_components = min(2, rows - 1, cols - 1)
+
+    model = TruncatedSVD(n_components=n_components, random_state=42)
+    user_features = model.fit_transform(matrix)
+    predicted_scores = np.dot(user_features, model.components_)
+
+    predicted_matrix = pd.DataFrame(
+        predicted_scores,
+        index=matrix.index,
+        columns=matrix.columns
+    )
+
+    return predicted_matrix
+
 
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
