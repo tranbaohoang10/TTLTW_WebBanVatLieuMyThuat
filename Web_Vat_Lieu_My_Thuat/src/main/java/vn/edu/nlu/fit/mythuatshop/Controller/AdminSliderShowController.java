@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 
 @WebServlet("/admin/sliders")
@@ -106,10 +106,34 @@ public class AdminSliderShowController extends HttpServlet {
 
         try {
             switch (action) {
-                case "create" -> handleCreate(req, resp);
-                case "update" -> handleUpdate(req, resp);
-                case "toggle" -> handleToggle(req, resp);
-                case "delete" -> handleDelete(req, resp);
+                case "create" -> {
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_CREATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleCreate(req, resp);
+                }
+                case "update" ->{
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_UPDATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleUpdate(req, resp);
+                }
+                case "toggle" -> {
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_LOCK")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleToggle(req, resp);
+                }
+                case "delete" -> {
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_DELETE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleDelete(req, resp);
+                }
                 default -> resp.sendRedirect(req.getContextPath() + "/admin/sliders");
             }
         } catch (Exception e) {

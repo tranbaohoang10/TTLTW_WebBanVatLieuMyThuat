@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelImportResult;
 import vn.edu.nlu.fit.mythuatshop.Service.ProductExcelImportService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.InputStream;
 
@@ -109,15 +110,31 @@ public class AdminProductController extends HttpServlet {
         try {
             switch (action) {
                 case "create":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_CREATE")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     createProduct(request);
                     break;
                 case "update":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_UPDATE")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     updateProduct(request);
                     break;
                 case "toggleActive":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_LOCK")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     toggleProductActive(request);
                     break;
                 case "importExcel":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_IMPORT")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     importProductsFromExcel(request);
                     break;
                 default:

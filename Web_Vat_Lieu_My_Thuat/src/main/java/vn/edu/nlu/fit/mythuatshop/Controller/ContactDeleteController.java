@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.nlu.fit.mythuatshop.Service.ContactService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
@@ -20,6 +21,10 @@ public class ContactDeleteController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idRaw = req.getParameter("id");
+        if (!PermissionUtil.hasPermission(req, "CONTACT_DELETE")) {
+            PermissionUtil.showNoPermission(req, resp);
+            return;
+        }
 
         if (idRaw != null) {
             try {

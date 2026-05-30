@@ -20,7 +20,7 @@
 
         #main .left {
             background-color: #17479D;
-            height: 100vh;
+            height: auto;
             width: 17%;
         }
 
@@ -189,6 +189,10 @@
             <c:if test="${role == 'ADMIN' || permissions.contains('PRODUCT_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+                </a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản

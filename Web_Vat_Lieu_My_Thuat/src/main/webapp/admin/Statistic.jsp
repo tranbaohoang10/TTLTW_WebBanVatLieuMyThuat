@@ -308,6 +308,10 @@
                   lý sản phẩm</a>
 
           </c:if>
+          <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+              <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+              </a>
+          </c:if>
           <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
