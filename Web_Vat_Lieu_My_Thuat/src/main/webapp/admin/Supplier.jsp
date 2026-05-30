@@ -350,7 +350,6 @@
                 <div class="header">
                     <div>
                         <h1>Danh sách nhà cung cấp</h1>
-                        <div class="muted">Dữ liệu này sẽ dùng khi lập phiếu nhập hàng.</div>
                     </div>
 
                     <button class="btn-add" id="btnAdd">Thêm nhà cung cấp</button>
