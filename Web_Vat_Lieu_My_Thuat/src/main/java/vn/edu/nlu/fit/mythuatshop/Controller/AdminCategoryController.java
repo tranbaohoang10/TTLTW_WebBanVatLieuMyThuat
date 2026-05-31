@@ -7,6 +7,7 @@ import jakarta.servlet.http.*;
 
 import vn.edu.nlu.fit.mythuatshop.Model.Category;
 import vn.edu.nlu.fit.mythuatshop.Service.CategoryService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,9 +48,27 @@ public class AdminCategoryController extends HttpServlet {
 
         try {
             switch (action) {
-                case "create" -> handleCreate(req);
-                case "update" -> handleUpdate(req);
-                case "toggleActive" -> handleToggleActive(req);
+                case "create" ->{
+                    if (!PermissionUtil.hasPermission(req, "CATEGORY_CREATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleCreate(req);
+                }
+                case "update" ->{
+                    if (!PermissionUtil.hasPermission(req, "CATEGORY_UPDATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleUpdate(req);
+                }
+                case "toggleActive" ->{
+                    if (!PermissionUtil.hasPermission(req, "CATEGORY_LOCK")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleToggleActive(req);
+                }
                 default -> {}
             }
         } catch (Exception e) {

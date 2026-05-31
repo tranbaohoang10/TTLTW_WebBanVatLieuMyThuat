@@ -21,7 +21,7 @@
 
     <style>
         #main { display:flex; }
-        #main .left{ background-color:#17479D; height:100vh; width:17%; }
+        #main .left{ background-color:#17479D; height:auto; width:17%; }
         #main .left .list-admin{ display:flex; flex-direction:column; gap:15px; }
         #main .left .list-admin a{ display:block; text-decoration:none; color:#fff; padding:10px 20px; }
         #main .left .list-admin a i{ margin-right:20px; }
@@ -151,6 +151,10 @@
             <c:if test="${role == 'ADMIN' || permissions.contains('PRODUCT_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+                </a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
               <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
