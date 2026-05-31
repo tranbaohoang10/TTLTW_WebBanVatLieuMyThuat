@@ -1,6 +1,7 @@
 package vn.edu.nlu.fit.mythuatshop.Service;
 
 import vn.edu.nlu.fit.mythuatshop.Dao.ProductRecommendationDao;
+import vn.edu.nlu.fit.mythuatshop.Model.ProductCard;
 import vn.edu.nlu.fit.mythuatshop.Model.ProductRecommendation;
 
 import java.io.BufferedReader;
@@ -47,5 +48,14 @@ public class ProductRecommendationService {
         recommendationDao.insertBatch(list);
 
         return list.size();
+    }
+    public List<ProductCard> getRecommendProducts(int userId) {
+        List<ProductCard> products = recommendationDao.getRecommendedProducts(userId, 8);
+
+        if (products.isEmpty()) {
+            products = recommendationDao.getDefaultProducts(8);
+        }
+
+        return products;
     }
 }
