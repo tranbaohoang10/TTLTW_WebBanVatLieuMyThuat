@@ -50,12 +50,15 @@ public class ProductRecommendationService {
         return list.size();
     }
     public List<ProductCard> getRecommendProducts(int userId) {
-        List<ProductCard> products = recommendationDao.getRecommendedProducts(userId, 8);
+        List<ProductCard> products = recommendationDao.getRecommendedProducts(userId, 5);
 
         if (products.isEmpty()) {
-            products = recommendationDao.getDefaultProducts(8);
+            products = recommendationDao.getDefaultProducts(5);
         }
 
         return products;
+    }
+    public List<ProductCard> getDefaultRecommendProducts() {
+        return recommendationDao.getDefaultProducts(5);
     }
 }

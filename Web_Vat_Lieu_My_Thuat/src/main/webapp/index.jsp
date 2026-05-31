@@ -429,6 +429,85 @@
     }, 4000);
 </script>
 <c:forEach var="entry" items="${productsByCategory}">
+    <c:if test="${not empty recommendedProducts}">
+        <div class="section-but">
+            <div class="container">
+                <div class="section-but-header">
+                    <h2 class="category-title">Gợi ý dành cho bạn</h2>
+                </div>
+
+                <div class="section-but-content">
+                    <div class="list-product">
+                        <c:forEach var="p" items="${recommendedProducts}">
+                            <div class="list-product-list1">
+                                <a href="${pageContext.request.contextPath}/DetailsProductController?id=${p.id}">
+                                    <img src="${p.thumbnail}" alt="${p.name}">
+                                </a>
+
+                                <div class="list-product-list1-content">
+                                    <div class="list-product-list1-content-socials">
+                                        <%@ include file="BadgeType.jsp" %>
+                                        <div class="list-product-list1-content-socials-2">
+                                            <i class="fa-solid fa-arrow-up-right-dots"></i>
+                                            <span>Đã bán ${p.soldQuantity}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="list-product-list1-content-description">
+                                        <p class="content">
+                                            <a href="${pageContext.request.contextPath}/DetailsProductController?id=${p.id}"
+                                               style="text-decoration: none; color: black;">
+                                                    ${p.name}
+                                            </a>
+                                        </p>
+
+                                        <div class="star">
+                                            <c:forEach var="i" begin="1" end="${p.fullStarCount}">
+                                                <i class="fa-solid fa-star"></i>
+                                            </c:forEach>
+
+                                            <c:if test="${p.halfStar}">
+                                                <i class="fa-solid fa-star-half-stroke"></i>
+                                            </c:if>
+
+                                            <c:forEach var="i" begin="1" end="${p.emptyStarCount}">
+                                                <i class="fa-regular fa-star"></i>
+                                            </c:forEach>
+
+                                            <span>(${p.avgRating})</span>
+                                        </div>
+
+                                        <h2 class="price-product-after">
+                                            <fmt:formatNumber value="${p.priceAfterDiscount}" type="number"/>đ
+                                        </h2>
+
+                                        <p class="price-product-before">
+                                            <fmt:formatNumber value="${p.price}" type="number"/>đ
+                                        </p>
+
+                                        <span class="price-product-discount">-${p.discountDefault}%</span>
+
+                                        <div class="button">
+                                            <form action="${pageContext.request.contextPath}/AddToCart?action=add"
+                                                  method="post"
+                                                  class="form-add-cart">
+                                                <input type="hidden" name="productId" value="${p.id}">
+                                                <input type="hidden" name="quantity" value="1">
+                                                <button type="submit" class="btn-xemchitiet">
+                                                    <i class="fa-solid fa-cart-plus"></i>
+                                                    Thêm vào giỏ
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </c:if>
     <c:set var="cat" value="${entry.key}"/>
     <c:set var="products" value="${entry.value}"/>
 
