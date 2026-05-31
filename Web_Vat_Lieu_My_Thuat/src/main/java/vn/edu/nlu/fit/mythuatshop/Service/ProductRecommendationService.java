@@ -36,4 +36,16 @@ public class ProductRecommendationService {
 
         return list;
     }
+    public int importFromCsv(String filePath) {
+        List<ProductRecommendation> list = readCsvFile(filePath);
+
+        if (list.isEmpty()) {
+            return 0;
+        }
+
+        recommendationDao.deleteAll();
+        recommendationDao.insertBatch(list);
+
+        return list.size();
+    }
 }
