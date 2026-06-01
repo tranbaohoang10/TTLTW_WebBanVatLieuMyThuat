@@ -194,6 +194,11 @@
                 <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
                 </a>
             </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/purchase-receipts">
+                    <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
+                </a>
+            </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                     lý tồn kho</a>
