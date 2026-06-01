@@ -244,6 +244,14 @@
             text-align: right;
             font-weight: bold;
         }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
     </style>
 
 </head>
@@ -355,7 +363,10 @@
                     <div class="alert-success">${sessionScope.purchaseReceiptMessage}</div>
                     <c:remove var="purchaseReceiptMessage" scope="session"/>
                 </c:if>
-
+                <c:if test="${not empty sessionScope.purchaseReceiptError}">
+                    <div class="alert-danger">${sessionScope.purchaseReceiptError}</div>
+                    <c:remove var="purchaseReceiptError" scope="session"/>
+                </c:if>
                 <form class="receipt-form"
                       method="post"
                       action="${ctx}/admin/purchase-receipts">
@@ -491,7 +502,7 @@
                         </a>
 
                         <button class="btn-primary" type="submit">
-                            Lưu thông tin phiếu nhập
+                            Lưu phiếu nhập
                         </button>
                     </div>
                 </form>
