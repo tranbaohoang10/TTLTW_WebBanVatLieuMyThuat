@@ -5,11 +5,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import vn.edu.nlu.fit.mythuatshop.Model.Category;
 import vn.edu.nlu.fit.mythuatshop.Model.ProductCard;
 import vn.edu.nlu.fit.mythuatshop.Model.SliderShow;
+import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.CategoryService;
 import vn.edu.nlu.fit.mythuatshop.Service.ProductCardService;
+import vn.edu.nlu.fit.mythuatshop.Service.ProductRecommendationService;
 import vn.edu.nlu.fit.mythuatshop.Service.SliderShowService;
 
 import java.io.IOException;
@@ -19,7 +22,7 @@ import java.util.Map;
 
 @WebServlet(name = "HomeController", value = "/home")
 public class HomeController extends HttpServlet {
-
+    private ProductRecommendationService recommendationService = new ProductRecommendationService();
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -40,6 +43,18 @@ public class HomeController extends HttpServlet {
                 productsByCategory.put(c, top);
             }
         }
+        HttpSession session = request.getSession();
+        Users currentUser = (Users) session.getAttribute("currentUser");
+
+        List<ProductCard> recommendedProducts;
+
+        if (currentUser != null) {
+            recommendedProducts = recommendationService.getRecommendProducts(currentUser.getId());
+        } else {
+            recommendedProducts = recommendationService.getDefaultRecommendProducts();
+        }
+
+        request.setAttribute("recommendedProducts", recommendedProducts);
 
         request.setAttribute("sliders", sliderShows);
         request.setAttribute("categories", categories); // vẫn dùng cho CategoryMenu.jsp

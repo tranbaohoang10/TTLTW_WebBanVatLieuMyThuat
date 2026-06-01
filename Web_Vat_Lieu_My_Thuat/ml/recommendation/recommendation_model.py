@@ -5,6 +5,7 @@ from sklearn.decomposition import TruncatedSVD
 
 DATA_PATH = "ml/recommendation/data/recommendation_train_data.csv"
 OUTPUT_DIR = "ml/recommendation/output"
+WEB_OUTPUT_DIR = "src/main/webapp/WEB-INF/ml/recommendation"
 
 
 def load_train_data():
@@ -81,7 +82,8 @@ def export_recommendations(matrix, predicted_matrix, top_n=5):
 
     result_data = pd.DataFrame(results)
 
-    output_path = os.path.join(OUTPUT_DIR, "recommendation_results.csv")
+    output_path = os.path.join(WEB_OUTPUT_DIR, "recommendation_results.csv")
+    os.makedirs(WEB_OUTPUT_DIR, exist_ok=True)
     result_data.to_csv(output_path, index=False)
 
     print("Da xuat ket qua goi y:", output_path)
