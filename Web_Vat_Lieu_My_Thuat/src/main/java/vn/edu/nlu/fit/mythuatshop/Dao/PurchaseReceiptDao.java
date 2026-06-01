@@ -120,6 +120,19 @@ public class PurchaseReceiptDao {
                 .mapTo(Integer.class)
                 .one();
     }
+    public int createPurchaseReceipt(PurchaseReceipt receipt,
+                                     List<PurchaseReceiptDetail> details) {
+        return jdbi.inTransaction(handle -> {
+            int receiptId = insertPurchaseReceipt(handle, receipt);
+
+            for (PurchaseReceiptDetail detail : details) {
+                detail.setReceiptId(receiptId);
+                insertPurchaseReceiptDetail(handle, detail);
+            }
+
+            return receiptId;
+        });
+    }
     private void insertPurchaseReceiptDetail(Handle handle,
                                              PurchaseReceiptDetail detail) {
         String sql = """
