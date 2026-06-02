@@ -392,14 +392,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Mã chứng từ từ nhà cung cấp</label>
-                        <input type="text"
-                               name="supplierDocumentCode"
-                               maxlength="100"
-                               placeholder="Ví dụ: HD-NCC-001">
-                    </div>
-
-                    <div class="form-group">
                         <label>Người nhập</label>
                         <input type="text"
                                value="${currentImporterName}"

@@ -127,11 +127,94 @@ public class PurchaseReceiptDao {
 
             for (PurchaseReceiptDetail detail : details) {
                 detail.setReceiptId(receiptId);
+
                 insertPurchaseReceiptDetail(handle, detail);
+
+                int beforeStock = getCurrentStockForUpdate(handle, detail.getProductId());
+                int afterStock = beforeStock + detail.getQuantity();
+
+                int updated = increaseProductStock(
+                        handle,
+                        detail.getProductId(),
+                        detail.getQuantity()
+                );
+
+                if (updated != 1) {
+                    throw new IllegalStateException(
+                            "Không thể cập nhật tồn kho cho sản phẩm ID: " + detail.getProductId()
+                    );
+                }
+
+                insertInventoryTransactionForImport(
+                        handle,
+                        detail.getProductId(),
+                        detail.getQuantity(),
+                        beforeStock,
+                        afterStock,
+                        receiptId,
+                        receipt.getCreatedBy()
+                );
             }
 
             return receiptId;
         });
+    }
+    private int getCurrentStockForUpdate(Handle handle, int productId) {
+        String sql = """
+            SELECT quantityStock
+            FROM products
+            WHERE ID = :productID
+            FOR UPDATE
+            """;
+
+        return handle.createQuery(sql)
+                .bind("productID", productId)
+                .mapTo(Integer.class)
+                .findOne()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Không tìm thấy sản phẩm ID: " + productId
+                ));
+    }
+
+    private int increaseProductStock(Handle handle, int productId, int quantity) {
+        String sql = """
+            UPDATE products
+            SET quantityStock = quantityStock + :quantity,
+                status = 'Còn hàng'
+            WHERE ID = :productID
+            """;
+
+        return handle.createUpdate(sql)
+                .bind("productID", productId)
+                .bind("quantity", quantity)
+                .execute();
+    }
+
+    private void insertInventoryTransactionForImport(Handle handle,
+                                                     int productId,
+                                                     int quantity,
+                                                     int beforeStock,
+                                                     int afterStock,
+                                                     int purchaseReceiptId,
+                                                     Integer createdBy) {
+        String sql = """
+            INSERT INTO inventory_transactions
+            (productID, type, quantity, beforeStock, afterStock,
+             note, orderID, createdBy, purchaseReceiptID)
+            VALUES
+            (:productID, 'IMPORT', :quantity, :beforeStock, :afterStock,
+             :note, NULL, :createdBy, :purchaseReceiptID)
+            """;
+
+        handle.createUpdate(sql)
+                .bind("productID", productId)
+                .bind("quantity", quantity)
+                .bind("beforeStock", beforeStock)
+                .bind("afterStock", afterStock)
+                .bind("note", "Nhập hàng từ phiếu nhập #" + purchaseReceiptId)
+                .bind("createdBy", createdBy)
+                .bind("purchaseReceiptID", purchaseReceiptId)
+                .execute();
     }
     private void insertPurchaseReceiptDetail(Handle handle,
                                              PurchaseReceiptDetail detail) {

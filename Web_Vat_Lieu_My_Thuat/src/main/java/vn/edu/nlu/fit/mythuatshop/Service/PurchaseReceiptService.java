@@ -70,7 +70,7 @@ public class PurchaseReceiptService {
         receipt.setTotalAmount(totalAmount);
 
         if (receipt.getStatus() == null || receipt.getStatus().isBlank()) {
-            receipt.setStatus("DRAFT");
+            receipt.setStatus("COMPLETED");
         }
 
         return purchaseReceiptDao.createPurchaseReceipt(receipt, details);
