@@ -65,7 +65,7 @@ public class AdminPurchaseReceiptController extends HttpServlet {
 
             request.getSession().setAttribute(
                     "purchaseReceiptMessage",
-                    "Lưu phiếu nhập hàng thành công. Mã phiếu nhập: #" + receiptId
+                    "Lưu phiếu nhập hàng thành công. Đã cộng tồn kho và ghi lịch sử nhập kho cho phiếu #" + receiptId
             );
 
         } catch (IllegalArgumentException e) {
@@ -116,7 +116,6 @@ public class AdminPurchaseReceiptController extends HttpServlet {
         receipt.setSupplierId(parseInt(request.getParameter("supplierID"), 0));
         receipt.setImportDate(parseImportDate(request.getParameter("importDate")));
         receipt.setCreatedBy(getCurrentUserId(request));
-        receipt.setSupplierDocumentCode(clean(request.getParameter("supplierDocumentCode")));
         receipt.setAttachmentPath(null);
         receipt.setNote(clean(request.getParameter("note")));
 
