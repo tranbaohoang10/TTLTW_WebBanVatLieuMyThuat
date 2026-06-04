@@ -414,15 +414,16 @@
             <div class="order-container">
                 <h1>Danh sách slideshow</h1>
 
+                <c:if test="${not empty error}">
+                    <div style="background:#f8d7da;color:#721c24;padding:12px 14px;border-radius:6px;margin-bottom:15px;border-left:4px solid #dc3545;">
+                            ${error}
+                    </div>
+                </c:if>
+
                 <div class="search">
                     <div class="search-input-icon">
                         <form id="sliderSearchForm" action="${pageContext.request.contextPath}/admin/sliders" method="get" style="display:flex; align-items:center;">
                             <input id="sliderSearchInput" name="q" value="${q}" placeholder="Tìm slider..." autocomplete="off"/>
-<%--                            <select id="sliderSizeSelect" name="size">--%>
-<%--                                <option value="5"  ${size==5?'selected':''}>5</option>--%>
-<%--                                <option value="10" ${size==10?'selected':''}>10</option>--%>
-<%--                                <option value="20" ${size==20?'selected':''}>20</option>--%>
-<%--                            </select>--%>
                             <button class="icon" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
                         </form>
                     </div>

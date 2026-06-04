@@ -142,6 +142,7 @@ public class AdminProductController extends HttpServlet {
             }
         } catch (Exception exception) {
             exception.printStackTrace();
+            request.getSession().setAttribute("productError",  exception.getMessage());
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/products");
@@ -345,6 +346,10 @@ public class AdminProductController extends HttpServlet {
         if (part == null || part.getSize() == 0) {
             return null;
         }
+        if(!isValidImage(part)) {
+            throw new IllegalArgumentException("Ảnh không hợp lệ hoặc vượt quá 5MB");
+        }
+
 
         String originalFileName = Paths.get(part.getSubmittedFileName()).getFileName().toString();
         String extension = "";
@@ -366,6 +371,19 @@ public class AdminProductController extends HttpServlet {
         part.write(savedFile.getAbsolutePath());
 
         return "/" + folder + "/" + savedFileName;
+    }
+
+    private boolean isValidImage(Part part) {
+        long maxSize = 5*1024*1024;
+        if(part.getSize() > maxSize) {
+            return false;
+        }
+        String fileName = part.getSubmittedFileName();
+        if(fileName==null){
+            return false;
+        }
+        fileName = fileName.toLowerCase();
+        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".webp");
     }
 
     private String trimToNull(String value) {
