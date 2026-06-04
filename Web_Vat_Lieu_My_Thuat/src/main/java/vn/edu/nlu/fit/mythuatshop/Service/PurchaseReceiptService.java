@@ -120,4 +120,7 @@ public class PurchaseReceiptService {
             }
         }
     }
+    public List<PurchaseReceipt> getAllPurchaseReceipts() {
+        return purchaseReceiptDao.findAllPurchaseReceipts();
+    }
 }

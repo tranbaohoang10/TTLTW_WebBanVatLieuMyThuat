@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -252,6 +253,62 @@
             border-radius: 6px;
             margin-bottom: 15px;
         }
+        .receipt-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .receipt-list-table th {
+            background: #2659F5;
+            color: white;
+            padding: 11px;
+            font-size: 14px;
+        }
+
+        .receipt-list-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+            vertical-align: middle;
+        }
+
+        .receipt-list-table tr:nth-child(even) td {
+            background: #f7f7f7;
+        }
+
+        .status-completed {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .status-draft {
+            color: #ff9800;
+            font-weight: 600;
+        }
+
+        .btn-detail {
+            display: inline-block;
+            background: #17479D;
+            color: white;
+            padding: 7px 11px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .btn-detail:hover {
+            background: #0f3475;
+        }
+
+        .empty-message {
+            margin-top: 15px;
+            padding: 14px;
+            background: #f8f9fa;
+            border: 1px dashed #bbb;
+            border-radius: 6px;
+            color: #666;
+        }
     </style>
 
 </head>
@@ -498,6 +555,103 @@
                         </button>
                     </div>
                 </form>
+            </div>
+            <div class="box">
+                <h1>Danh sách phiếu nhập hàng</h1>
+                <div class="muted">
+                    Danh sách các phiếu nhập hàng đã được tạo trong hệ thống.
+                </div>
+
+                <c:choose>
+                    <c:when test="${empty purchaseReceipts}">
+                        <div class="empty-message">
+                            Chưa có phiếu nhập hàng nào được tạo.
+                        </div>
+                    </c:when>
+
+                    <c:otherwise>
+                        <table class="receipt-list-table">
+                            <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã phiếu nhập</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Ngày nhập</th>
+                                <th>Người nhập</th>
+                                <th>Tổng tiền</th>
+                                <th>Ghi chú</th>
+                                <th>Trạng thái</th>
+                                <th>Chi tiết</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            <c:forEach var="r" items="${purchaseReceipts}" varStatus="loop">
+                                <tr>
+                                    <td>${loop.index + 1}</td>
+
+                                    <td>#${r.id}</td>
+
+                                    <td>
+                                        <c:out value="${r.supplierName}" />
+                                    </td>
+
+                                    <td>
+                                        <fmt:formatDate value="${r.importDate}" pattern="dd/MM/yyyy HH:mm" />
+                                    </td>
+
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${not empty r.createdByName}">
+                                                <c:out value="${r.createdByName}" />
+                                            </c:when>
+                                            <c:otherwise>
+                                                Admin
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+
+                                    <td>
+                                        <fmt:formatNumber value="${r.totalAmount}" type="number" groupingUsed="true" /> đ
+                                    </td>
+
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${not empty r.note}">
+                                                <c:out value="${r.note}" />
+                                            </c:when>
+                                            <c:otherwise>
+                                                -
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${r.status == 'COMPLETED'}">
+                                                <span class="status-completed">Đã nhập kho</span>
+                                            </c:when>
+                                            <c:when test="${r.status == 'DRAFT'}">
+                                                <span class="status-draft">Nháp</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:out value="${r.status}" />
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+
+                                    <td>
+                                        <a class="btn-detail"
+                                           href="${ctx}/admin/purchase-receipts/detail?id=${r.id}">
+                                            Xem chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
     </div>

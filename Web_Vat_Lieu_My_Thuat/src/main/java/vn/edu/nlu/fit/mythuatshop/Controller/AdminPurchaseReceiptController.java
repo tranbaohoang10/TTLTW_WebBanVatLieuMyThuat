@@ -41,10 +41,14 @@ public class AdminPurchaseReceiptController extends HttpServlet {
                 "activeProducts",
                 purchaseReceiptService.getActiveProductsForCreateForm()
         );
+        request.setAttribute(
+                "purchaseReceipts",
+                purchaseReceiptService.getAllPurchaseReceipts()
+        );
 
         request.setAttribute(
                 "currentImporterName",
-                getCurrentImporterName(request)
+                purchaseReceiptService.getCurrentImporterName(request)
         );
 
         request.getRequestDispatcher("/admin/PurchaseReceipt.jsp").forward(request, response);
