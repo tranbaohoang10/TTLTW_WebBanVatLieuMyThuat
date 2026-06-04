@@ -199,6 +199,13 @@
                     <button class="btn-add" id="btnAdd">Thêm danh mục</button>
                 </div>
 
+                <c:if test="${not empty sessionScope.categoryError}">
+                    <div style="background:#f8d7da;color:#721c24;padding:12px 14px;border-radius:6px;margin-bottom:15px;border-left:4px solid #dc3545;">
+                            ${sessionScope.categoryError}
+                    </div>
+                    <c:remove var="categoryError" scope="session"/>
+                </c:if>
+
                 <table id="categoryTable" class="category-table display">
                     <thead>
                     <tr>

@@ -26,8 +26,8 @@ import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 @WebServlet("/admin/sliders")
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,
-        maxFileSize = 10 * 1024 * 1024,
-        maxRequestSize = 20 * 1024 * 1024
+        maxFileSize = 20 * 1024 * 1024,
+        maxRequestSize = 25 * 1024 * 1024
 )
 public class AdminSliderShowController extends HttpServlet {
     private final LogService logService = new LogService();
@@ -101,10 +101,14 @@ public class AdminSliderShowController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("utf-8");
 
-        String action = req.getParameter("action");
-        if (action == null) action = "";
+
+
 
         try {
+            String action = req.getParameter("action");
+            if (action == null){
+                action = "";
+            }
             switch (action) {
                 case "create" -> {
                     if (!PermissionUtil.hasPermission(req, "SLIDER_CREATE")) {
@@ -251,6 +255,9 @@ public class AdminSliderShowController extends HttpServlet {
         Part filePart = req.getPart("thumbnailFile");
 
         if (filePart != null && filePart.getSize() > 0) {
+            if(!isValidImage(filePart)) {
+                throw new IllegalArgumentException("Ảnh không hợp lệ hoặc vượt quá 5MB");
+            }
             String submitted = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
             String ext = "";
             int dot = submitted.lastIndexOf('.');
@@ -273,6 +280,19 @@ public class AdminSliderShowController extends HttpServlet {
             return thumbnailUrl;
         }
         return oldThumbnail;
+    }
+
+    private boolean isValidImage(Part part) {
+        long maxSize = 5*1024*1024;
+        if(part.getSize() > maxSize) {
+            return false;
+        }
+        String fileName = part.getSubmittedFileName();
+        if(fileName==null){
+            return false;
+        }
+        fileName = fileName.toLowerCase();
+        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".webp");
     }
 
 

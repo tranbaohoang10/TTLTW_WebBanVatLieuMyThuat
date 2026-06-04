@@ -76,6 +76,7 @@ public class AdminCategoryController extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            req.getSession().setAttribute("categoryError", e.getMessage());
         }
 
         resp.sendRedirect(req.getContextPath() + "/admin/categories");
@@ -137,6 +138,9 @@ public class AdminCategoryController extends HttpServlet {
     private String saveUploadAndReturnUrl(HttpServletRequest req, Part part, String folder) throws IOException {
         if (part == null || part.getSize() == 0) return null;
 
+        if (!isValidImage(part)) {
+            throw new IllegalArgumentException("Ảnh không hợp lệ hoặc vượt quá 5MB");
+        }
         String original = Paths.get(part.getSubmittedFileName()).getFileName().toString();
         String ext = "";
         int dot = original.lastIndexOf('.');
@@ -152,6 +156,19 @@ public class AdminCategoryController extends HttpServlet {
         part.write(savedFile.getAbsolutePath());
 
         return "/" + folder + "/" + savedName;
+    }
+
+    private boolean isValidImage(Part part) {
+        long maxSize = 5*1024*1024;
+        if(part.getSize() > maxSize) {
+            return false;
+        }
+        String fileName = part.getSubmittedFileName();
+        if(fileName==null){
+            return false;
+        }
+        fileName = fileName.toLowerCase();
+        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".webp");
     }
 
     private int parseInt(String s, int def) {
