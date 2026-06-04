@@ -233,4 +233,32 @@ public class PurchaseReceiptDao {
                 .bind("lineTotal", detail.getLineTotal())
                 .execute();
     }
+    public List<PurchaseReceipt> findAllPurchaseReceipts() {
+        String sql = """
+            SELECT pr.ID AS id,
+                   pr.supplierID AS supplierId,
+                   s.name AS supplierName,
+                   pr.importDate AS importDate,
+                   pr.createdBy AS createdBy,
+                   CASE
+                       WHEN pr.createdBy IS NULL THEN 'Admin'
+                       ELSE CONCAT('Admin #', pr.createdBy)
+                   END AS createdByName,
+                   pr.supplierDocumentCode AS supplierDocumentCode,
+                   pr.attachmentPath AS attachmentPath,
+                   pr.totalAmount AS totalAmount,
+                   pr.note AS note,
+                   pr.status AS status,
+                   pr.createAt AS createAt
+            FROM purchase_receipts pr
+            JOIN suppliers s ON s.ID = pr.supplierID
+            ORDER BY pr.ID DESC
+            """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapToBean(PurchaseReceipt.class)
+                        .list()
+        );
+    }
 }
