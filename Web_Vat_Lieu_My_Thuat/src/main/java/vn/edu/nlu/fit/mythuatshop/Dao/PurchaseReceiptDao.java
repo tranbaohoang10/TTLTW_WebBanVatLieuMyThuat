@@ -261,4 +261,56 @@ public class PurchaseReceiptDao {
                         .list()
         );
     }
+    public PurchaseReceipt findPurchaseReceiptById(int receiptId) {
+        String sql = """
+            SELECT pr.ID AS id,
+                   pr.supplierID AS supplierId,
+                   s.name AS supplierName,
+                   pr.importDate AS importDate,
+                   pr.createdBy AS createdBy,
+                   CASE
+                       WHEN pr.createdBy IS NULL THEN 'Admin'
+                       ELSE CONCAT('Admin #', pr.createdBy)
+                   END AS createdByName,
+                   pr.supplierDocumentCode AS supplierDocumentCode,
+                   pr.attachmentPath AS attachmentPath,
+                   pr.totalAmount AS totalAmount,
+                   pr.note AS note,
+                   pr.status AS status,
+                   pr.createAt AS createAt
+            FROM purchase_receipts pr
+            JOIN suppliers s ON s.ID = pr.supplierID
+            WHERE pr.ID = :receiptId
+            """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .bind("receiptId", receiptId)
+                        .mapToBean(PurchaseReceipt.class)
+                        .findOne()
+                        .orElse(null)
+        );
+    }
+    public List<PurchaseReceiptDetail> findPurchaseReceiptDetailsByReceiptId(int receiptId) {
+        String sql = """
+            SELECT prd.ID AS id,
+                   prd.receiptID AS receiptId,
+                   prd.productID AS productId,
+                   p.name AS productName,
+                   prd.quantity AS quantity,
+                   prd.importPrice AS importPrice,
+                   prd.lineTotal AS lineTotal
+            FROM purchase_receipt_details prd
+            JOIN products p ON p.ID = prd.productID
+            WHERE prd.receiptID = :receiptId
+            ORDER BY prd.ID ASC
+            """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .bind("receiptId", receiptId)
+                        .mapToBean(PurchaseReceiptDetail.class)
+                        .list()
+        );
+    }
 }
