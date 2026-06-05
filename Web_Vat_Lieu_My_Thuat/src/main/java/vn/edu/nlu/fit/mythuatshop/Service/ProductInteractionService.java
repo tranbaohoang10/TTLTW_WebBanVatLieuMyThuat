@@ -41,4 +41,10 @@ public class ProductInteractionService {
 
         return csv.toString();
     }
+    public void savePurchaseList(int userId, List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return;
+        }
+        interactionDao.insertPurchaseBatch(userId, productIds);
+    }
 }
