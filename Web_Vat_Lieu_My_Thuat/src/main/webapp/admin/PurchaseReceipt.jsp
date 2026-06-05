@@ -309,6 +309,75 @@
             border-radius: 6px;
             color: #666;
         }
+        .receipt-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .receipt-list-table th {
+            background: #2659F5;
+            color: white;
+            padding: 12px 10px;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .receipt-list-table td {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 10px;
+            background: #fff;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .receipt-list-table tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+
+        .receipt-list-table tr:hover td {
+            background: #eef3ff;
+        }
+
+        .btn-detail {
+            display: inline-block;
+            background: #17479D;
+            color: white;
+            padding: 7px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .btn-detail:hover {
+            background: #0f3475;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
     </style>
 
 </head>
@@ -444,6 +513,7 @@
                     <div class="form-group">
                         <label>Ngày nhập hàng</label>
                         <input type="datetime-local"
+                               id="importDateInput"
                                name="importDate"
                                required>
                     </div>
@@ -526,9 +596,9 @@
                                 <input type="number"
                                        name="importPrices"
                                        class="import-price-input"
-                                       min="0"
-                                       step="1000"
-                                       value="0"
+                                       min="1"
+                                       step="0.01"
+                                       value="1"
                                        required>
                             </td>
 
@@ -629,13 +699,10 @@
                                     <td>
                                         <c:choose>
                                             <c:when test="${r.status == 'COMPLETED'}">
-                                                <span class="status-completed">Đã nhập kho</span>
-                                            </c:when>
-                                            <c:when test="${r.status == 'DRAFT'}">
-                                                <span class="status-draft">Nháp</span>
+                                                <span class="status-badge status-success">Thành công</span>
                                             </c:when>
                                             <c:otherwise>
-                                                <c:out value="${r.status}" />
+                                                <span class="status-badge status-success">Thành công</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -663,6 +730,7 @@
     const totalAmountText = document.getElementById("totalAmountText");
     const totalAmountInput = document.getElementById("totalAmount");
     const receiptForm = document.querySelector(".receipt-form");
+    const importDateInput = document.getElementById("importDateInput");
 
     function formatMoney(value) {
         const numberValue = Number(value) || 0;
@@ -786,6 +854,20 @@
     btnAddProductRow.addEventListener("click", addProductRow);
 
     receiptForm.addEventListener("submit", function (event) {
+        if (!importDateInput || !importDateInput.value) {
+            event.preventDefault();
+            alert("Vui lòng chọn ngày nhập hàng.");
+            return;
+        }
+
+        const selectedImportDate = new Date(importDateInput.value);
+        const now = new Date();
+
+        if (selectedImportDate > now) {
+            event.preventDefault();
+            alert("Ngày nhập hàng không được lớn hơn thời điểm hiện tại.");
+            return;
+        }
         const rows = receiptItemsBody.querySelectorAll("tr");
 
         if (rows.length === 0) {
@@ -825,6 +907,15 @@
     });
 
     addProductRow();
+    function toDatetimeLocalValue(date) {
+        const offset = date.getTimezoneOffset();
+        const localDate = new Date(date.getTime() - offset * 60000);
+        return localDate.toISOString().slice(0, 16);
+    }
+
+    if (importDateInput) {
+        importDateInput.max = toDatetimeLocalValue(new Date());
+    }
 </script>
 </body>
 </html>
