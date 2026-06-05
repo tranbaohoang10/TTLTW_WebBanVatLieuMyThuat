@@ -430,13 +430,6 @@
                 </a>
             </c:if>
 
-
-            <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
-                <a href="${ctx}/admin/purchase-receipts" class="active">
-                    <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
-                </a>
-            </c:if>
-
             <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${ctx}/admin/users">
                     <i class="fa-solid fa-person"></i>Quản lý người dùng

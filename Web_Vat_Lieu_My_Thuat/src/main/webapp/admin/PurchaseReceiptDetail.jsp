@@ -232,13 +232,6 @@
                     <i class="fa-solid fa-palette"></i>Quản lý sản phẩm
                 </a>
             </c:if>
-
-            <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
-                <a href="${ctx}/admin/inventory">
-                    <i class="fa-solid fa-warehouse"></i>Quản lý tồn kho
-                </a>
-            </c:if>
-
             <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
                 <a href="${ctx}/admin/suppliers">
                     <i class="fa-solid fa-truck-field"></i>Nhà cung cấp
@@ -248,6 +241,12 @@
             <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
                 <a href="${ctx}/admin/purchase-receipts" class="active">
                     <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
+                </a>
+            </c:if>
+
+            <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
+                <a href="${ctx}/admin/inventory">
+                    <i class="fa-solid fa-warehouse"></i>Quản lý tồn kho
                 </a>
             </c:if>
 
@@ -266,6 +265,11 @@
             <c:if test="${role == 'ADMIN' || permissions.contains('VOUCHER_VIEW')}">
                 <a href="${ctx}/admin/vouchers">
                     <i class="fa-solid fa-gift"></i>Quản lý khuyến mãi
+                </a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('LOG_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/logs">
+                    <i class="fa-solid fa-clock-rotate-left"></i>Quản lý thao tác
                 </a>
             </c:if>
 
