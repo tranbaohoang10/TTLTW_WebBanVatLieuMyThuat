@@ -370,6 +370,14 @@
             color: #155724;
             border: 1px solid #c3e6cb;
         }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
     </style>
 
 </head>
@@ -505,6 +513,7 @@
                     <div class="form-group">
                         <label>Ngày nhập hàng</label>
                         <input type="datetime-local"
+                               id="importDateInput"
                                name="importDate"
                                required>
                     </div>
@@ -587,9 +596,9 @@
                                 <input type="number"
                                        name="importPrices"
                                        class="import-price-input"
-                                       min="0"
-                                       step="1000"
-                                       value="0"
+                                       min="1"
+                                       step="0.01"
+                                       value="1"
                                        required>
                             </td>
 
@@ -721,6 +730,7 @@
     const totalAmountText = document.getElementById("totalAmountText");
     const totalAmountInput = document.getElementById("totalAmount");
     const receiptForm = document.querySelector(".receipt-form");
+    const importDateInput = document.getElementById("importDateInput");
 
     function formatMoney(value) {
         const numberValue = Number(value) || 0;
@@ -844,6 +854,20 @@
     btnAddProductRow.addEventListener("click", addProductRow);
 
     receiptForm.addEventListener("submit", function (event) {
+        if (!importDateInput || !importDateInput.value) {
+            event.preventDefault();
+            alert("Vui lòng chọn ngày nhập hàng.");
+            return;
+        }
+
+        const selectedImportDate = new Date(importDateInput.value);
+        const now = new Date();
+
+        if (selectedImportDate > now) {
+            event.preventDefault();
+            alert("Ngày nhập hàng không được lớn hơn thời điểm hiện tại.");
+            return;
+        }
         const rows = receiptItemsBody.querySelectorAll("tr");
 
         if (rows.length === 0) {
@@ -883,6 +907,15 @@
     });
 
     addProductRow();
+    function toDatetimeLocalValue(date) {
+        const offset = date.getTimezoneOffset();
+        const localDate = new Date(date.getTime() - offset * 60000);
+        return localDate.toISOString().slice(0, 16);
+    }
+
+    if (importDateInput) {
+        importDateInput.max = toDatetimeLocalValue(new Date());
+    }
 </script>
 </body>
 </html>

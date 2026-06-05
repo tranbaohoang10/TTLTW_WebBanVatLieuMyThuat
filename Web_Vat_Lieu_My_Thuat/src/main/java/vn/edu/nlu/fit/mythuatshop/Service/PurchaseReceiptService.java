@@ -7,6 +7,7 @@ import vn.edu.nlu.fit.mythuatshop.Model.Supplier;
 import vn.edu.nlu.fit.mythuatshop.Model.PurchaseReceipt;
 import vn.edu.nlu.fit.mythuatshop.Model.PurchaseReceiptDetail;
 
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -88,6 +89,12 @@ public class PurchaseReceiptService {
 
         if (receipt.getImportDate() == null) {
             throw new IllegalArgumentException("Vui lòng chọn ngày nhập hàng.");
+        }
+
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+
+        if (receipt.getImportDate().after(now)) {
+            throw new IllegalArgumentException("Ngày nhập hàng không được lớn hơn thời điểm hiện tại.");
         }
 
         if (details == null || details.isEmpty()) {
