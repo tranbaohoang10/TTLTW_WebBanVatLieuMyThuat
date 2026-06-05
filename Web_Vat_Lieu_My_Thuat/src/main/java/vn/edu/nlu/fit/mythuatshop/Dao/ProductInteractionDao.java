@@ -44,4 +44,19 @@ public class ProductInteractionDao {
                         .list()
         );
     }
+    public void insertPurchaseBatch(int userId, List<Integer> productIds) {
+        String sql = "INSERT INTO user_product_interactions(userID, productID, actionType, score) " +
+                "VALUES (:userId, :productId, :actionType, :score)";
+        jdbi.useHandle(handle -> {
+            var batch = handle.prepareBatch(sql);
+            for (Integer productId : productIds) {
+                batch.bind("userId", userId)
+                        .bind("productId", productId)
+                        .bind("actionType", "PURCHASE")
+                        .bind("score", 10)
+                        .add();
+            }
+            batch.execute();
+        });
+    }
 }

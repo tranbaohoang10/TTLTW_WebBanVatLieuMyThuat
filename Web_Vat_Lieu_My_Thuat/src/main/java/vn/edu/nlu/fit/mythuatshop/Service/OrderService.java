@@ -444,10 +444,12 @@ public class OrderService {
         if (details == null) {
             return;
         }
+        List<Integer> productIds = new ArrayList<>();
 
         for (OrderDetail item : details) {
-            interactionService.savePurchase(userId, item.getProductId());
+            productIds.add(item.getProductId());
         }
+        interactionService.savePurchaseList(userId, productIds);
     }
 
 }
