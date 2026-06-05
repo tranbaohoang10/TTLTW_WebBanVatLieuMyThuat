@@ -11,6 +11,8 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
           integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 </head>
 
 <style>
@@ -104,15 +106,6 @@
         flex-wrap: wrap;
     }
 
-    .search-input-icon{
-        display:flex;
-        align-items:center;
-        border:1px solid #ddd;
-        border-radius:10px;
-        overflow:hidden;
-        background:#fff;
-    }
-
     .search-input-icon input{
         padding:10px 15px;
         border:none;
@@ -129,16 +122,6 @@
         border-left: 1px solid #eee;
         font-size: 14px;
         cursor:pointer;
-    }
-
-    .icon{
-        background:#f1f1f1;
-        padding:10px 15px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        cursor:pointer;
-        border:none;
     }
 
     .icon i{ font-size:16px; color:#333; }
@@ -222,34 +205,67 @@
     .status.success{ background:#D1FAE5; color:#0f5132; }
     .status.cancel{ background:#ffd6d6; color:#b91c1c; }
 
-    .pagination{
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        margin:25px 0;
-        gap:5px;
-        flex-wrap: wrap;
+
+    #sliderTable_wrapper .dataTables_filter {
+        float: none !important;
+        text-align: right !important;
+        margin-bottom: 15px;
     }
 
-    .page-link{
-        padding:6px 12px;
-        border:1px solid #d0d7de;
-        border-radius:4px;
-        color:#0d6efd;
-        background:white;
-        text-decoration:none;
-        font-size:14px;
-        transition:.2s;
-    }
-    .page-link:hover{ background:#e9ecef; }
-    .page-link.active{
-        background:#2659F5;
-        color:white;
-        font-weight:bold;
-        border-color:#2659F5;
+    #sliderTable_wrapper .dataTables_filter label {
+        font-size: 16px;
+        font-weight: 500;
+        color: #111;
     }
 
-    /* ===== MODAL ===== */
+    #sliderTable_wrapper .dataTables_filter input {
+        margin-left: 8px !important;
+        padding: 8px 12px;
+        border: 1px solid #cfcfcf !important;
+        border-radius: 6px;
+        outline: none;
+        min-width: 220px;
+        background-color: #fff;
+    }
+
+    #sliderTable_wrapper .dataTables_filter input:focus {
+        border-color: #2659F5 !important;
+    }
+
+    #sliderTable_wrapper .dataTables_paginate {
+        float: none !important;
+        text-align: center !important;
+        margin-top: 20px;
+    }
+
+    #sliderTable_wrapper .dataTables_paginate .paginate_button {
+        border: none !important;
+        background: transparent !important;
+        color: #111 !important;
+        padding: 8px 14px !important;
+        margin: 0 3px;
+        border-radius: 4px;
+        min-width: 38px;
+    }
+
+    #sliderTable_wrapper .dataTables_paginate .paginate_button.current,
+    #sliderTable_wrapper .dataTables_paginate .paginate_button.current:hover {
+        background: #2659F5 !important;
+        color: white !important;
+        border: 1px solid #2659F5 !important;
+    }
+
+    #sliderTable_wrapper .dataTables_paginate .paginate_button:hover {
+        background: #e9ecef !important;
+        color: #2659F5 !important;
+    }
+
+    #sliderTable_wrapper .dataTables_paginate .paginate_button.disabled,
+    #sliderTable_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+        color: #888 !important;
+        background: transparent !important;
+        cursor: default !important;
+    }
     .modal{
         position: fixed;
         inset:0;
@@ -342,7 +358,8 @@
         to{ opacity:1; transform:scale(1); }
     }
 </style>
-
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <body>
 <c:set var="permissions" value="${sessionScope.permissions}" />
 <c:set var="role" value="${sessionScope.currentUser.role}" />
@@ -421,19 +438,10 @@
                 </c:if>
 
                 <div class="search">
-                    <div class="search-input-icon">
-                        <form id="sliderSearchForm" action="${pageContext.request.contextPath}/admin/sliders" method="get" style="display:flex; align-items:center;">
-                            <input id="sliderSearchInput" name="q" value="${q}" placeholder="Tìm slider..." autocomplete="off"/>
-                            <button class="icon" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        </form>
-                    </div>
-
                     <button type="button" class="btn-them-banner">Thêm slideshow</button>
-
-                    <div id="sliderSearchStatus" style="width:100%; text-align:right; font-size:13px; color:#666;"></div>
                 </div>
 
-                <table class="order-table">
+                <table id="sliderTable" class="order-table display">
                     <thead>
                     <tr>
                         <th>ID</th>
@@ -508,22 +516,7 @@
                     </tbody>
                 </table>
 
-                <div id="sliderPagination" class="pagination">
-                    <c:if test="${page > 1}">
-                        <a class="page-link"
-                           href="${pageContext.request.contextPath}/admin/sliders?q=${q}&size=${size}&page=${page-1}">Trước</a>
-                    </c:if>
 
-                    <c:forEach var="p" begin="1" end="${totalPages}">
-                        <a class="page-link ${p==page ? 'active' : ''}"
-                           href="${pageContext.request.contextPath}/admin/sliders?q=${q}&size=${size}&page=${p}">${p}</a>
-                    </c:forEach>
-
-                    <c:if test="${page < totalPages}">
-                        <a class="page-link"
-                           href="${pageContext.request.contextPath}/admin/sliders?q=${q}&size=${size}&page=${page+1}">Sau</a>
-                    </c:if>
-                </div>
 
             </div>
         </div>
@@ -628,7 +621,6 @@
 </div>
 
 <script>
-    // ===== MODAL ADD/EDIT (event delegation để AJAX render vẫn bấm được) =====
     const addModal = document.getElementById("addSliderModal");
     const editModal = document.getElementById("editSliderModal");
 
@@ -658,7 +650,6 @@
         if (e.target === editModal) editModal.style.display = "none";
     });
 
-    // Mở modal edit bằng delegation (bấm nút nào cũng ăn kể cả sau AJAX)
     document.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-open-edit");
         if (!btn) return;
@@ -673,252 +664,29 @@
         editModal.style.display = "flex";
     });
 </script>
-
 <script>
-    // ===== AJAX search + paging =====
-    const ctxSlider = "${pageContext.request.contextPath}";
-    const sForm = document.getElementById("sliderSearchForm");
-    const sInput = document.getElementById("sliderSearchInput");
-    const sSize = document.getElementById("sliderSizeSelect");
-    const sTbody = document.getElementById("sliderTbody");
-    const sPaging = document.getElementById("sliderPagination");
-    const sStatus = document.getElementById("sliderSearchStatus");
-
-    let sTimer = null;
-    let sAbort = null;
-
-    function text(v){ return (v == null) ? "" : String(v); }
-
-    function renderRows(list){
-        if (!sTbody) return;
-        sTbody.innerHTML = "";
-
-        if (!list || list.length === 0){
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 6;
-            td.style.textAlign = "center";
-            td.style.padding = "14px";
-            td.style.color = "#666";
-            td.innerText = "Không có dữ liệu";
-            tr.appendChild(td);
-            sTbody.appendChild(tr);
-            return;
-        }
-
-        list.forEach((s) => {
-            const tr = document.createElement("tr");
-
-            // ID
-            const tdId = document.createElement("td");
-            tdId.innerText = s.id;
-
-            // Title
-            const tdTitle = document.createElement("td");
-            tdTitle.className = "col-title";
-            tdTitle.innerText = text(s.title);
-
-            // Status
-            const tdStatus = document.createElement("td");
-            tdStatus.className = "col-status";
-            const span = document.createElement("span");
-            if (s.status === 1){
-                span.className = "status success";
-                span.innerText = "Hiển thị";
-            } else {
-                span.className = "status cancel";
-                span.innerText = "Ẩn";
-            }
-            tdStatus.appendChild(span);
-
-            // IndexOrder
-            const tdOrder = document.createElement("td");
-            tdOrder.className = "col-order";
-            tdOrder.innerText = text(s.indexOrder);
-
-            // Thumbnail
-            const tdThumb = document.createElement("td");
-            const img = document.createElement("img");
-            let src = text(s.thumbnail);
-            // nếu backend trả về "/context/uploads/..." thì dùng luôn
-            img.src = src;
-            img.alt = "banner";
-            tdThumb.appendChild(img);
-
-            // Options
-            const tdOpt = document.createElement("td");
-
-            const btnEdit = document.createElement("button");
-            btnEdit.type = "button";
-            btnEdit.className = "btn-Sua btn-open-edit";
-            btnEdit.dataset.id = text(s.id);
-            btnEdit.dataset.title = text(s.title);
-            btnEdit.dataset.status = text(s.status);
-            btnEdit.dataset.order = text(s.indexOrder);
-
-            btnEdit.dataset.thumb = text(s.thumbnail);
-            btnEdit.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>';
-
-            const formToggle = document.createElement("form");
-            formToggle.method = "post";
-            formToggle.action = ctxSlider + "/admin/sliders";
-            formToggle.style.display = "inline";
-
-            const tAction = document.createElement("input");
-            tAction.type = "hidden";
-            tAction.name = "action";
-            tAction.value = "toggle";
-
-            const tId = document.createElement("input");
-            tId.type = "hidden";
-            tId.name = "id";
-            tId.value = s.id;
-
-            const tCur = document.createElement("input");
-            tCur.type = "hidden";
-            tCur.name = "currentStatus";
-            tCur.value = s.status;
-
-            const btnToggle = document.createElement("button");
-            btnToggle.type = "submit";
-            btnToggle.className = "btn-Sua";
-            btnToggle.title = "Ẩn/Hiện";
-            btnToggle.innerHTML = '<i class="fa-solid fa-eye"></i>';
-
-            formToggle.appendChild(tAction);
-            formToggle.appendChild(tId);
-            formToggle.appendChild(tCur);
-            formToggle.appendChild(btnToggle);
-
-            const formDel = document.createElement("form");
-            formDel.method = "post";
-            formDel.action = ctxSlider + "/admin/sliders";
-            formDel.style.display = "inline";
-            formDel.onsubmit = () => confirm("Xóa slider #" + s.id + "?");
-
-            const dAction = document.createElement("input");
-            dAction.type = "hidden";
-            dAction.name = "action";
-            dAction.value = "delete";
-
-            const dId = document.createElement("input");
-            dId.type = "hidden";
-            dId.name = "id";
-            dId.value = s.id;
-
-            const btnDel = document.createElement("button");
-            btnDel.type = "submit";
-            btnDel.className = "btn-Xoa";
-            btnDel.innerHTML = '<i class="fa-solid fa-trash"></i>';
-
-            formDel.appendChild(dAction);
-            formDel.appendChild(dId);
-            formDel.appendChild(btnDel);
-
-            tdOpt.appendChild(btnEdit);
-            tdOpt.appendChild(formToggle);
-            tdOpt.appendChild(formDel);
-
-            tr.appendChild(tdId);
-            tr.appendChild(tdTitle);
-            tr.appendChild(tdStatus);
-            tr.appendChild(tdOrder);
-            tr.appendChild(tdThumb);
-            tr.appendChild(tdOpt);
-
-            sTbody.appendChild(tr);
+    $(document).ready(function () {
+        $('#sliderTable').DataTable({
+            pageLength: 10,
+            lengthChange: false,
+            ordering: true,
+            searching: true,
+            info: false,
+            dom: 'ftip',
+            language: {
+                search: "Tìm kiếm:",
+                zeroRecords: "Không tìm thấy slideshow phù hợp",
+                emptyTable: "Không có dữ liệu",
+                paginate: {
+                    previous: "Trước",
+                    next: "Sau"
+                }
+            },
+            columnDefs: [
+                { orderable: false, targets: [4, 5] }
+            ]
         });
-    }
-
-    function renderPaging(totalPages, currentPage){
-        if (!sPaging) return;
-        sPaging.innerHTML = "";
-
-        function addLink(label, page, active){
-            const a = document.createElement("a");
-            a.href = "#";
-            a.className = "page-link" + (active ? " active" : "");
-            a.dataset.page = page;
-            a.innerText = label;
-            sPaging.appendChild(a);
-        }
-
-        if (currentPage > 1) addLink("Trước", currentPage - 1, false);
-        for (let p = 1; p <= totalPages; p++) addLink(String(p), p, p === currentPage);
-        if (currentPage < totalPages) addLink("Sau", currentPage + 1, false);
-    }
-
-    async function fetchSliders(q, page, size){
-        if (sAbort) sAbort.abort();
-        sAbort = new AbortController();
-
-        if (sStatus) sStatus.innerText = "Đang tìm...";
-
-        const url = new URL(ctxSlider + "/admin/sliders", window.location.origin);
-        url.searchParams.set("ajax", "1");
-        url.searchParams.set("q", q || "");
-        url.searchParams.set("page", String(page || 1));
-        url.searchParams.set("size", String(size || 10));
-
-        const res = await fetch(url.toString(), {
-            signal: sAbort.signal,
-            headers: { "X-Requested-With": "XMLHttpRequest" }
-        });
-
-        const ct = res.headers.get("content-type") || "";
-        if (!ct.includes("application/json")){
-            window.location.href = ctxSlider + "/login";
-            return;
-        }
-
-        const data = await res.json();
-
-        renderRows(data.sliders);
-        renderPaging(data.totalPages || 1, data.currentPage || 1);
-
-        if (sStatus) sStatus.innerText = "";
-
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set("q", data.q || "");
-        newUrl.searchParams.set("page", String(data.currentPage || 1));
-        newUrl.searchParams.set("size", String(data.size || 10));
-        window.history.replaceState({}, "", newUrl);
-    }
-
-    // gõ tới đâu tìm tới đó
-    if (sInput){
-        sInput.addEventListener("input", () => {
-            clearTimeout(sTimer);
-            sTimer = setTimeout(() => {
-                fetchSliders(sInput.value || "", 1, parseInt(sSize?.value || "10", 10));
-            }, 300);
-        });
-    }
-
-    // đổi size -> fetch lại
-    if (sSize){
-        sSize.addEventListener("change", () => {
-            fetchSliders(sInput?.value || "", 1, parseInt(sSize.value || "10", 10));
-        });
-    }
-
-    // chặn submit -> fetch
-    if (sForm){
-        sForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            fetchSliders(sInput?.value || "", 1, parseInt(sSize?.value || "10", 10));
-        });
-    }
-
-    // paging ajax
-    if (sPaging){
-        sPaging.addEventListener("click", (e) => {
-            const a = e.target.closest("a.page-link");
-            if (!a) return;
-            e.preventDefault();
-            fetchSliders(sInput?.value || "", parseInt(a.dataset.page || "1", 10), parseInt(sSize?.value || "10", 10));
-        });
-    }
+    });
 </script>
 
 </body>

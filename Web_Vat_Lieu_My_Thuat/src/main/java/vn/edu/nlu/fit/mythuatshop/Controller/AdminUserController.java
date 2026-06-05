@@ -37,9 +37,7 @@ public class AdminUserController extends HttpServlet {
 
         request.setAttribute("users", users);
         request.setAttribute("groups", groups);
-//        request.setAttribute("currentPage", page);
-//        request.setAttribute("totalPages", totalPages);
-//        request.setAttribute("q",q);
+
         request.setAttribute("msg", msg);
 
         request.getRequestDispatcher("/admin/User.jsp").forward(request, response);
@@ -50,15 +48,7 @@ public class AdminUserController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-//        String page = request.getParameter("page");
-//        String q = request.getParameter("q");
-//
-//        if (page == null || page.isBlank()) {
-//            page = "1";
-//        }
-//        if (q == null) {
-//            q = "";
-//        }
+
         boolean result = false;
 
         if ("create".equals(action)) {
@@ -130,7 +120,6 @@ public class AdminUserController extends HttpServlet {
         } else {
             msg = "fail";
         }
-//        String qEncoded = URLEncoder.encode(q, StandardCharsets.UTF_8);
         response.sendRedirect(request.getContextPath() + "/admin/users?msg=" + msg);
     }
 
