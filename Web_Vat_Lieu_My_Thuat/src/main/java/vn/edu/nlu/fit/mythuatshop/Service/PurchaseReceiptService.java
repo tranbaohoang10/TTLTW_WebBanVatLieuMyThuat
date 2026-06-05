@@ -123,4 +123,25 @@ public class PurchaseReceiptService {
     public List<PurchaseReceipt> getAllPurchaseReceipts() {
         return purchaseReceiptDao.findAllPurchaseReceipts();
     }
+    public PurchaseReceipt getPurchaseReceiptDetailForAdmin(int receiptId) {
+        if (receiptId <= 0) {
+            throw new IllegalArgumentException("Phiếu nhập không hợp lệ.");
+        }
+
+        PurchaseReceipt receipt = purchaseReceiptDao.findPurchaseReceiptById(receiptId);
+
+        if (receipt == null) {
+            throw new IllegalArgumentException("Không tìm thấy phiếu nhập hàng.");
+        }
+
+        return receipt;
+    }
+
+    public List<PurchaseReceiptDetail> getPurchaseReceiptItemsForAdmin(int receiptId) {
+        if (receiptId <= 0) {
+            throw new IllegalArgumentException("Phiếu nhập không hợp lệ.");
+        }
+
+        return purchaseReceiptDao.findPurchaseReceiptDetailsByReceiptId(receiptId);
+    }
 }

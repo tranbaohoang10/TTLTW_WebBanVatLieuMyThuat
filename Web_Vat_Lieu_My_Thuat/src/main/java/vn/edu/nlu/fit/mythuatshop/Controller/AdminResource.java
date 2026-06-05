@@ -14,6 +14,7 @@ public class AdminResource {
         resources.put("/admin/inventory", "INVENTORY_VIEW");
         resources.put("/admin/suppliers", "SUPPLIER_VIEW");
         resources.put("/admin/purchase-receipts", "PURCHASE_RECEIPT_VIEW");
+        resources.put("/admin/purchase-receipts/detail", "PURCHASE_RECEIPT_VIEW");
         resources.put("/admin/users", "USER_VIEW");
 
         resources.put("/admin/orders", "ORDER_VIEW");
