@@ -123,7 +123,7 @@ public class AdminPurchaseReceiptController extends HttpServlet {
         receipt.setAttachmentPath(null);
         receipt.setNote(clean(request.getParameter("note")));
 
-        receipt.setStatus("DRAFT");
+        receipt.setStatus("COMPLETED");
 
         return receipt;
     }

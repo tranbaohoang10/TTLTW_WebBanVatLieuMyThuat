@@ -184,6 +184,19 @@
             border-radius: 6px;
             color: #666;
         }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 
@@ -309,17 +322,7 @@
                     <div class="info-item">
                         <div class="info-label">Trạng thái</div>
                         <div class="info-value">
-                            <c:choose>
-                                <c:when test="${r.status == 'COMPLETED'}">
-                                    <span class="status-completed">Đã nhập kho</span>
-                                </c:when>
-                                <c:when test="${r.status == 'DRAFT'}">
-                                    <span class="status-draft">Nháp</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:out value="${r.status}" />
-                                </c:otherwise>
-                            </c:choose>
+                            <span class="status-badge status-success">Thành công</span>
                         </div>
                     </div>
 
