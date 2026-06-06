@@ -6,14 +6,16 @@ public class Product_Review {
     private int id;
     private int userID;
     private int productID;
+    private int orderID;
     private int rating;
     private String comment;
     private Timestamp createAt;
     private String username;
-    public Product_Review(int id, int userID, int productID, int rating, String comment, Timestamp createAt) {
+    public Product_Review(int id, int userID, int productID, int orderID , int rating, String comment, Timestamp createAt) {
         this.id = id;
         this.userID = userID;
         this.productID = productID;
+        this.orderID = orderID;
         this.rating = rating;
         this.comment = comment;
         this.createAt = createAt;
@@ -35,6 +37,14 @@ public class Product_Review {
 
     public void setProductID(int productID) {
         this.productID = productID;
+    }
+
+    public int getOrderID() {
+        return orderID;
+    }
+
+    public void setOrderID(int orderID) {
+        this.orderID = orderID;
     }
 
     public int getUserID() {
@@ -81,6 +91,7 @@ public class Product_Review {
                 "id=" + id +
                 ", userID=" + userID +
                 ", productID=" + productID +
+                ", orderID=" + orderID +
                 ", rating=" + rating +
                 ", comment='" + comment + '\'' +
                 ", createAt=" + createAt +
