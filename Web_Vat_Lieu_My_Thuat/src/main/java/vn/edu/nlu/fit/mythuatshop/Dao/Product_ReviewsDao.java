@@ -14,7 +14,7 @@ public class Product_ReviewsDao {
         this.jdbi = JDBIConnector.getJdbi();
     }
     public List<Product_Review> findAll(){
-    String sql="select id,userID,productID,rating,comment,createAt from product_reviews";
+    String sql="select id,userID,productID, orderID,rating,comment,createAt from product_reviews";
         return jdbi.withHandle(h -> h.createQuery(sql).mapToBean(Product_Review.class).list());
     }
     public double getAverageRating(int productID){
@@ -23,7 +23,7 @@ public class Product_ReviewsDao {
         }
     public List<Product_Review> findByProductId(int productId) {
         String sql =
-                "SELECT pr.id, pr.userID, pr.productID, pr.rating, pr.comment, pr.createAt, " +
+                "SELECT pr.id, pr.userID, pr.productID, pr.orderID, pr.rating, pr.comment, pr.createAt, " +
                         "u.fullName AS username " +
                         "FROM product_reviews pr " +
                         "JOIN users u ON pr.userID = u.id " +
@@ -39,18 +39,20 @@ public class Product_ReviewsDao {
     }
     // Thêm 1 review mới
     public void insert(Product_Review review) {
-        String sql = "INSERT INTO product_reviews(userID, productID, rating, comment, createAt) " +
-                "VALUES (:userID, :productID, :rating, :comment, NOW())";
+        String sql = "INSERT INTO product_reviews(userID, productID, orderID, rating, comment, createAt) " +
+                "VALUES (:userID, :productID, :orderID, :rating, :comment, NOW())";
 
         jdbi.useHandle(h ->
                 h.createUpdate(sql)
                         .bind("userID", review.getUserID())
                         .bind("productID", review.getProductID())
+                        .bind("orderID", review.getOrderID())
                         .bind("rating", review.getRating())
                         .bind("comment", review.getComment())
                         .execute()
         );
     }
+
 
     public boolean canReviewProduct(int userId, int productID) {
         String sql = """
@@ -77,11 +79,11 @@ public class Product_ReviewsDao {
         String sql = """
                 SELECT COUNT(*)
                 FROM product_reviews pr
-                WHERE pr.userId = :userId
+                WHERE pr.userID = :userID
                 AND pr.productID = :productID
                 """;
         Integer count = jdbi.withHandle(h -> h.createQuery(sql)
-                .bind("userId",userId)
+                .bind("userID   ",userId)
                 .bind("productID",productID)
                 .mapTo(Integer.class).one()
         );
@@ -102,6 +104,67 @@ public class Product_ReviewsDao {
                         .bind("comment", review.getComment())
                         .bind("userID", review.getUserID())
                         .bind("productID", review.getProductID())
+                        .execute()
+        );
+    }
+    public boolean hasUserReviewedOrderProduct(int userId, int productID, int orderID) {
+        String sql = """
+            SELECT COUNT(*)
+            FROM product_reviews pr
+            WHERE pr.userID = :userID
+              AND pr.productID = :productID
+              AND pr.orderID = :orderID
+            """;
+
+        Integer count = jdbi.withHandle(h -> h.createQuery(sql)
+                .bind("userID", userId)
+                .bind("productID", productID)
+                .bind("orderID", orderID)
+                .mapTo(Integer.class)
+                .one()
+        );
+
+        return count != null && count > 0;
+    }
+    public boolean canReviewOrderProduct(int userId, int productID, int orderID) {
+        String sql = """
+            SELECT COUNT(*)
+            FROM orders o
+            JOIN order_details od ON o.ID = od.orderID
+            JOIN order_statuses os ON os.ID = o.orderStatusID
+            WHERE o.userID = :userID
+              AND o.ID = :orderID
+              AND od.productID = :productID
+              AND os.statusName = 'Hoàn thành'
+            """;
+
+        Integer count = jdbi.withHandle(h -> h.createQuery(sql)
+                .bind("userID", userId)
+                .bind("orderID", orderID)
+                .bind("productID", productID)
+                .mapTo(Integer.class)
+                .one()
+        );
+
+        return count != null && count > 0;
+    }
+    public void updateByOrderProduct(Product_Review review) {
+        String sql = """
+            UPDATE product_reviews
+            SET rating = :rating,
+                comment = :comment
+            WHERE userID = :userID
+              AND productID = :productID
+              AND orderID = :orderID
+            """;
+
+        jdbi.useHandle(h ->
+                h.createUpdate(sql)
+                        .bind("rating", review.getRating())
+                        .bind("comment", review.getComment())
+                        .bind("userID", review.getUserID())
+                        .bind("productID", review.getProductID())
+                        .bind("orderID", review.getOrderID())
                         .execute()
         );
     }
