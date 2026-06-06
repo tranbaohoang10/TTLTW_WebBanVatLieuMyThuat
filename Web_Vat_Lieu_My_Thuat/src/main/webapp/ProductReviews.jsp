@@ -262,6 +262,7 @@
 
                     <form class="form" action="${pageContext.request.contextPath}/Product_ReviewsController" method="post">
                         <input type="hidden" name="productID" value="${product.id}"/>
+                        <input type="hidden" name="orderID" value="${orderID}"/>
 
                         <p class="reviews_star">
             <span class="star-rating">
