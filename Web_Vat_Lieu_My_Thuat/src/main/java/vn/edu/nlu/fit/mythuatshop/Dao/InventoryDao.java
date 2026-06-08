@@ -230,4 +230,59 @@ public class InventoryDao {
                         .one()
         );
     }
+    public List<Product> findLowStockProducts(int threshold) {
+        String sql = """
+            SELECT ID AS id,
+                   name,
+                   price,
+                   discountDefault,
+                   categoryID AS categoryId,
+                   thumbnail,
+                   quantityStock,
+                   soldQuantity,
+                   status,
+                   createAt,
+                   brand,
+                   isActive
+            FROM products
+            WHERE isActive = 1
+              AND quantityStock > 0
+              AND quantityStock <= :threshold
+            ORDER BY quantityStock ASC, ID ASC
+            """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .bind("threshold", threshold)
+                        .mapToBean(Product.class)
+                        .list()
+        );
+    }
+
+    public List<Product> findOutOfStockProducts() {
+        String sql = """
+            SELECT ID AS id,
+                   name,
+                   price,
+                   discountDefault,
+                   categoryID AS categoryId,
+                   thumbnail,
+                   quantityStock,
+                   soldQuantity,
+                   status,
+                   createAt,
+                   brand,
+                   isActive
+            FROM products
+            WHERE isActive = 1
+              AND quantityStock <= 0
+            ORDER BY ID ASC
+            """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapToBean(Product.class)
+                        .list()
+        );
+    }
 }

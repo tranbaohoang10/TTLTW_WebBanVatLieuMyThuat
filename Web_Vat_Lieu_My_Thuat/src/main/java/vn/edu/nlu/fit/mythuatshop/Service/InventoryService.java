@@ -40,4 +40,11 @@ public class InventoryService {
     public int countOutOfStockProducts() {
         return inventoryDao.countOutOfStockProducts();
     }
+    public List<Product> getLowStockProducts() {
+        return inventoryDao.findLowStockProducts(LOW_STOCK_THRESHOLD);
+    }
+
+    public List<Product> getOutOfStockProducts() {
+        return inventoryDao.findOutOfStockProducts();
+    }
 }
