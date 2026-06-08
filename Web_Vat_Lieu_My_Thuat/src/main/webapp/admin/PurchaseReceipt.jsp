@@ -893,9 +893,9 @@
                 return;
             }
 
-            if (importPrice < 0) {
+            if (importPrice < 1) {
                 event.preventDefault();
-                alert("Giá nhập không được âm.");
+                alert("Giá nhập phải lớn hơn hoặc bằng 1.");
                 return;
             }
         }

@@ -8,6 +8,7 @@ import java.util.List;
 
 public class InventoryService {
     private final InventoryDao inventoryDao;
+    private static final int LOW_STOCK_THRESHOLD = 10;
 
     public InventoryService() {
         this.inventoryDao = new InventoryDao();
@@ -27,5 +28,16 @@ public class InventoryService {
 
     public boolean adjustStock(int productId, int newStock, String note, Integer adminId) {
         return inventoryDao.adjustStock(productId, newStock, note, adminId);
+    }
+    public int getLowStockThreshold() {
+        return LOW_STOCK_THRESHOLD;
+    }
+
+    public int countLowStockProducts() {
+        return inventoryDao.countLowStockProducts(LOW_STOCK_THRESHOLD);
+    }
+
+    public int countOutOfStockProducts() {
+        return inventoryDao.countOutOfStockProducts();
     }
 }
