@@ -23,7 +23,11 @@ public class AdminInventoryController extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-
+        request.setAttribute("lowStockThreshold", inventoryService.getLowStockThreshold());
+        request.setAttribute("lowStockCount", inventoryService.countLowStockProducts());
+        request.setAttribute("outOfStockCount", inventoryService.countOutOfStockProducts());
+        request.setAttribute("lowStockProducts", inventoryService.getLowStockProducts());
+        request.setAttribute("outOfStockProducts", inventoryService.getOutOfStockProducts());
         request.setAttribute("products", inventoryService.getInventoryProducts());
         request.setAttribute("history", inventoryService.getHistory());
 

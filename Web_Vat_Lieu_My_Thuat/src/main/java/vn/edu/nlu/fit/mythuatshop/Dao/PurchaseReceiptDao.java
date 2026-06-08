@@ -240,10 +240,7 @@ public class PurchaseReceiptDao {
                    s.name AS supplierName,
                    pr.importDate AS importDate,
                    pr.createdBy AS createdBy,
-                   CASE
-                       WHEN pr.createdBy IS NULL THEN 'Admin'
-                       ELSE CONCAT('Admin #', pr.createdBy)
-                   END AS createdByName,
+                   COALESCE(u.fullName, CONCAT('Admin #', pr.createdBy), 'Admin') AS createdByName,
                    pr.supplierDocumentCode AS supplierDocumentCode,
                    pr.attachmentPath AS attachmentPath,
                    pr.totalAmount AS totalAmount,
@@ -252,6 +249,7 @@ public class PurchaseReceiptDao {
                    pr.createAt AS createAt
             FROM purchase_receipts pr
             JOIN suppliers s ON s.ID = pr.supplierID
+            LEFT JOIN users u ON u.id = pr.createdBy
             ORDER BY pr.ID DESC
             """;
 
@@ -268,10 +266,7 @@ public class PurchaseReceiptDao {
                    s.name AS supplierName,
                    pr.importDate AS importDate,
                    pr.createdBy AS createdBy,
-                   CASE
-                       WHEN pr.createdBy IS NULL THEN 'Admin'
-                       ELSE CONCAT('Admin #', pr.createdBy)
-                   END AS createdByName,
+                   COALESCE(u.fullName, CONCAT('Admin #', pr.createdBy), 'Admin') AS createdByName,
                    pr.supplierDocumentCode AS supplierDocumentCode,
                    pr.attachmentPath AS attachmentPath,
                    pr.totalAmount AS totalAmount,
@@ -280,6 +275,7 @@ public class PurchaseReceiptDao {
                    pr.createAt AS createAt
             FROM purchase_receipts pr
             JOIN suppliers s ON s.ID = pr.supplierID
+            LEFT JOIN users u ON u.id = pr.createdBy
             WHERE pr.ID = :receiptId
             """;
 

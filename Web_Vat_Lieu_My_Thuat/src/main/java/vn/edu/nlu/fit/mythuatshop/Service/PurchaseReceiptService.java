@@ -122,8 +122,8 @@ public class PurchaseReceiptService {
                 throw new IllegalArgumentException("Số lượng nhập phải lớn hơn 0.");
             }
 
-            if (detail.getImportPrice() < 0) {
-                throw new IllegalArgumentException("Giá nhập không được âm.");
+            if (detail.getImportPrice() < 1) {
+                throw new IllegalArgumentException("Giá nhập phải lớn hon hoặc bằng 1");
             }
         }
     }
