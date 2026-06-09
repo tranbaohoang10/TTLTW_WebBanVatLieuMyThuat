@@ -19,4 +19,12 @@ public class PermissionService {
         Set<String> permissions = permissionDao.getCodesByUserId(userId);
         return permissions.contains(permissionCode);
     }
+    public Set<String> getPermissionsByGroupId(int groupId) {
+        return permissionDao.getCodesByGroupId(groupId);
+    }
+
+    public void updateGroupPermissions(int groupId, String[] permissionCodes) {
+        permissionDao.updateGroupPermissions(groupId, permissionCodes);
+    }
+
 }
