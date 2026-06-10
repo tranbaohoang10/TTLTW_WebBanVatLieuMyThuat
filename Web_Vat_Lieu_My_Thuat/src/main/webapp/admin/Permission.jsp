@@ -230,15 +230,6 @@
         background-color: #17479D;
     }
 
-    .note-box {
-        margin-top: 15px;
-        background: #fff3cd;
-        color: #664d03;
-        padding: 12px 16px;
-        border-radius: 8px;
-        border: 1px solid #ffecb5;
-        font-size: 14px;
-    }
 </style>
 
 <body>
@@ -347,7 +338,6 @@
 
                 <div class="permission-header">
                     <h1>Quản lý phân quyền</h1>
-                    <p>Admin chọn nhóm nhân viên, sau đó tick các quyền cần cấp và bấm lưu.</p>
                 </div>
 
                 <c:if test="${msg == 'success'}">
@@ -703,9 +693,7 @@
                                 Lưu phân quyền
                             </button>
 
-                            <div class="note-box">
-                                Khi lưu phân quyền, hệ thống sẽ xóa quyền cũ của nhóm này rồi thêm lại các quyền đang được tick.
-                            </div>
+
                         </form>
                     </div>
                 </div>
