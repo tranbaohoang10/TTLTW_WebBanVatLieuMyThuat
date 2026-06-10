@@ -1,10 +1,7 @@
 package vn.edu.nlu.fit.mythuatshop.Service;
 
 import vn.edu.nlu.fit.mythuatshop.Dao.StatisticDAO;
-import vn.edu.nlu.fit.mythuatshop.Model.BestSellerChartPoint;
-import vn.edu.nlu.fit.mythuatshop.Model.BestSellerRow;
-import vn.edu.nlu.fit.mythuatshop.Model.NoSaleRow;
-import vn.edu.nlu.fit.mythuatshop.Model.RevenueMonth;
+import vn.edu.nlu.fit.mythuatshop.Model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,5 +33,12 @@ public class StatisticService {
 
     public List<BestSellerChartPoint> getBestSellerTop5ChartAllTime() {
         return dao.getTop5BestSellingProductsForChart();
+    }
+    public BigDecimal getTotalImportCostThisYear() {
+        return dao.getTotalImportCostOfCurrentYear();
+    }
+
+    public List<ImportCostMonth> getImportCostByMonthThisYear() {
+        return dao.getImportCostByMonthOfCurrentYear();
     }
 }

@@ -1,10 +1,7 @@
 package vn.edu.nlu.fit.mythuatshop.Dao;
 
 import org.jdbi.v3.core.Jdbi;
-import vn.edu.nlu.fit.mythuatshop.Model.BestSellerChartPoint;
-import vn.edu.nlu.fit.mythuatshop.Model.BestSellerRow;
-import vn.edu.nlu.fit.mythuatshop.Model.NoSaleRow;
-import vn.edu.nlu.fit.mythuatshop.Model.RevenueMonth;
+import vn.edu.nlu.fit.mythuatshop.Model.*;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -85,7 +82,61 @@ public class StatisticDAO {
                         .list()
         );
     }
+    public BigDecimal getTotalImportCostOfCurrentYear() {
+        String sql = """
+        SELECT COALESCE(SUM(totalAmount), 0)
+        FROM purchase_receipts
+        WHERE status = 'COMPLETED'
+          AND YEAR(importDate) = YEAR(CURDATE())
+    """;
 
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapTo(BigDecimal.class)
+                        .one()
+        );
+    }
+    public List<ImportCostMonth> getImportCostByMonthOfCurrentYear() {
+        String sql = """
+        SELECT
+            monthNumbers.monthValue AS month,
+            COALESCE(importCostTable.importCost, 0) AS importCost
+        FROM (
+            SELECT 1 AS monthValue
+            UNION ALL SELECT 2
+            UNION ALL SELECT 3
+            UNION ALL SELECT 4
+            UNION ALL SELECT 5
+            UNION ALL SELECT 6
+            UNION ALL SELECT 7
+            UNION ALL SELECT 8
+            UNION ALL SELECT 9
+            UNION ALL SELECT 10
+            UNION ALL SELECT 11
+            UNION ALL SELECT 12
+        ) AS monthNumbers
+        LEFT JOIN (
+            SELECT
+                MONTH(importDate) AS monthValue,
+                SUM(totalAmount) AS importCost
+            FROM purchase_receipts
+            WHERE status = 'COMPLETED'
+              AND YEAR(importDate) = YEAR(CURDATE())
+            GROUP BY MONTH(importDate)
+        ) AS importCostTable
+        ON monthNumbers.monthValue = importCostTable.monthValue
+        ORDER BY monthNumbers.monthValue
+    """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .map((resultSet, context) -> new ImportCostMonth(
+                                resultSet.getInt("month"),
+                                resultSet.getBigDecimal("importCost")
+                        ))
+                        .list()
+        );
+    }
     public List<NoSaleRow> getProductsWithNoSales(LocalDateTime startTime, LocalDateTime endTime) {
         String sql = """
             SELECT

@@ -281,6 +281,38 @@
       padding:6px 10px !important;
       outline:none !important;
     }
+    .summary-cards {
+      width: 100%;
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .summary-cards .tong-doanhthu {
+      flex: 1;
+      min-height: 160px;
+      border-right: none !important;
+    }
+
+    .chart-grid {
+      width: 100%;
+      display: flex;
+      gap: 20px;
+    }
+
+    .chart-card {
+      flex: 1;
+      min-height: 320px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-card canvas {
+      width: 100% !important;
+      max-height: 300px;
+    }
   </style>
 
   <body>
@@ -357,14 +389,34 @@
         <div class="thongke-doanhthu">
           <h1>Thống kê doanh thu</h1>
 
-          <div class="tong-doanhthu">
-            <h2>Tổng doanh thu</h2>
-            <hr>
-            <h3><fmt:formatNumber value="${totalYear}" type="number" groupingUsed="true"/> VNĐ</h3>
+          <div class="summary-cards">
+            <div class="tong-doanhthu">
+              <h2>Tổng doanh thu</h2>
+              <hr>
+              <h3>
+                <fmt:formatNumber value="${totalYear}" type="number" groupingUsed="true"/> VNĐ
+              </h3>
+            </div>
+
+            <div class="tong-doanhthu" style="background-color:#C77800;">
+              <h2>Tổng chi phí nhập hàng</h2>
+              <hr>
+              <h3>
+                <fmt:formatNumber value="${totalImportCostYear}" type="number" groupingUsed="true"/> VNĐ
+              </h3>
+            </div>
           </div>
 
-          <div class="bieudo-doanhthu">
-            <canvas id="chartDoanhThu"></canvas>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h2>Biểu đồ doanh thu theo tháng</h2>
+              <canvas id="chartDoanhThu"></canvas>
+            </div>
+
+            <div class="chart-card">
+              <h2>Biểu đồ chi phí nhập hàng theo tháng</h2>
+              <canvas id="chartChiPhiNhap"></canvas>
+            </div>
           </div>
         </div>
 
@@ -386,28 +438,19 @@
             </thead>
 
             <tbody>
-            <c:choose>
-              <c:when test="${empty bestTable}">
+            <c:if test="${not empty bestTable}">
+              <c:forEach var="p" items="${bestTable}">
                 <tr>
-                  <td colspan="7" style="text-align:center;padding:16px;">
-                    Không có dữ liệu sản phẩm bán chạy
-                  </td>
+                  <td></td>
+                  <td>SP${p.productId}</td>
+                  <td><c:out value="${p.productName}"/></td>
+                  <td><c:out value="${p.categoryName}"/></td>
+                  <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
+                  <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
+                  <td>${p.soldQty}</td>
                 </tr>
-              </c:when>
-              <c:otherwise>
-                <c:forEach var="p" items="${bestTable}">
-                  <tr>
-                    <td></td>
-                    <td>SP${p.productId}</td>
-                    <td><c:out value="${p.productName}"/></td>
-                    <td><c:out value="${p.categoryName}"/></td>
-                    <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
-                    <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
-                    <td>${p.soldQty}</td>
-                  </tr>
-                </c:forEach>
-              </c:otherwise>
-            </c:choose>
+              </c:forEach>
+            </c:if>
             </tbody>
           </table>
 
@@ -454,28 +497,19 @@
             </thead>
 
             <tbody>
-            <c:choose>
-              <c:when test="${empty noSaleTable}">
+            <c:if test="${not empty noSaleTable}">
+              <c:forEach var="p" items="${noSaleTable}">
                 <tr>
-                  <td colspan="7" style="text-align:center;padding:16px;">
-                    Không có sản phẩm nào không bán trong ${noSaleMonths} tháng gần đây
-                  </td>
+                  <td></td>
+                  <td>SP${p.productId}</td>
+                  <td><c:out value="${p.productName}"/></td>
+                  <td><c:out value="${p.categoryName}"/></td>
+                  <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
+                  <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
+                  <td>${p.soldQuantity}</td>
                 </tr>
-              </c:when>
-              <c:otherwise>
-                <c:forEach var="p" items="${noSaleTable}">
-                  <tr>
-                    <td></td>
-                    <td>SP${p.productId}</td>
-                    <td><c:out value="${p.productName}"/></td>
-                    <td><c:out value="${p.categoryName}"/></td>
-                    <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
-                    <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
-                    <td>${p.soldQuantity}</td>
-                  </tr>
-                </c:forEach>
-              </c:otherwise>
-            </c:choose>
+              </c:forEach>
+            </c:if>
             </tbody>
           </table>
         </div>
@@ -498,7 +532,11 @@
       ${r.revenue}<c:if test="${!st.last}">,</c:if>
       </c:forEach>
     ];
-
+    const importCostData = [
+      <c:forEach var="c" items="${importCostYear}" varStatus="st">
+      ${c.importCost}<c:if test="${!st.last}">,</c:if>
+      </c:forEach>
+    ];
     new Chart(document.getElementById('chartDoanhThu'), {
       type: 'line',
       data: {
@@ -521,7 +559,28 @@
         }
       }
     });
-
+    new Chart(document.getElementById('chartChiPhiNhap'), {
+      type: 'bar',
+      data: {
+        labels: revenueLabels,
+        datasets: [{
+          label: 'Chi phí nhập hàng (VNĐ)',
+          data: importCostData,
+          borderRadius: 6,
+          maxBarThickness: 70
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: (value) => Number(value).toLocaleString('vi-VN') + 'đ' }
+          }
+        }
+      }
+    });
     // ===== CHART BEST SELLER TOP 5 =====
     const bestLabels = [
       <c:forEach var="b" items="${bestChart}" varStatus="st">
