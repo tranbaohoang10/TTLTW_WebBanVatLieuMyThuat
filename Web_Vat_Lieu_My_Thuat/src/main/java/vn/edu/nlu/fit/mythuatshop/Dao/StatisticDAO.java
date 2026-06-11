@@ -137,6 +137,46 @@ public class StatisticDAO {
                         .list()
         );
     }
+    public ProfitSummary getProfitSummaryOfCurrentYear() {
+        String sql = """
+        SELECT
+            COALESCE((
+                SELECT SUM(o.totalPrice)
+                FROM orders o
+                WHERE o.orderStatusID = 3
+                  AND YEAR(o.createAt) = YEAR(CURDATE())
+            ), 0) AS revenue,
+
+            COALESCE((
+                SELECT SUM(od.quantity * COALESCE(avg_import.avgImportPrice, 0))
+                FROM orders o
+                JOIN order_details od
+                    ON od.orderID = o.ID
+                LEFT JOIN (
+                    SELECT
+                        prd.productID,
+                        SUM(prd.quantity * prd.importPrice) / SUM(prd.quantity) AS avgImportPrice
+                    FROM purchase_receipt_details prd
+                    JOIN purchase_receipts pr
+                        ON pr.ID =  prd.receiptID
+                    WHERE pr.status = 'COMPLETED'
+                    GROUP BY prd.productID
+                ) avg_import
+                    ON avg_import.productID = od.productID
+                WHERE o.orderStatusID = 3
+                  AND YEAR(o.createAt) = YEAR(CURDATE())
+            ), 0) AS costOfGoodsSold
+    """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .map((rs, ctx) -> new ProfitSummary(
+                                rs.getBigDecimal("revenue"),
+                                rs.getBigDecimal("costOfGoodsSold")
+                        ))
+                        .one()
+        );
+    }
     public List<NoSaleRow> getProductsWithNoSales(LocalDateTime startTime, LocalDateTime endTime) {
         String sql = """
             SELECT
