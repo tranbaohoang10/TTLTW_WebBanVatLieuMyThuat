@@ -16,6 +16,7 @@ public class AdminResource {
         resources.put("/admin/purchase-receipts", "PURCHASE_RECEIPT_VIEW");
         resources.put("/admin/purchase-receipts/detail", "PURCHASE_RECEIPT_VIEW");
         resources.put("/admin/users", "USER_VIEW");
+        resources.put("/admin/permissions", "PERMISSION_MANAGE");
 
         resources.put("/admin/orders", "ORDER_VIEW");
         resources.put("/admin/order-detail", "ORDER_DETAIL_VIEW");
