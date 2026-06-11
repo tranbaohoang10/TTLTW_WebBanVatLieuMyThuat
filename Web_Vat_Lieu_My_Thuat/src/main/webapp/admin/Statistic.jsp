@@ -313,6 +313,19 @@
       width: 100% !important;
       max-height: 300px;
     }
+    .summary-cards {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .summary-cards .tong-doanhthu {
+        width: 100% !important;
+        min-height: 150px;
+        border-right: none !important;
+    }
   </style>
 
   <body>
@@ -405,6 +418,29 @@
                 <fmt:formatNumber value="${totalImportCostYear}" type="number" groupingUsed="true"/> VNĐ
               </h3>
             </div>
+              <div class="tong-doanhthu" style="background-color:#6C757D;">
+                  <h2>Giá vốn hàng bán</h2>
+                  <hr>
+                  <h3>
+                      <fmt:formatNumber value="${profitSummary.costOfGoodsSold}" type="number" groupingUsed="true"/> VNĐ
+                  </h3>
+              </div>
+
+              <div class="tong-doanhthu" style="background-color:#198754;">
+                  <h2>Lợi nhuận</h2>
+                  <hr>
+                  <h3>
+                      <fmt:formatNumber value="${profitSummary.profit}" type="number" groupingUsed="true"/> VNĐ
+                  </h3>
+              </div>
+
+              <div class="tong-doanhthu" style="background-color:#0D6EFD;">
+                  <h2>Tỉ suất lợi nhuận</h2>
+                  <hr>
+                  <h3>
+                      <fmt:formatNumber value="${profitSummary.profitMargin}" type="number" maxFractionDigits="2"/>%
+                  </h3>
+              </div>
           </div>
 
           <div class="chart-grid">
