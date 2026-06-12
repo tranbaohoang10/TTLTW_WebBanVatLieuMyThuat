@@ -257,6 +257,11 @@
         <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
         </c:if>
+        <c:if test="${role == 'ADMIN' || permissions.contains('PERMISSION_MANAGE')}">
+            <a href="${pageContext.request.contextPath}/admin/permissions" >
+                <i class="fa-solid fa-user-shield"></i>Quản lý phân quyền
+            </a>
+        </c:if>
         <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
                 lý đơn hàng</a>

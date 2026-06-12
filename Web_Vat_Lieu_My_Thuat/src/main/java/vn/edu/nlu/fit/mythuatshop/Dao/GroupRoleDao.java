@@ -17,4 +17,16 @@ public class GroupRoleDao {
                 "order by id";
         return  jdbi.withHandle(handle -> handle.createQuery(sql).mapToBean(GroupRole.class).list());
     }
+    public List<GroupRole> findStaffGroups() {
+        String sql = "SELECT id, code, name " +
+                "FROM groups_role " +
+                "WHERE code IN ('ORDER_STAFF_GROUP', 'CONTENT_STAFF_GROUP', 'SUPPORT_STAFF_GROUP', 'INVENTORY_STAFF_GROUP') " +
+                "ORDER BY id";
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapToBean(GroupRole.class)
+                        .list()
+        );
+    }
 }

@@ -10,4 +10,7 @@ public class GroupRoleService {
     public List<GroupRole> getAllGroup() {
         return groupRoleDao.findAll();
     }
+    public List<GroupRole> getStaffGroups() {
+        return groupRoleDao.findStaffGroups();
+    }
 }
