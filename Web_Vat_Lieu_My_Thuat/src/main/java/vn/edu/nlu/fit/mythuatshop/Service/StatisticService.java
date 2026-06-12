@@ -69,4 +69,7 @@ public class StatisticService {
 
         return summary;
     }
+    public List<ProductProfitRow> getProductProfitRowsThisYear() {
+        return dao.getProductProfitRowsOfCurrentYear();
+    }
 }

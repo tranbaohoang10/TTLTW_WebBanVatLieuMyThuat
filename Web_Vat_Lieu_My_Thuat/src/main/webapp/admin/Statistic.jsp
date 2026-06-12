@@ -454,6 +454,59 @@
               <canvas id="chartChiPhiNhap"></canvas>
             </div>
           </div>
+            <div class="product-container">
+                <h1>Thống kê lợi nhuận theo từng sản phẩm</h1>
+
+                <table id="tblProductProfit" class="product-table display">
+                    <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã sản phẩm</th>
+                        <th>Tên sản phẩm</th>
+                        <th>SL nhập</th>
+                        <th>Tổng chi phí nhập</th>
+                        <th>Giá nhập TB</th>
+                        <th>SL bán</th>
+                        <th>Doanh thu</th>
+                        <th>Giá vốn</th>
+                        <th>Lợi nhuận</th>
+                        <th>Tỉ suất LN</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <c:if test="${not empty productProfitRows}">
+                        <c:forEach var="p" items="${productProfitRows}">
+                            <tr>
+                                <td></td>
+                                <td>SP${p.productId}</td>
+                                <td><c:out value="${p.productName}"/></td>
+                                <td>${p.importedQuantity}</td>
+                                <td>
+                                    <fmt:formatNumber value="${p.totalImportCost}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.averageImportPrice}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>${p.soldQuantity}</td>
+                                <td>
+                                    <fmt:formatNumber value="${p.revenue}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.costOfGoodsSold}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.profit}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.profitMargin}" type="number" maxFractionDigits="2"/>%
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </c:if>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- BEST SELLER (ALL TIME) -->
@@ -689,7 +742,7 @@
 
       initTable('#tblBest');
       initTable('#tblNoSale');
-
+      initTable('#tblProductProfit');
       // Clamp input months 1..12
       $('#noSaleMonths').on('input', function () {
         let v = parseInt(this.value || "1");

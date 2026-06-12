@@ -26,6 +26,7 @@ public class AdminStatisticsController extends HttpServlet {
         var totalImportCostYear = service.getTotalImportCostThisYear();
         var importCostYear = service.getImportCostByMonthThisYear();
         var profitSummary = service.getProfitSummaryThisYear();
+        var productProfitRows = service.getProductProfitRowsThisYear();
 
         var bestTable = service.getBestSellersAllTime();
         var bestChart = service.getBestSellerTop5ChartAllTime();
@@ -39,6 +40,7 @@ public class AdminStatisticsController extends HttpServlet {
         req.setAttribute("totalImportCostYear", totalImportCostYear);
         req.setAttribute("importCostYear", importCostYear);
         req.setAttribute("profitSummary", profitSummary);
+        req.setAttribute("productProfitRows", productProfitRows);
         req.setAttribute("bestTable", bestTable);
         req.setAttribute("bestChart", bestChart);
         req.setAttribute("noSaleTable", noSaleTable);
