@@ -264,4 +264,80 @@ public class StatisticDAO {
                         .list()
         );
     }
+    public List<ProductProfitRow> getProductProfitRowsOfCurrentYear() {
+        String sql = """
+        SELECT
+            product.ID AS productId,
+            product.name AS productName,
+
+            COALESCE(importTable.importedQuantity, 0) AS importedQuantity,
+            COALESCE(importTable.totalImportCost, 0) AS totalImportCost,
+            COALESCE(importTable.averageImportPrice, 0) AS averageImportPrice,
+
+            COALESCE(saleTable.soldQuantity, 0) AS soldQuantity,
+            COALESCE(saleTable.revenue, 0) AS revenue,
+
+            COALESCE(saleTable.soldQuantity, 0) 
+                * COALESCE(importTable.averageImportPrice, 0) AS costOfGoodsSold,
+
+            COALESCE(saleTable.revenue, 0)
+                - (
+                    COALESCE(saleTable.soldQuantity, 0) 
+                    * COALESCE(importTable.averageImportPrice, 0)
+                  ) AS profit,
+
+            CASE
+                WHEN COALESCE(saleTable.revenue, 0) > 0 THEN
+                    (
+                        COALESCE(saleTable.revenue, 0)
+                        - (
+                            COALESCE(saleTable.soldQuantity, 0) 
+                            * COALESCE(importTable.averageImportPrice, 0)
+                          )
+                    ) / COALESCE(saleTable.revenue, 0) * 100
+                ELSE 0
+            END AS profitMargin
+
+        FROM products product
+
+        LEFT JOIN (
+            SELECT
+                prd.productID,
+                SUM(prd.quantity) AS importedQuantity,
+                SUM(prd.quantity * prd.importPrice) AS totalImportCost,
+                SUM(prd.quantity * prd.importPrice) / SUM(prd.quantity) AS averageImportPrice
+            FROM purchase_receipt_details prd
+            JOIN purchase_receipts pr
+                ON pr.ID = prd.receiptID
+            WHERE pr.status = 'COMPLETED'
+            GROUP BY prd.productID
+        ) importTable
+            ON importTable.productID = product.ID
+
+        LEFT JOIN (
+            SELECT
+                od.productID,
+                SUM(od.quantity) AS soldQuantity,
+                SUM(od.quantity * od.price) AS revenue
+            FROM order_details od
+            JOIN orders o
+                ON o.ID = od.orderID
+            WHERE o.orderStatusID = 3
+              AND YEAR(o.createAt) = YEAR(CURDATE())
+            GROUP BY od.productID
+        ) saleTable
+            ON saleTable.productID = product.ID
+
+        WHERE COALESCE(importTable.importedQuantity, 0) > 0
+           OR COALESCE(saleTable.soldQuantity, 0) > 0
+
+        ORDER BY profit DESC
+    """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapToBean(ProductProfitRow.class)
+                        .list()
+        );
+    }
 }

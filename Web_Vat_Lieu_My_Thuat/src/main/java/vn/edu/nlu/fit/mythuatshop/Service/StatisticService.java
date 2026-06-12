@@ -69,4 +69,20 @@ public class StatisticService {
 
         return summary;
     }
+    public List<ProductProfitRow> getProductProfitRowsThisYear() {
+        return dao.getProductProfitRowsOfCurrentYear();
+    }
+    public ProductProfitRow findProductProfitRowByProductId(List<ProductProfitRow> rows, int productId) {
+        if (rows == null || productId <= 0) {
+            return null;
+        }
+
+        for (ProductProfitRow row : rows) {
+            if (row.getProductId() == productId) {
+                return row;
+            }
+        }
+
+        return null;
+    }
 }

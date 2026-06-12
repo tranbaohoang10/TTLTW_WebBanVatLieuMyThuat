@@ -20,13 +20,14 @@ public class AdminStatisticsController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         int noSaleMonths = clampMonths(parseInt(req.getParameter("noSaleMonths"), 1));
-
+        int profitProductId = parseInt(req.getParameter("profitProductId"), 0);
         var totalYear = service.getTotalRevenueThisYear();
         var revYear = service.getRevenueByMonthThisYear();
         var totalImportCostYear = service.getTotalImportCostThisYear();
         var importCostYear = service.getImportCostByMonthThisYear();
         var profitSummary = service.getProfitSummaryThisYear();
-
+        var productProfitRows = service.getProductProfitRowsThisYear();
+        var selectedProductProfit = service.findProductProfitRowByProductId(productProfitRows, profitProductId);
         var bestTable = service.getBestSellersAllTime();
         var bestChart = service.getBestSellerTop5ChartAllTime();
 
@@ -39,6 +40,9 @@ public class AdminStatisticsController extends HttpServlet {
         req.setAttribute("totalImportCostYear", totalImportCostYear);
         req.setAttribute("importCostYear", importCostYear);
         req.setAttribute("profitSummary", profitSummary);
+        req.setAttribute("productProfitRows", productProfitRows);
+        req.setAttribute("profitProductId", profitProductId);
+        req.setAttribute("selectedProductProfit", selectedProductProfit);
         req.setAttribute("bestTable", bestTable);
         req.setAttribute("bestChart", bestChart);
         req.setAttribute("noSaleTable", noSaleTable);
