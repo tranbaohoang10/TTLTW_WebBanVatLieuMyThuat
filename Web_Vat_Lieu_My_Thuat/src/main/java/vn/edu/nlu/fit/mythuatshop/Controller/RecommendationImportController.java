@@ -35,18 +35,30 @@ public class RecommendationImportController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/recommendations?import=empty");
             return;
         }
-
+        String fileName = filePart.getSubmittedFileName();
+        if (fileName == null || !fileName.toLowerCase().endsWith(".csv")) {
+            response.sendRedirect(request.getContextPath() + "/admin/recommendations?status=format");
+            return;
+        }
         String folderPath = getServletContext().getRealPath("/WEB-INF/ml/recommendation");
 
         Path folder = Paths.get(folderPath);
         Files.createDirectories(folder);
 
-        Path filePath = folder.resolve("recommendation_results.csv");
-
-        Files.copy(filePart.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        int count = recommendationService.importFromCsv(filePath.toString());
-
-        response.sendRedirect(request.getContextPath() + "/admin/recommendations?import=success&count=" + count);
+        Path tempFile = folder.resolve("recommendation_results.csv");
+        Path resultFile = folder.resolve( "recommendation_results.csv" );
+        Files.copy(filePart.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            int count = recommendationService.importFromCsv(tempFile.toString());
+            Files.move( tempFile, resultFile, StandardCopyOption.REPLACE_EXISTING );
+            response.sendRedirect( request.getContextPath() + "/admin/recommendations" + "?status=success&count=" + count );
+        } catch (IllegalArgumentException e) {
+            Files.deleteIfExists(tempFile);
+            response.sendRedirect( request.getContextPath() + "/admin/recommendations?status=invalid" );
+        } catch (Exception e) {
+            e.printStackTrace(); Files.deleteIfExists(tempFile);
+            response.sendRedirect( request.getContextPath() + "/admin/recommendations?status=error" );
+        }
     }
+
 }

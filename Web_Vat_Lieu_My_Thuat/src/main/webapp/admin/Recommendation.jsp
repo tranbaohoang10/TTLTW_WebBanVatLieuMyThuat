@@ -267,7 +267,8 @@
 
 <body>
 <div id="main">
-
+    <c:set var="role" value="${sessionScope.currentUser.role}"/>
+    <c:set var="permissions" value="${sessionScope.permissions}"/>
     <div class="left">
         <div class="list-admin">
             <a href="Admin.jsp" class="logo"><img src="../assets/images/logo/logo.png" alt=""></a>
@@ -392,16 +393,33 @@
                         </a>
                 </div>
                 <div class="import-box">
-                    <h2>Tải kết quả gợi ý</h2>
-                    <c:if test="${param['import'] eq 'success'}">
+                    <h2>Cập nhật kết quả gợi</h2>
+                    <c:if test="${param.status eq 'success'}">
                         <p class="message-success">
                             Đã cập nhật ${param.count} dòng gợi ý sản phẩm.
                         </p>
                     </c:if>
 
-                    <c:if test="${param['import'] eq 'empty'}">
+                    <c:if test="${param.status eq 'empty'}">
                         <p class="message-error">
                             Vui lòng chọn file kết quả gợi ý.
+                        </p>
+                    </c:if>
+                    <c:if test="${param.status eq 'format'}">
+                        <p class="message-error">
+                            File tải lên phải có định dạng CSV.
+                        </p>
+                    </c:if>
+
+                    <c:if test="${param.status eq 'invalid'}">
+                        <p class="message-error">
+                            File CSV không đúng cấu trúc hoặc có dữ liệu không hợp lệ.
+                        </p>
+                    </c:if>
+
+                    <c:if test="${param.status eq 'error'}">
+                        <p class="message-error">
+                            Không thể cập nhật kết quả gợi ý. Vui lòng thử lại.
                         </p>
                     </c:if>
                      <form action="${pageContext.request.contextPath}/admin/recommendations/import"
@@ -413,7 +431,7 @@
 
                             <button type="submit" class="btn-import">
                                 <i class="fa-solid fa-upload"></i>
-                                Tải file kết quả
+                                Cập nhật sản phẩm gợi ý
                             </button>
                         </form>
                 </div>
