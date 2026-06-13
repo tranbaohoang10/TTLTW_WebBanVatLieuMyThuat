@@ -120,6 +120,54 @@
         margin-bottom: 0;
         line-height: 1.8;
     }
+    .process-box {
+        margin-top: 25px;
+    }
+
+    .process-box h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+
+    .stat-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        background: #f5f7fb;
+        border-radius: 8px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #17479d;
+        color: white;
+        font-size: 20px;
+    }
+
+    .stat-item p {
+        margin: 0 0 8px;
+        color: #666;
+    }
+
+    .stat-item h3 {
+        margin: 0;
+        font-size: 24px;
+        color: #222;
+    }
+
 </style>
 
 <body>
@@ -190,7 +238,55 @@
                 <h1>Quản lý gợi ý sản phẩm</h1>
 
                 <div class="process-box">
+                    <h2>Thông tin dữ liệu gợi ý</h2>
 
+                    <div class="stat-list">
+
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fa-solid fa-arrow-pointer"></i>
+                            </div>
+
+                            <div>
+                                <p>Tổng số hành vi</p>
+                                <h3>${totalInteractions}</h3>
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+
+                            <div>
+                                <p>Người dùng có hành vi</p>
+                                <h3>${totalUsers}</h3>
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+
+                            <div>
+                                <p>Kết quả gợi ý hiện có</p>
+                                <h3>${totalRecommendations}</h3>
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+
+                            <div>
+                                <p>Cập nhật gần nhất</p>
+                                <h3>${lastUpdatedTime}</h3>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 

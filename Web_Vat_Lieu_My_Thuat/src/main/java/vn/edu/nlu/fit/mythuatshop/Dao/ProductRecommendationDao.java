@@ -84,15 +84,14 @@ public class ProductRecommendationDao {
     }
 
     public String getLastUpdatedTime() {
-        String sql = "SELECT COALESCE(" +
-                "DATE_FORMAT(MAX(createdAt), '%d/%m/%Y %H:%i'), " +
-                "'Chưa cập nhật') " +
+        String sql = "SELECT DATE_FORMAT(MAX(createdAt), '%d/%m/%Y %H:%i') " +
                 "FROM product_recommendations";
 
         return jdbi.withHandle(handle ->
                 handle.createQuery(sql)
                         .mapTo(String.class)
-                        .one()
+                        .findOne()
+                        .orElse("")
         );
     }
 }
