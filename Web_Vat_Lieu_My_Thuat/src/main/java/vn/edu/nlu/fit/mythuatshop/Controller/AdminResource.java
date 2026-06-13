@@ -12,19 +12,23 @@ public class AdminResource {
         resources.put("/admin/categories", "CATEGORY_VIEW");
         resources.put("/admin/products", "PRODUCT_VIEW");
         resources.put("/admin/inventory", "INVENTORY_VIEW");
-
+        resources.put("/admin/suppliers", "SUPPLIER_VIEW");
+        resources.put("/admin/purchase-receipts", "PURCHASE_RECEIPT_VIEW");
+        resources.put("/admin/purchase-receipts/detail", "PURCHASE_RECEIPT_VIEW");
         resources.put("/admin/users", "USER_VIEW");
+        resources.put("/admin/permissions", "PERMISSION_MANAGE");
 
         resources.put("/admin/orders", "ORDER_VIEW");
         resources.put("/admin/order-detail", "ORDER_DETAIL_VIEW");
-        resources.put("/admin/orders/edit", "ORDER_EDIT_VIEW");
-        resources.put("/admin/orders/status", "ORDER_STATUS_VIEW");
+        resources.put("/admin/orders/edit", "ORDER_UPDATE_INFO");
+        resources.put("/admin/orders/status", "ORDER_UPDATE_STATUS");
+        resources.put("/admin/order-tracking", "ORDER_DETAIL_VIEW");
 
         resources.put("/admin/vouchers", "VOUCHER_VIEW");
         resources.put("/admin/sliders", "SLIDER_VIEW");
 
         resources.put("/admin/contacts", "CONTACT_VIEW");
-        resources.put("/admin/contacts/delete", "CONTACT_DELETE_VIEW");
+        resources.put("/admin/contacts/delete", "CONTACT_DELETE");
         resources.put("/admin/contacts/reply", "CONTACT_REPLY_VIEW");
 
         resources.put("/admin/logs", "LOG_VIEW");

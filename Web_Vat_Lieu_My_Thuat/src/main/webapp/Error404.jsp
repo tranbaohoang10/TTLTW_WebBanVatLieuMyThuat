@@ -1,10 +1,24 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String errorCode = (String) request.getAttribute("errorCode");
+    String errorTitle = (String) request.getAttribute("errorTitle");
+    String errorMessage = (String) request.getAttribute("errorMessage");
+    if (errorCode == null) {
+        errorCode = "404";
+    }
+    if (errorTitle == null) {
+        errorTitle = "Không tìm thấy trang";
+    }
+    if (errorMessage == null) {
+        errorMessage = "Trang bạn truy cập không tồn tại, đã bị đổi đường dẫn, hoặc bạn không có quyền truy cập.";
+    }
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>404 - Không tìm thấy trang</title>
+    <title><%= errorCode %> - <%= errorTitle %></title>
     <style>
         :root{
             --bg1:#0b1220;
@@ -150,9 +164,9 @@
     <div class="card">
         <div class="badge"><span class="dot"></span> Mythuat Shop Admin</div>
 
-        <h1>Không tìm thấy trang</h1>
+        <h1><%= errorTitle %></h1>
         <p>
-            Trang bạn truy cập không tồn tại, đã bị đổi đường dẫn, hoặc bạn không có quyền truy cập.
+            <%= errorMessage %>
         </p>
 
         <div class="actions">
@@ -175,7 +189,7 @@
     </div>
 
     <div class="card side">
-        <p class="big404">404</p>
+        <p class="big404"><%= errorCode %></p>
         <p>Oops! Không có gì ở đây cả.</p>
     </div>
 </div>

@@ -133,6 +133,14 @@ public class LoginController extends HttpServlet {
             req.setAttribute("error", error);
             session.removeAttribute("FLASH_ERROR");
         }
+        String permissionChanged = req.getParameter("permissionChanged");
+        String statusChanged = req.getParameter("statusChanged");
+        if("1".equals(permissionChanged)) {
+            req.setAttribute("error", "Quyền của tài khoản đã thay đổi. Vui lòng đăng nhập lại");
+        }
+        if("1".equals(statusChanged)) {
+            req.setAttribute("error", "Trạng thái của tài khoản đã thay đổi. Vui lòng đăng nhập lại");
+        }
 
         req.getRequestDispatcher("/Login.jsp").forward(req, resp);
     }

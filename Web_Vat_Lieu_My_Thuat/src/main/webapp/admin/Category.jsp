@@ -21,7 +21,7 @@
 
     <style>
         #main { display:flex; }
-        #main .left{ background-color:#17479D; height:100vh; width:17%; }
+        #main .left{ background-color:#17479D; height:auto; width:17%; }
         #main .left .list-admin{ display:flex; flex-direction:column; gap:15px; }
         #main .left .list-admin a{ display:block; text-decoration:none; color:#fff; padding:10px 20px; }
         #main .left .list-admin a i{ margin-right:20px; }
@@ -152,12 +152,26 @@
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
             </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+                </a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/purchase-receipts">
+                    <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
+                </a>
+            </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
               <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
               </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PERMISSION_MANAGE')}">
+                <a href="${pageContext.request.contextPath}/admin/permissions" >
+                    <i class="fa-solid fa-user-shield"></i>Quản lý phân quyền
+                </a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
@@ -200,6 +214,13 @@
                     <h1>Danh sách danh mục</h1>
                     <button class="btn-add" id="btnAdd">Thêm danh mục</button>
                 </div>
+
+                <c:if test="${not empty sessionScope.categoryError}">
+                    <div style="background:#f8d7da;color:#721c24;padding:12px 14px;border-radius:6px;margin-bottom:15px;border-left:4px solid #dc3545;">
+                            ${sessionScope.categoryError}
+                    </div>
+                    <c:remove var="categoryError" scope="session"/>
+                </c:if>
 
                 <table id="categoryTable" class="category-table display">
                     <thead>

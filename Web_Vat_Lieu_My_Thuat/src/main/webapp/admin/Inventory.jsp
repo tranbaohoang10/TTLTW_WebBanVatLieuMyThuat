@@ -23,7 +23,7 @@
 
         #main .left {
             background-color: #17479D;
-            height: 100vh;
+            height: auto;
             width: 17%;
             position: sticky;
             top: 0;
@@ -180,6 +180,45 @@
             border-radius: 6px;
             margin-bottom: 15px;
         }
+        .stock-alert-section {
+            margin-top: 10px;
+        }
+
+        .stock-alert-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stock-alert-list {
+            margin: 5px 0 0 18px;
+            padding: 0;
+        }
+
+        .stock-alert-list li {
+            margin-bottom: 4px;
+        }
+        .stock-alert-box {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 12px 14px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .stock-alert-box strong {
+            color: #6b4f00;
+        }
+
+        .danger-text {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .warning-text {
+            color: #ff9800;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -208,12 +247,26 @@
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
             </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+                </a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/purchase-receipts">
+                    <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
+                </a>
+            </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/inventory" class="active"><i class="fa-solid fa-warehouse"></i>Quản
                     lý tồn kho</a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PERMISSION_MANAGE')}">
+                <a href="${pageContext.request.contextPath}/admin/permissions" >
+                    <i class="fa-solid fa-user-shield"></i>Quản lý phân quyền
+                </a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
@@ -258,7 +311,44 @@
                 <div class="alert-error">${sessionScope.inventoryError}</div>
                 <c:remove var="inventoryError" scope="session"/>
             </c:if>
+            <c:if test="${outOfStockCount > 0 || lowStockCount > 0}">
+                <div class="stock-alert-box">
+                    <strong>Cảnh báo tồn kho:</strong>
+                    Có <span class="danger-text">${outOfStockCount}</span> sản phẩm đã hết hàng
+                    và <span class="warning-text">${lowStockCount}</span> sản phẩm sắp hết hàng
+                    với ngưỡng cảnh báo là ${lowStockThreshold}.
 
+                    <c:if test="${not empty outOfStockProducts}">
+                        <div class="stock-alert-section">
+                            <div class="stock-alert-title danger-text">Sản phẩm hết hàng:</div>
+
+                            <ul class="stock-alert-list">
+                                <c:forEach var="p" items="${outOfStockProducts}">
+                                    <li>
+                                        ID ${p.id} - <c:out value="${p.name}" />
+                                        <span class="danger-text">(Tồn kho: ${p.quantityStock})</span>
+                                    </li>
+                                </c:forEach>
+                            </ul>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${not empty lowStockProducts}">
+                        <div class="stock-alert-section">
+                            <div class="stock-alert-title warning-text">Sản phẩm sắp hết hàng:</div>
+
+                            <ul class="stock-alert-list">
+                                <c:forEach var="p" items="${lowStockProducts}">
+                                    <li>
+                                        ID ${p.id} - <c:out value="${p.name}" />
+                                        <span class="warning-text">(Tồn kho: ${p.quantityStock})</span>
+                                    </li>
+                                </c:forEach>
+                            </ul>
+                        </div>
+                    </c:if>
+                </div>
+            </c:if>
             <div class="box">
                 <h1>Quản lý tồn kho</h1>
 
@@ -288,7 +378,7 @@
                                     <c:when test="${p.quantityStock == 0}">
                                         <span class="badge badge-danger">Hết hàng</span>
                                     </c:when>
-                                    <c:when test="${p.quantityStock <= 5}">
+                                    <c:when test="${p.quantityStock <= 10}">
                                         <span class="badge badge-warning">Sắp hết</span>
                                     </c:when>
                                     <c:otherwise>

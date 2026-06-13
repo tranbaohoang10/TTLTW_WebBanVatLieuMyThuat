@@ -12,27 +12,24 @@ import vn.edu.nlu.fit.mythuatshop.Service.SliderShowService;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
+import static java.lang.Math.max;
 
 
 @WebServlet("/admin/sliders")
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,
-        maxFileSize = 10 * 1024 * 1024,
-        maxRequestSize = 20 * 1024 * 1024
+        maxFileSize = 20 * 1024 * 1024,
+        maxRequestSize = 25 * 1024 * 1024
 )
 public class AdminSliderShowController extends HttpServlet {
     private final LogService logService = new LogService();
     private SliderShowService service;
-    private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
 
 
@@ -45,38 +42,10 @@ public class AdminSliderShowController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("utf-8");
 
-        String q = trimOrNull(req.getParameter("q"));
-        int page = parseInt(req.getParameter("page"), 1);
-        int size = parseInt(req.getParameter("size"), 10);
-        if (size < 5) size = 5;
-        if (size > 50) size = 50;
+        int total = service.countByKeyword(null);
+        int size = Math.max(total, 1);
 
-        int total = service.countByKeyword(q);
-        int totalPages = (int) Math.ceil(total * 1.0 / size);
-        if (totalPages == 0) totalPages = 1;
-        if (page > totalPages) page = totalPages;
-
-
-        List<SliderShow> sliders = service.findPageByKeyword(q, page, size);
-
-        boolean isAjax =
-                "1".equals(req.getParameter("ajax")) ||
-                        "XMLHttpRequest".equalsIgnoreCase(req.getHeader("X-Requested-With"));
-
-        if (isAjax) {
-            Map<String, Object> out = new HashMap<>();
-            out.put("sliders", sliders);
-            out.put("currentPage", page);
-            out.put("totalPages", totalPages);
-            out.put("q", q == null ? "" : q);
-            out.put("size", size);
-
-            resp.setCharacterEncoding("UTF-8");
-            resp.setContentType("application/json; charset=UTF-8");
-            resp.getWriter().write(gson.toJson(out));
-            return;
-        }
-
+        List<SliderShow> sliders = service.findPageByKeyword(null, 1, size);
 
         String editIdRaw = req.getParameter("editId");
         if (editIdRaw != null) {
@@ -87,11 +56,6 @@ public class AdminSliderShowController extends HttpServlet {
         }
 
         req.setAttribute("sliders", sliders);
-        req.setAttribute("q", q == null ? "" : q);
-        req.setAttribute("page", page);
-        req.setAttribute("size", size);
-        req.setAttribute("totalPages", totalPages);
-        req.setAttribute("total", total);
 
         req.getRequestDispatcher("/admin/SliderShow.jsp").forward(req, resp);
     }
@@ -101,15 +65,40 @@ public class AdminSliderShowController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("utf-8");
 
-        String action = req.getParameter("action");
-        if (action == null) action = "";
-
         try {
+            String action = req.getParameter("action");
+            if (action == null){
+                action = "";
+            }
             switch (action) {
-                case "create" -> handleCreate(req, resp);
-                case "update" -> handleUpdate(req, resp);
-                case "toggle" -> handleToggle(req, resp);
-                case "delete" -> handleDelete(req, resp);
+                case "create" -> {
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_CREATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleCreate(req, resp);
+                }
+                case "update" ->{
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_UPDATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleUpdate(req, resp);
+                }
+                case "toggle" -> {
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_LOCK")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleToggle(req, resp);
+                }
+                case "delete" -> {
+                    if (!PermissionUtil.hasPermission(req, "SLIDER_DELETE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleDelete(req, resp);
+                }
                 default -> resp.sendRedirect(req.getContextPath() + "/admin/sliders");
             }
         } catch (Exception e) {
@@ -147,7 +136,7 @@ public class AdminSliderShowController extends HttpServlet {
         s.setThumbnail(thumbnail);
 
         service.create(s);
-        writeLog(req, "Tạo slider", "AdminSliderShowController#create", null, s);
+        writeLog(req, "Tạo slider", "Quản lý Slider Show", null, s);
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=created");
     }
 
@@ -191,7 +180,7 @@ public class AdminSliderShowController extends HttpServlet {
         s.setThumbnail(thumbnail);
 
         service.update(s);
-        writeLog(req, "Cập nhật slider", "AdminSliderShowController#update", old, s);
+        writeLog(req, "Cập nhật slider", "Quản lý Slider Show", old, s);
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=updated");
     }
 
@@ -204,7 +193,7 @@ public class AdminSliderShowController extends HttpServlet {
             Optional<SliderShow> newOpt = service.findById(id);
 
             if (oldOpt.isPresent() && newOpt.isPresent()) {
-                writeLog(req, "Đổi trạng thái slider", "AdminSliderShowController#toggle", oldOpt.get(), newOpt.get());
+                writeLog(req, "Đổi trạng thái slider", "Quản lý Slider Show", oldOpt.get(), newOpt.get());
             }
         }
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=toggled");
@@ -217,7 +206,7 @@ public class AdminSliderShowController extends HttpServlet {
             service.delete(id);
 
             if (oldOpt.isPresent()) {
-                writeLog(req, "Xóa slider", "AdminSliderShowController#delete", oldOpt.get(), null);
+                writeLog(req, "Xóa slider", "Quản lý Slider Show", oldOpt.get(), null);
             }
         }
         resp.sendRedirect(req.getContextPath() + "/admin/sliders?success=deleted");
@@ -227,6 +216,9 @@ public class AdminSliderShowController extends HttpServlet {
         Part filePart = req.getPart("thumbnailFile");
 
         if (filePart != null && filePart.getSize() > 0) {
+            if(!isValidImage(filePart)) {
+                throw new IllegalArgumentException("Ảnh không hợp lệ hoặc vượt quá 5MB");
+            }
             String submitted = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
             String ext = "";
             int dot = submitted.lastIndexOf('.');
@@ -249,6 +241,19 @@ public class AdminSliderShowController extends HttpServlet {
             return thumbnailUrl;
         }
         return oldThumbnail;
+    }
+
+    private boolean isValidImage(Part part) {
+        long maxSize = 5*1024*1024;
+        if(part.getSize() > maxSize) {
+            return false;
+        }
+        String fileName = part.getSubmittedFileName();
+        if(fileName==null){
+            return false;
+        }
+        fileName = fileName.toLowerCase();
+        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".webp");
     }
 
 

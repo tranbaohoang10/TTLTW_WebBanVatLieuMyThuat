@@ -8,17 +8,32 @@ import java.util.Optional;
 
 public class SliderShowService {
     private final SliderShowDao sliderShowDao;
+    private static List<SliderShow> sliderCache = null;
+    private static long sliderCacheTime = 0;
+    private static final long CACHE_TIME = 5 * 60 * 1000;
 
     public SliderShowService() {
         this.sliderShowDao = new SliderShowDao();
     }
 
-    // ===== FRONTEND =====
+
     public List<SliderShow> getSliderShow() {
-        return sliderShowDao.getSliderShowAll();
+        return getSliderShowByCache();
     }
 
-    // ===== ADMIN: list/search/paging =====
+    public List<SliderShow> getSliderShowByCache() {
+        long now = System.currentTimeMillis();
+        if (sliderCache != null && now - sliderCacheTime < CACHE_TIME) {
+            return sliderCache;
+        }
+        sliderCache = sliderShowDao.getSliderShowAll();
+        sliderCacheTime = now;
+        return sliderCache;
+    }
+    public void clearSliderCache() {
+        sliderCache = null;
+        sliderCacheTime = 0;
+    }
     public int countByKeyword(String keyword) {
         return sliderShowDao.countByKeyword(keyword);
     }
@@ -28,32 +43,39 @@ public class SliderShowService {
         return sliderShowDao.findPageByKeyword(keyword, offset, pageSize);
     }
 
-    // ===== ADMIN: detail =====
     public Optional<SliderShow> findById(int id) {
         return sliderShowDao.findById(id);
     }
 
-    // ===== ADMIN: validate =====
+
     public boolean existsIndexOrder(int indexOrder, Integer excludeId) {
         return sliderShowDao.existsIndexOrder(indexOrder, excludeId);
     }
 
-    // ===== ADMIN: CRUD =====
+
     public int create(SliderShow s) {
-        return sliderShowDao.insert(s);
+        int id = sliderShowDao.insert(s);
+        clearSliderCache();
+        return id;
     }
 
     public boolean update(SliderShow s) {
-        return sliderShowDao.update(s) > 0;
+        boolean result = sliderShowDao.update(s)>0;
+        clearSliderCache();
+        return result;
     }
 
     public boolean delete(int id) {
-        return sliderShowDao.delete(id) > 0;
+        boolean result = sliderShowDao.delete(id)>0;
+        clearSliderCache();
+        return result;
     }
 
-    // ===== ADMIN: toggle status =====
+
     public boolean toggleStatus(int id, int currentStatus) {
         int newStatus = (currentStatus == 1) ? 0 : 1;
-        return sliderShowDao.updateStatus(id, newStatus) > 0;
+        boolean result = sliderShowDao.updateStatus(id, newStatus)>0;
+        clearSliderCache();
+        return result;
     }
 }

@@ -9,7 +9,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết sản phẩm</title>
+
+    <c:set var="seoProductName" value="${not empty product.name ? product.name : 'Chi tiết sản phẩm'}" />
+    <c:set var="seoBrand" value="${not empty product.brand ? product.brand : 'Thiên Long'}" />
+    <title>${seoProductName} - Thiên Long</title>
+    <meta name="description"
+          content="Mua ${seoProductName} tại Thiên Long. Xem thông tin sản phẩm, thương hiệu ${seoBrand}, giá bán và tình trạng hàng.">
+    <meta name="keywords"
+          content="${seoProductName}, ${seoBrand}, dụng cụ mỹ thuật, văn phòng phẩm, Thiên Long">
+
     <link rel="stylesheet" href="./assets/css/style.css">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"

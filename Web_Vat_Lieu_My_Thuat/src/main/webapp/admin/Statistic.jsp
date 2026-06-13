@@ -281,6 +281,127 @@
       padding:6px 10px !important;
       outline:none !important;
     }
+    .summary-cards {
+      width: 100%;
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .summary-cards .tong-doanhthu {
+      flex: 1;
+      min-height: 160px;
+      border-right: none !important;
+    }
+
+    .chart-grid {
+      width: 100%;
+      display: flex;
+      gap: 20px;
+    }
+
+    .chart-card {
+      flex: 1;
+      min-height: 320px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-card canvas {
+      width: 100% !important;
+      max-height: 300px;
+    }
+    .summary-cards {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .summary-cards .tong-doanhthu {
+        width: 100% !important;
+        min-height: 150px;
+        border-right: none !important;
+    }
+    .profit-filter {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+
+    .profit-filter label {
+        font-weight: 600;
+        color: #2659F5;
+    }
+
+    .profit-filter select {
+        padding: 10px 12px;
+        min-width: 280px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .profit-filter button,
+    .profit-filter a {
+        padding: 10px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .profit-filter button {
+        background-color: #2659F5;
+        color: white;
+    }
+
+    .profit-filter a {
+        background-color: #6C757D;
+        color: white;
+    }
+
+    .product-profit-detail {
+        margin: 20px 0;
+        padding: 20px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+    }
+
+    .product-profit-detail h2 {
+        margin-bottom: 15px;
+    }
+
+    .product-profit-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 15px;
+    }
+
+    .product-profit-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+    }
+
+    .product-profit-card span {
+        display: block;
+        color: #6c757d;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .product-profit-card strong {
+        font-size: 18px;
+        color: #17479D;
+    }
   </style>
 
   <body>
@@ -308,6 +429,15 @@
                   lý sản phẩm</a>
 
           </c:if>
+          <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+              <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+              </a>
+          </c:if>
+          <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
+              <a href="${pageContext.request.contextPath}/admin/purchase-receipts">
+                  <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
+              </a>
+          </c:if>
           <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
             <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
@@ -315,6 +445,11 @@
 
           <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
               <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+          </c:if>
+          <c:if test="${role == 'ADMIN' || permissions.contains('PERMISSION_MANAGE')}">
+              <a href="${pageContext.request.contextPath}/admin/permissions" >
+                  <i class="fa-solid fa-user-shield"></i>Quản lý phân quyền
+              </a>
           </c:if>
           <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">
               <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
@@ -354,15 +489,194 @@
         <div class="thongke-doanhthu">
           <h1>Thống kê doanh thu</h1>
 
-          <div class="tong-doanhthu">
-            <h2>Tổng doanh thu</h2>
-            <hr>
-            <h3><fmt:formatNumber value="${totalYear}" type="number" groupingUsed="true"/> VNĐ</h3>
+          <div class="summary-cards">
+            <div class="tong-doanhthu">
+              <h2>Tổng doanh thu</h2>
+              <hr>
+              <h3>
+                <fmt:formatNumber value="${totalYear}" type="number" groupingUsed="true"/> VNĐ
+              </h3>
+            </div>
+
+            <div class="tong-doanhthu" style="background-color:#C77800;">
+              <h2>Tổng chi phí nhập hàng</h2>
+              <hr>
+              <h3>
+                <fmt:formatNumber value="${totalImportCostYear}" type="number" groupingUsed="true"/> VNĐ
+              </h3>
+            </div>
+              <div class="tong-doanhthu" style="background-color:#6C757D;">
+                  <h2>Giá vốn hàng bán</h2>
+                  <hr>
+                  <h3>
+                      <fmt:formatNumber value="${profitSummary.costOfGoodsSold}" type="number" groupingUsed="true"/> VNĐ
+                  </h3>
+              </div>
+
+              <div class="tong-doanhthu" style="background-color:#198754;">
+                  <h2>Lợi nhuận</h2>
+                  <hr>
+                  <h3>
+                      <fmt:formatNumber value="${profitSummary.profit}" type="number" groupingUsed="true"/> VNĐ
+                  </h3>
+              </div>
+
+              <div class="tong-doanhthu" style="background-color:#0D6EFD;">
+                  <h2>Tỉ suất lợi nhuận</h2>
+                  <hr>
+                  <h3>
+                      <fmt:formatNumber value="${profitSummary.profitMargin}" type="number" maxFractionDigits="2"/>%
+                  </h3>
+              </div>
           </div>
 
-          <div class="bieudo-doanhthu">
-            <canvas id="chartDoanhThu"></canvas>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h2>Biểu đồ doanh thu theo tháng</h2>
+              <canvas id="chartDoanhThu"></canvas>
+            </div>
+
+            <div class="chart-card">
+              <h2>Biểu đồ chi phí nhập hàng theo tháng</h2>
+              <canvas id="chartChiPhiNhap"></canvas>
+            </div>
           </div>
+            <div class="product-container" id="productProfitSection">
+                <h1>Thống kê lợi nhuận theo từng sản phẩm</h1>
+                <form method="get" action="${pageContext.request.contextPath}/admin/statistics#productProfitSection" class="profit-filter">
+                    <input type="hidden" name="noSaleMonths" value="${noSaleMonths}">
+
+                    <label for="profitProductId">Chọn sản phẩm:</label>
+
+                    <select id="profitProductId" name="profitProductId">
+                        <option value="0">-- Chọn sản phẩm cần xem --</option>
+
+                        <c:forEach var="p" items="${productProfitRows}">
+                            <option value="${p.productId}" <c:if test="${profitProductId == p.productId}">selected</c:if>>
+                                SP${p.productId} - <c:out value="${p.productName}"/>
+                            </option>
+                        </c:forEach>
+                    </select>
+
+                    <button type="submit">Xem thống kê</button>
+
+                    <a href="${pageContext.request.contextPath}/admin/statistics?noSaleMonths=${noSaleMonths}#productProfitSection">
+                        Xóa chọn
+                    </a>
+                </form>
+                <c:if test="${not empty selectedProductProfit}">
+                    <div class="product-profit-detail">
+                        <h2>
+                            Chi tiết lợi nhuận:
+                            SP${selectedProductProfit.productId} -
+                            <c:out value="${selectedProductProfit.productName}"/>
+                        </h2>
+
+                        <div class="product-profit-cards">
+                            <div class="product-profit-card">
+                                <span>Số lượng nhập</span>
+                                <strong>${selectedProductProfit.importedQuantity}</strong>
+                            </div>
+
+                            <div class="product-profit-card">
+                                <span>Tổng chi phí nhập</span>
+                                <strong>
+                                    <fmt:formatNumber value="${selectedProductProfit.totalImportCost}" type="number" groupingUsed="true"/> VNĐ
+                                </strong>
+                            </div>
+
+                            <div class="product-profit-card">
+                                <span>Giá nhập trung bình</span>
+                                <strong>
+                                    <fmt:formatNumber value="${selectedProductProfit.averageImportPrice}" type="number" groupingUsed="true"/> VNĐ
+                                </strong>
+                            </div>
+
+                            <div class="product-profit-card">
+                                <span>Số lượng bán</span>
+                                <strong>${selectedProductProfit.soldQuantity}</strong>
+                            </div>
+
+                            <div class="product-profit-card">
+                                <span>Doanh thu</span>
+                                <strong>
+                                    <fmt:formatNumber value="${selectedProductProfit.revenue}" type="number" groupingUsed="true"/> VNĐ
+                                </strong>
+                            </div>
+
+                            <div class="product-profit-card">
+                                <span>Giá vốn hàng bán</span>
+                                <strong>
+                                    <fmt:formatNumber value="${selectedProductProfit.costOfGoodsSold}" type="number" groupingUsed="true"/> VNĐ
+                                </strong>
+                            </div>
+
+                            <div class="product-profit-card">
+                                <span>Lợi nhuận</span>
+                                <strong>
+                                    <fmt:formatNumber value="${selectedProductProfit.profit}" type="number" groupingUsed="true"/> VNĐ
+                                </strong>
+                            </div>
+
+                            <div class="product-profit-card">
+                                <span>Tỉ suất lợi nhuận</span>
+                                <strong>
+                                    <fmt:formatNumber value="${selectedProductProfit.profitMargin}" type="number" maxFractionDigits="2"/>%
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                </c:if>
+                <table id="tblProductProfit" class="product-table display">
+                    <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã sản phẩm</th>
+                        <th>Tên sản phẩm</th>
+                        <th>SL nhập</th>
+                        <th>Tổng chi phí nhập</th>
+                        <th>Giá nhập TB</th>
+                        <th>SL bán</th>
+                        <th>Doanh thu</th>
+                        <th>Giá vốn</th>
+                        <th>Lợi nhuận</th>
+                        <th>Tỉ suất LN</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <c:if test="${not empty productProfitRows}">
+                        <c:forEach var="p" items="${productProfitRows}">
+                            <tr>
+                                <td></td>
+                                <td>SP${p.productId}</td>
+                                <td><c:out value="${p.productName}"/></td>
+                                <td>${p.importedQuantity}</td>
+                                <td>
+                                    <fmt:formatNumber value="${p.totalImportCost}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.averageImportPrice}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>${p.soldQuantity}</td>
+                                <td>
+                                    <fmt:formatNumber value="${p.revenue}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.costOfGoodsSold}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.profit}" type="number" groupingUsed="true"/> VNĐ
+                                </td>
+                                <td>
+                                    <fmt:formatNumber value="${p.profitMargin}" type="number" maxFractionDigits="2"/>%
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </c:if>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- BEST SELLER (ALL TIME) -->
@@ -383,28 +697,19 @@
             </thead>
 
             <tbody>
-            <c:choose>
-              <c:when test="${empty bestTable}">
+            <c:if test="${not empty bestTable}">
+              <c:forEach var="p" items="${bestTable}">
                 <tr>
-                  <td colspan="7" style="text-align:center;padding:16px;">
-                    Không có dữ liệu sản phẩm bán chạy
-                  </td>
+                  <td></td>
+                  <td>SP${p.productId}</td>
+                  <td><c:out value="${p.productName}"/></td>
+                  <td><c:out value="${p.categoryName}"/></td>
+                  <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
+                  <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
+                  <td>${p.soldQty}</td>
                 </tr>
-              </c:when>
-              <c:otherwise>
-                <c:forEach var="p" items="${bestTable}">
-                  <tr>
-                    <td></td>
-                    <td>SP${p.productId}</td>
-                    <td><c:out value="${p.productName}"/></td>
-                    <td><c:out value="${p.categoryName}"/></td>
-                    <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
-                    <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
-                    <td>${p.soldQty}</td>
-                  </tr>
-                </c:forEach>
-              </c:otherwise>
-            </c:choose>
+              </c:forEach>
+            </c:if>
             </tbody>
           </table>
 
@@ -426,6 +731,7 @@
           <h1>Thống kê sản phẩm không bán được</h1>
 
           <form method="get" action="${pageContext.request.contextPath}/admin/statistics" class="thoigian">
+              <input type="hidden" name="profitProductId" value="${profitProductId}">
             <div class="sothang">
               <label for="noSaleMonths">Nhập số tháng</label>
               <input type="number" id="noSaleMonths" name="noSaleMonths" min="1" max="12"
@@ -451,28 +757,19 @@
             </thead>
 
             <tbody>
-            <c:choose>
-              <c:when test="${empty noSaleTable}">
+            <c:if test="${not empty noSaleTable}">
+              <c:forEach var="p" items="${noSaleTable}">
                 <tr>
-                  <td colspan="7" style="text-align:center;padding:16px;">
-                    Không có sản phẩm nào không bán trong ${noSaleMonths} tháng gần đây
-                  </td>
+                  <td></td>
+                  <td>SP${p.productId}</td>
+                  <td><c:out value="${p.productName}"/></td>
+                  <td><c:out value="${p.categoryName}"/></td>
+                  <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
+                  <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
+                  <td>${p.soldQuantity}</td>
                 </tr>
-              </c:when>
-              <c:otherwise>
-                <c:forEach var="p" items="${noSaleTable}">
-                  <tr>
-                    <td></td>
-                    <td>SP${p.productId}</td>
-                    <td><c:out value="${p.productName}"/></td>
-                    <td><c:out value="${p.categoryName}"/></td>
-                    <td><fmt:formatNumber value="${p.price}" type="number" groupingUsed="true"/></td>
-                    <td><fmt:formatDate value="${p.createAt}" pattern="dd-MM-yyyy"/></td>
-                    <td>${p.soldQuantity}</td>
-                  </tr>
-                </c:forEach>
-              </c:otherwise>
-            </c:choose>
+              </c:forEach>
+            </c:if>
             </tbody>
           </table>
         </div>
@@ -495,7 +792,11 @@
       ${r.revenue}<c:if test="${!st.last}">,</c:if>
       </c:forEach>
     ];
-
+    const importCostData = [
+      <c:forEach var="c" items="${importCostYear}" varStatus="st">
+      ${c.importCost}<c:if test="${!st.last}">,</c:if>
+      </c:forEach>
+    ];
     new Chart(document.getElementById('chartDoanhThu'), {
       type: 'line',
       data: {
@@ -518,7 +819,28 @@
         }
       }
     });
-
+    new Chart(document.getElementById('chartChiPhiNhap'), {
+      type: 'bar',
+      data: {
+        labels: revenueLabels,
+        datasets: [{
+          label: 'Chi phí nhập hàng (VNĐ)',
+          data: importCostData,
+          borderRadius: 6,
+          maxBarThickness: 70
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: (value) => Number(value).toLocaleString('vi-VN') + 'đ' }
+          }
+        }
+      }
+    });
     // ===== CHART BEST SELLER TOP 5 =====
     const bestLabels = [
       <c:forEach var="b" items="${bestChart}" varStatus="st">
@@ -591,7 +913,7 @@
 
       initTable('#tblBest');
       initTable('#tblNoSale');
-
+      initTable('#tblProductProfit');
       // Clamp input months 1..12
       $('#noSaleMonths').on('input', function () {
         let v = parseInt(this.value || "1");

@@ -14,9 +14,7 @@ import vn.edu.nlu.fit.mythuatshop.Service.GroupRoleService;
 import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+
 import java.util.List;
 
 import java.util.LinkedHashMap;
@@ -33,56 +31,13 @@ public class AdminUserController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int page = 1;
-        int pageSize = 10;
-
-        String pageParam = request.getParameter("page");
-        String q = request.getParameter("q");
         String msg = request.getParameter("msg");
-
-
-        if (q == null) {
-            q = "";
-        }
-        try{
-            if (pageParam != null) {
-                page = Integer.parseInt(pageParam);
-            }
-        } catch (Exception e) {
-            page = 1;
-        }
-
-        List<Users> users = adminUserService.listUsers(page, pageSize, q);
-        int totalPages = adminUserService.totalPages(pageSize, q);
+        List<Users> users = adminUserService.listAllUsers();
         List<GroupRole> groups = groupRoleService.getAllGroup();
-
-        String ajax = request.getParameter("ajax");
-        String requestedWith = request.getHeader("X-Requested-With");
-
-
-        if ("1".equals(ajax) || "XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
-            List<Map<String, Object>> userRows = new ArrayList<>();
-            for (Users user : users) {
-                userRows.add(toUserMap(user));
-            }
-            Map<String, Object> data = new LinkedHashMap<>();
-            data.put("users", userRows);
-            data.put("currentPage", page);
-            data.put("totalPages", totalPages);
-            data.put("q", q);
-
-            response.setCharacterEncoding("UTF-8");
-            response.setContentType("application/json; charset=UTF-8");
-            response.getWriter().write(gson.toJson(data));
-            return;
-        }
-
 
         request.setAttribute("users", users);
         request.setAttribute("groups", groups);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("totalPages", totalPages);
-        request.setAttribute("q",q);
+
         request.setAttribute("msg", msg);
 
         request.getRequestDispatcher("/admin/User.jsp").forward(request, response);
@@ -93,15 +48,7 @@ public class AdminUserController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-        String page = request.getParameter("page");
-        String q = request.getParameter("q");
 
-        if (page == null || page.isBlank()) {
-            page = "1";
-        }
-        if (q == null) {
-            q = "";
-        }
         boolean result = false;
 
         if ("create".equals(action)) {
@@ -173,24 +120,9 @@ public class AdminUserController extends HttpServlet {
         } else {
             msg = "fail";
         }
-        String qEncoded = URLEncoder.encode(q, StandardCharsets.UTF_8);
-        response.sendRedirect(
-                request.getContextPath() + "/admin/users?page=" + page + "&q=" + qEncoded + "&msg=" + msg
-        );
+        response.sendRedirect(request.getContextPath() + "/admin/users?msg=" + msg);
     }
-    private Map<String, Object> toUserMap(Users user) {
-        Map<String, Object> row = new LinkedHashMap<>();
-        row.put("id", user.getId());
-        row.put("fullName", user.getFullName());
-        row.put("phoneNumber", user.getPhoneNumber());
-        row.put("address", user.getAddress());
-        row.put("createAt", user.getCreateAt() == null ? "" : user.getCreateAt().toString());
-        row.put("dob", user.getDob() == null ? "" : user.getDob().toString());
-        row.put("role", user.getRole());
-        row.put("groupId", user.getGroupId());
-        row.put("isActive", user.getIsActive());
-        return row;
-    }
+
     private Integer getIntParam(HttpServletRequest request, String name) {
         try {
             String value = request.getParameter(name);

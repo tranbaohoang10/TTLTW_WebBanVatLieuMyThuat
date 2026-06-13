@@ -14,7 +14,10 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
           integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css"/>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 </head>
 <style>
     #main {
@@ -23,7 +26,7 @@
 
     #main .left {
         background-color: #17479D;
-        height: 100vh;
+        height: auto;
         width: 17%;
     }
 
@@ -417,36 +420,6 @@
         color: #fff;
     }
 
-
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 25px 0;
-        gap: 5px;
-    }
-
-    .page-link {
-        padding: 6px 12px;
-        border: 1px solid #d0d7de;
-        border-radius: 4px;
-        color: #0d6efd;
-        background-color: white;
-        text-decoration: none;
-        font-size: 14px;
-        transition: 0.2s;
-    }
-
-    .page-link:hover {
-        background-color: #e9ecef;
-    }
-
-    .page-link.active {
-        background-color: #2659F5;
-        color: white;
-        font-weight: bold;
-        border-color: #2659F5;
-    }
     .alert-success-custom {
         background: #d1e7dd;
         color: #0f5132;
@@ -477,6 +450,30 @@
         }
     }
 
+    .dataTables_paginate .paginate_button {
+        padding: 6px 12px !important;
+        margin: 0 3px !important;
+        border: 1px solid #ccc !important;
+        border-radius: 4px !important;
+        background: white !important;
+        color: #2659F5 !important;
+    }
+
+    .dataTables_paginate .paginate_button:hover {
+        background: #e9ecef !important;
+        color: #2659F5 !important;
+    }
+
+    .dataTables_paginate .paginate_button.current {
+        background: #2659F5 !important;
+        color: white !important;
+        border-color: #2659F5 !important;
+    }
+
+    .dataTables_paginate .paginate_button.disabled {
+        color: #999 !important;
+        background: white !important;
+    }
 </style>
 
 <body>
@@ -506,6 +503,15 @@
                     lý sản phẩm</a>
             </c:if>
 
+            <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+                </a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/purchase-receipts">
+                    <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
+                </a>
+            </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
               <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
@@ -513,6 +519,11 @@
 
             <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/users"  class="active"><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PERMISSION_MANAGE')}">
+                <a href="${pageContext.request.contextPath}/admin/permissions" >
+                    <i class="fa-solid fa-user-shield"></i>Quản lý phân quyền
+                </a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/orders"><i class="fa-solid fa-box-open"></i>Quản
@@ -570,17 +581,15 @@
                         Thao tác thất bại.
                     </div>
                 </c:if>
-                <form id="userSearchForm" class="search" method="get" action="${pageContext.request.contextPath}/admin/users">
+                <div class="search">
                     <div class="search-input-icon">
-                        <input id="userSearchInput" type="text" name="q" value="${q}" placeholder="Tìm kiếm người dùng..." autocomplete="off">
-                        <button type="submit" class="icon"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <input id="userSearchInput" type="text"  placeholder="Tìm kiếm người dùng..." autocomplete="off">
+                        <button type="button" class="icon" id="btnUserSearch"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                     <button type="button" class="btn-them-khach-hang">Thêm người dùng</button>
-                </form>
+                </div>
 
-                <div id="searchStatus" style="margin:6px 0; font-size:13px; color:#666;"></div>
-
-                <table class="order-table">
+                <table id="userTable" class="order-table">
                     <thead>
                     <tr>
                         <th>ID</th>
@@ -637,8 +646,7 @@
                                         <form class="lockForm" method="post" action="${pageContext.request.contextPath}/admin/users" style="display:inline">
                                             <input type="hidden" name="action" value="lock"/>
                                             <input type="hidden" name="id" value="${u.id}"/>
-                                            <input type="hidden" name="page" value="${currentPage}"/>
-                                            <input type="hidden" name="q" value="${q}"/>
+
                                             <button class="btn-Xoa btn-open-lock" type="button" title="Khóa">
                                                 <i class="fa-solid fa-lock"></i>
                                             </button>
@@ -649,8 +657,6 @@
                                         <form class="lockForm" method="post" action="${pageContext.request.contextPath}/admin/users" style="display:inline">
                                             <input type="hidden" name="action" value="unlock"/>
                                             <input type="hidden" name="id" value="${u.id}"/>
-                                            <input type="hidden" name="page" value="${currentPage}"/>
-                                            <input type="hidden" name="q" value="${q}"/>
                                             <button class="btn-unlock btn-open-lock" type="button" title="Mở khóa">
                                                 <i class="fa-solid fa-lock-open"></i>
                                             </button>
@@ -669,24 +675,7 @@
                     </tbody>
 
                 </table>
-                <div id="pagination" class="pagination">
-                    <c:if test="${currentPage > 1}">
-                        <a class="page-link"
-                           href="${pageContext.request.contextPath}/admin/users?page=${currentPage-1}&q=${q}">Trước</a>
-                    </c:if>
 
-                    <c:forEach var="p" begin="1" end="${totalPages}">
-                        <a class="page-link ${p == currentPage ? 'active' : ''}"
-                           href="${pageContext.request.contextPath}/admin/users?page=${p}&q=${q}">
-                                ${p}
-                        </a>
-                    </c:forEach>
-
-                    <c:if test="${currentPage < totalPages}">
-                        <a class="page-link"
-                           href="${pageContext.request.contextPath}/admin/users?page=${currentPage+1}&q=${q}">Sau</a>
-                    </c:if>
-                </div>
 
             </div>
         </div>
@@ -704,8 +693,6 @@
 
         <form method="post" action="${pageContext.request.contextPath}/admin/users">
             <input type="hidden" name="action" value="create"/>
-            <input type="hidden" name="page" value="${currentPage}" data-sync="page"/>
-            <input type="hidden" name="q" value="${q}" data-sync="q"/>
 
 
             <div class="modal-body">
@@ -774,8 +761,7 @@
         <form method="post" action="${pageContext.request.contextPath}/admin/users">
             <input type="hidden" name="action" value="update"/>
             <input type="hidden" name="id" id="editId" />
-            <input type="hidden" name="page" value="${currentPage}" data-sync="page"/>
-            <input type="hidden" name="q" value="${q}" data-sync="q"/>
+
 
 
 
@@ -958,13 +944,37 @@
         if (e.target === lockModal) lockModal.style.display = "none";
     });
 </script>
+<script>
+    $(document).ready(function () {
+        var table = $('#userTable').DataTable({
+            pageLength: 10,
+            lengthChange: false,
+            info: false,
+            ordering: true,
+            searching: true,
+            dom: 'rtip',
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/vi.json'
+            },
+            columnDefs: [
+                {
+                    orderable: false,
+                    targets: 8
+                }
+            ]
+        });
 
+        $('#userSearchInput').keyup(function () {
+            var keyword = $(this).val();
+            table.search(keyword).draw();
+        });
 
-
-
-<script>window.__CTX = "${pageContext.request.contextPath}";</script>
-<script src="${pageContext.request.contextPath}/assets/js/admin-users-ajax.js"></script>
-
+        $('#btnUserSearch').click(function () {
+            var keyword = $('#userSearchInput').val();
+            table.search(keyword).draw();
+        });
+    });
+</script>
 </body>
 
 </html>
