@@ -73,4 +73,25 @@ public class ProductRecommendationDao {
                         .list()
         );
     }
+    public int countRecommendations() {
+        String sql = "SELECT COUNT(*) FROM product_recommendations";
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapTo(Integer.class)
+                        .one()
+        );
+    }
+
+    public String getLastUpdatedTime() {
+        String sql = "SELECT DATE_FORMAT(MAX(createdAt), '%d/%m/%Y %H:%i') " +
+                "FROM product_recommendations";
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapTo(String.class)
+                        .findOne()
+                        .orElse("")
+        );
+    }
 }

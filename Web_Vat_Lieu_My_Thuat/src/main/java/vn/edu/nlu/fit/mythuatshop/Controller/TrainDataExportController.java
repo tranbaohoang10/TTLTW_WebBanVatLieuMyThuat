@@ -8,7 +8,7 @@ import vn.edu.nlu.fit.mythuatshop.Service.ProductInteractionService;
 
 import java.io.IOException;
 
-@WebServlet(name = "TrainDataExportController", value = "/export-recommendation-data")
+@WebServlet(name = "TrainDataExportController", value = "/admin/recommendations/export")
 public class TrainDataExportController extends HttpServlet {
     private ProductInteractionService interactionService = new ProductInteractionService();
 

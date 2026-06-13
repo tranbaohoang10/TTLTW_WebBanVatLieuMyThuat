@@ -551,6 +551,12 @@
                     <i class="fa-solid fa-clock-rotate-left"></i>Quản lý thao tác
                 </a>
             </c:if>
+            <c:if test="${role == 'ADMIN' || (not empty permissions && permissions.contains('RECOMMENDATION_VIEW'))}">
+                <a href="${pageContext.request.contextPath}/admin/recommendations">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    Quản lý gợi ý
+                </a>
+            </c:if>
             <a href="${pageContext.request.contextPath}/logout"><i
                     class="fa-solid fa-right-from-bracket"></i>
                 Đăng xuất</a>
