@@ -361,4 +361,21 @@ public class ProductDao {
         String sql = "DELETE FROM products WHERE id = :id";
         return jdbi.withHandle(h -> h.createUpdate(sql).bind("id", id).execute());
     }
+    public Product findDetailById(int productId) {
+        String sql = "SELECT p.id, p.name, p.price, " +
+                "p.discountDefault, p.categoryId, c.categoryName, " +
+                "p.thumbnail, p.quantityStock, p.soldQuantity, " +
+                "p.status, p.createAt, p.brand, p.isActive " +
+                "FROM Products p " +
+                "LEFT JOIN categories c ON p.categoryId = c.id " +
+                "WHERE p.id = :productId";
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .bind("productId", productId)
+                        .mapToBean(Product.class)
+                        .findOne()
+                        .orElse(null)
+        );
+    }
 }

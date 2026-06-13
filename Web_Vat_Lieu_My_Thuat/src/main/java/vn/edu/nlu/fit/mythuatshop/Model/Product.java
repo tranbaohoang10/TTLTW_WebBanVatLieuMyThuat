@@ -16,6 +16,7 @@ public class Product implements Serializable {
     private Timestamp createAt;
     private String brand;
     private int isActive;
+    private String categoryName;
 
     public Product() {
     }
@@ -120,6 +121,14 @@ public class Product implements Serializable {
 
     public void setBrand(String brand) {
         this.brand = brand;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public double getPriceAfterDiscount() { // tính giá bán (giá gốc sau khi giảm)

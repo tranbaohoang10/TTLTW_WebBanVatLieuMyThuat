@@ -94,4 +94,11 @@ public class ProductService {
 
         return Arrays.asList(keyword.split(" "));
     }
+    public Product getProductDetail(int productId) {
+        if (productId <= 0) {
+            return null;
+        }
+
+        return productDao.findDetailById(productId);
+    }
 }
