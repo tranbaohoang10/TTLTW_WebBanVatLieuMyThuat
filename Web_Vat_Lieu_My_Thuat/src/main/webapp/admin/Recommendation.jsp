@@ -201,6 +201,67 @@
     .btn-export:hover {
         background: #123875;
     }
+    .import-box {
+        margin-top: 25px;
+        padding: 20px;
+        background: #f5f7fb;
+        border-radius: 8px;
+    }
+
+    .import-box h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+
+    .import-box p {
+        color: #666;
+    }
+
+    .import-form {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 18px;
+    }
+
+    .import-form input[type="file"] {
+        padding: 9px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn-import {
+        padding: 11px 18px;
+        border: none;
+        border-radius: 5px;
+        background: #17479d;
+        color: white;
+        cursor: pointer;
+    }
+
+    .btn-import i {
+        margin-right: 7px;
+    }
+
+    .btn-import:hover {
+        background: #123875;
+    }
+
+    .message-success {
+        padding: 10px;
+        background: #e8f7ed;
+        color: #237a3b !important;
+        border-radius: 5px;
+    }
+
+    .message-error {
+        padding: 10px;
+        background: #fdeaea;
+        color: #b42318 !important;
+        border-radius: 5px;
+    }
 
 </style>
 
@@ -329,6 +390,32 @@
                             <i class="fa-solid fa-download"></i>
                             Xuất dữ liệu train
                         </a>
+                </div>
+                <div class="import-box">
+                    <h2>Tải kết quả gợi ý</h2>
+                    <c:if test="${param['import'] eq 'success'}">
+                        <p class="message-success">
+                            Đã cập nhật ${param.count} dòng gợi ý sản phẩm.
+                        </p>
+                    </c:if>
+
+                    <c:if test="${param['import'] eq 'empty'}">
+                        <p class="message-error">
+                            Vui lòng chọn file kết quả gợi ý.
+                        </p>
+                    </c:if>
+                     <form action="${pageContext.request.contextPath}/admin/recommendations/import"
+                              method="post" enctype="multipart/form-data" class="import-form">
+                         <input type="file"
+                                name="recommendationFile"
+                                accept=".csv"
+                                required>
+
+                            <button type="submit" class="btn-import">
+                                <i class="fa-solid fa-upload"></i>
+                                Tải file kết quả
+                            </button>
+                        </form>
                 </div>
             </div>
 
