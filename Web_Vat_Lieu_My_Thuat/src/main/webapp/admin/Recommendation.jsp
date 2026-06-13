@@ -1,5 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -167,6 +167,40 @@
         font-size: 24px;
         color: #222;
     }
+    .action-box {
+        margin-top: 25px;
+        padding: 20px;
+        background: #f5f7fb;
+        border-radius: 8px;
+    }
+
+    .action-box h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+
+    .action-box p {
+        margin-bottom: 20px;
+        color: #666;
+    }
+
+    .btn-export {
+        display: inline-block;
+        padding: 11px 18px;
+        background: #17479d;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .btn-export i {
+        margin-right: 7px;
+    }
+
+    .btn-export:hover {
+        background: #123875;
+    }
 
 </style>
 
@@ -287,6 +321,14 @@
                         </div>
 
                     </div>
+                </div>
+                <div class="action-box">
+                    <h2>Cập nhật dữ liệu gợi ý</h2>
+                        <a href="${pageContext.request.contextPath}/admin/recommendations/export"
+                           class="btn-export">
+                            <i class="fa-solid fa-download"></i>
+                            Xuất dữ liệu train
+                        </a>
                 </div>
             </div>
 
