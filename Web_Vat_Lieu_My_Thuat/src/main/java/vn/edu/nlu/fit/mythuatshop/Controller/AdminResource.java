@@ -29,6 +29,10 @@ public class AdminResource {
 
         resources.put("/admin/logs", "LOG_VIEW");
         resources.put("/admin/log-detail", "LOG_DETAIL_VIEW");
+
+        resources.put("/admin/recommendations", "RECOMMENDATION_VIEW");
+        resources.put("/admin/recommendations/export", "RECOMMENDATION_EXPORT");
+        resources.put("/admin/recommendations/import", "RECOMMENDATION_IMPORT");
     }
 
     public static String getPermissionCode(String path) {

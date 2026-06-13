@@ -83,7 +83,7 @@ public class AdminOrderTrackingController extends HttpServlet {
                 return "Đang lưu kho";
             case "transporting":
                 return "Đang trung chuyển";
-            case "delivering":
+                case "delivering":
                 return "Đang giao hàng";
             case "delivered":
                 return "Giao thành công";
