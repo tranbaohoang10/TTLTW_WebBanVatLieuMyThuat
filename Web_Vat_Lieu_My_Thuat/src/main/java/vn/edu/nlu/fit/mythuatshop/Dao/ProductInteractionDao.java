@@ -59,4 +59,22 @@ public class ProductInteractionDao {
             batch.execute();
         });
     }
+    public int countInteractions() {
+        String sql = "SELECT COUNT(*) FROM user_product_interactions";
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapTo(Integer.class)
+                        .one()
+        );
+    }
+
+    public int countUsersWithInteractions() {
+        String sql = "SELECT COUNT(DISTINCT userID) " +
+                "FROM user_product_interactions";
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapTo(Integer.class)
+                        .one()
+        );
+    }
 }

@@ -61,4 +61,11 @@ public class ProductRecommendationService {
     public List<ProductCard> getDefaultRecommendProducts() {
         return recommendationDao.getDefaultProducts(5);
     }
+    public int countRecommendations() {
+        return recommendationDao.countRecommendations();
+    }
+
+    public String getLastUpdatedTime() {
+        return recommendationDao.getLastUpdatedTime();
+    }
 }

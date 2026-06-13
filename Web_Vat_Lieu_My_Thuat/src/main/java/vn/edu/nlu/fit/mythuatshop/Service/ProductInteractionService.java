@@ -47,4 +47,11 @@ public class ProductInteractionService {
         }
         interactionDao.insertPurchaseBatch(userId, productIds);
     }
+    public int countInteractions() {
+        return interactionDao.countInteractions();
+    }
+
+    public int countUsersWithInteractions() {
+        return interactionDao.countUsersWithInteractions();
+    }
 }
