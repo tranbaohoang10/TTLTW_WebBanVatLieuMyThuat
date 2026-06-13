@@ -4,23 +4,21 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
-import vn.edu.nlu.fit.mythuatshop.Service.InventoryExcelReportService;
+import vn.edu.nlu.fit.mythuatshop.Service.InventoryGoogleSheetReportService;
 import vn.edu.nlu.fit.mythuatshop.Service.InventoryService;
 import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 @WebServlet(name = "AdminInventoryController", value = "/admin/inventory")
 public class AdminInventoryController extends HttpServlet {
     private InventoryService inventoryService;
-    private InventoryExcelReportService inventoryExcelReportService;
+    private InventoryGoogleSheetReportService inventoryGoogleSheetReportService;
 
     @Override
     public void init() {
         inventoryService = new InventoryService();
-        inventoryExcelReportService = new InventoryExcelReportService();
+        inventoryGoogleSheetReportService = new InventoryGoogleSheetReportService();
     }
 
     @Override
@@ -29,24 +27,8 @@ public class AdminInventoryController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if ("downloadExcelReport".equals(action)) {
-            if (!PermissionUtil.hasPermission(request, "INVENTORY_VIEW")) {
-                PermissionUtil.showNoPermission(request, response);
-                return;
-            }
-            if (!inventoryExcelReportService.reportFileExists()) {
-                request.getSession().setAttribute("inventoryError", "Chưa có file báo cáo Excel. Vui lòng cập nhật báo cáo trước.");
-                response.sendRedirect(request.getContextPath() + "/admin/inventory");
-                return;
-            }
-            Path reportPath = inventoryExcelReportService.getReportPath();
+        request.setAttribute("googleSheetUrl", inventoryGoogleSheetReportService.getSpreadsheetUrl());
 
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setHeader("Content-Disposition", "attachment; filename=\"bao-cao-ton-kho.xlsx\"");
-
-            Files.copy(reportPath, response.getOutputStream());
-            return;
-        }
         request.setAttribute("lowStockThreshold", inventoryService.getLowStockThreshold());
         request.setAttribute("lowStockCount", inventoryService.countLowStockProducts());
         request.setAttribute("outOfStockCount", inventoryService.countOutOfStockProducts());
@@ -65,20 +47,24 @@ public class AdminInventoryController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-        if ("updateExcelReport".equals(action)) {
+        if ("updateGoogleSheetReport".equals(action)) {
             if (!PermissionUtil.hasPermission(request, "INVENTORY_VIEW")) {
                 PermissionUtil.showNoPermission(request, response);
                 return;
             }
-
             try {
-                inventoryExcelReportService.updateTodayReport();
-                request.getSession().setAttribute("inventoryMessage", "Cập nhật báo cáo Excel hôm nay thành công.");
+                inventoryGoogleSheetReportService.updateTodayReport();
+                request.getSession().setAttribute(
+                        "inventoryMessage",
+                        "Cập nhật báo cáo tồn kho lên Google Sheet thành công."
+                );
             } catch (Exception e) {
                 e.printStackTrace();
-                request.getSession().setAttribute("inventoryError", "Cập nhật báo cáo Excel thất bại.");
+                request.getSession().setAttribute(
+                        "inventoryError",
+                        "Cập nhật Google Sheet thất bại. Vui lòng kiểm tra cấu hình Google Sheet."
+                );
             }
-
             response.sendRedirect(request.getContextPath() + "/admin/inventory");
             return;
         }
