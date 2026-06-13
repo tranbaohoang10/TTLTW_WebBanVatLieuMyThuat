@@ -16,28 +16,7 @@ public class AdminUserService {
     private final UserDao userDao = new UserDao();
     private final EmailVerificationTokenDao tokenDao = new EmailVerificationTokenDao();
 
-    public List<Users> listUsers(int page, int pageSize, String keyword) {
-        if (page < 1) {
-            page = 1;
-        }
-        int offset = (page - 1) * pageSize;
-        if (keyword == null) {
-            keyword = "";
-        } else {
-            keyword = keyword.trim();
-        }
-        return userDao.findUsers(keyword, offset, pageSize);
-    }
 
-    public int totalPages(int pageSize, String keyword) {
-        if (keyword == null) {
-            keyword = "";
-        } else {
-            keyword = keyword.trim();
-        }
-        int totalUsers = userDao.countUsers(keyword);
-        return (int) Math.ceil((double) totalUsers / pageSize);
-    }
 
     public boolean createUser(String fullName, String email, String phone,
                               String dobStr, String address, String role,Integer groupId, String baseUrl) {
@@ -127,5 +106,8 @@ public class AdminUserService {
 
     public Users getUserById(int id) {
         return userDao.findById(id);
+    }
+    public List<Users> listAllUsers() {
+        return userDao.findAllUsers();
     }
 }

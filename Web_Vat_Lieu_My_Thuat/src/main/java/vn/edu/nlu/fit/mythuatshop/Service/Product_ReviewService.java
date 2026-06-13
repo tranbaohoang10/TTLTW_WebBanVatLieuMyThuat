@@ -1,7 +1,6 @@
 package vn.edu.nlu.fit.mythuatshop.Service;
 
 import vn.edu.nlu.fit.mythuatshop.Dao.Product_ReviewsDao;
-import vn.edu.nlu.fit.mythuatshop.Model.Product;
 import vn.edu.nlu.fit.mythuatshop.Model.Product_Review;
 
 import java.util.List;
@@ -37,5 +36,17 @@ public class Product_ReviewService {
     }
     public void updateReview(Product_Review review) {
         product_reviewsDao.update(review);
+    }
+
+    public boolean canReviewOrderProduct(int userId, int productID, int orderID) {
+        return product_reviewsDao.canReviewOrderProduct(userId, productID, orderID);
+    }
+
+    public boolean hasReviewOrderProduct(int userId, int productID, int orderID) {
+        return product_reviewsDao.hasUserReviewedOrderProduct(userId, productID, orderID);
+    }
+
+    public void updateReviewByOrderProduct(Product_Review review) {
+        product_reviewsDao.updateByOrderProduct(review);
     }
 }

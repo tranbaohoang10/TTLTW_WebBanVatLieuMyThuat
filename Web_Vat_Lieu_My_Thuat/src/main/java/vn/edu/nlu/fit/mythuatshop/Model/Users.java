@@ -15,6 +15,8 @@ public class Users {
     private LocalDateTime createAt;
     private int isActive;
     private Integer groupId;
+    private LocalDateTime permissionUpdateAt;
+    private LocalDateTime statusUpdateAt;
 
 
     public int getId() {
@@ -98,5 +100,21 @@ public class Users {
 
     public void setGroupId(Integer groupId) {
         this.groupId = groupId;
+    }
+
+    public LocalDateTime getPermissionUpdateAt() {
+        return permissionUpdateAt;
+    }
+
+    public void setPermissionUpdateAt(LocalDateTime permissionUpdateAt) {
+        this.permissionUpdateAt = permissionUpdateAt;
+    }
+
+    public LocalDateTime getStatusUpdateAt() {
+        return statusUpdateAt;
+    }
+
+    public void setStatusUpdateAt(LocalDateTime statusUpdateAt) {
+        this.statusUpdateAt = statusUpdateAt;
     }
 }

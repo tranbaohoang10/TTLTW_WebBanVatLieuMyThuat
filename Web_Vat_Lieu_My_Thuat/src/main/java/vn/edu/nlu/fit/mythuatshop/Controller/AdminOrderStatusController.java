@@ -9,6 +9,7 @@ import vn.edu.nlu.fit.mythuatshop.Model.Order;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.LogService;
 import vn.edu.nlu.fit.mythuatshop.Service.OrderService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
@@ -26,6 +27,12 @@ public class AdminOrderStatusController extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json; charset=UTF-8");
 
+        if (!PermissionUtil.hasPermission(req, "ORDER_UPDATE_STATUS")) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Bạn không có quyền cập nhật trạng thái đơn hàng\"}");
+            return;
+        }
+
         boolean success = false;
         String message = "Cập nhật trạng thái thất bại";
         String newStatus = "";
@@ -33,14 +40,27 @@ public class AdminOrderStatusController extends HttpServlet {
         try {
             int orderId = Integer.parseInt(req.getParameter("orderId"));
             newStatus = req.getParameter("statusName");
-
+            String cancelReason = req.getParameter("cancelReason");
             String beforeStatus = "";
             Order oldOrder = orderService.getOrderDetailForAdmin(orderId);
             if (oldOrder != null && oldOrder.getStatusName() != null) {
                 beforeStatus = oldOrder.getStatusName();
             }
 
-            success = orderService.adminUpdateOrderStatus(orderId, newStatus);
+            Integer adminId = getCurrentUserId(req);
+
+            if ("Đã hủy".equalsIgnoreCase(newStatus)
+                    && (cancelReason == null || cancelReason.isBlank())) {
+                message = "Vui lòng nhập lý do hủy đơn";
+                success = false;
+            } else {
+                success = orderService.adminUpdateOrderStatus(
+                        orderId,
+                        newStatus,
+                        cancelReason,
+                        adminId
+                );
+            }
 
             if (success) {
                 Integer userId = getCurrentUserId(req);

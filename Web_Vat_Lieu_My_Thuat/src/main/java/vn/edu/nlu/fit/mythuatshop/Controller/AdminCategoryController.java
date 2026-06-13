@@ -6,7 +6,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import vn.edu.nlu.fit.mythuatshop.Model.Category;
+import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.CategoryService;
+import vn.edu.nlu.fit.mythuatshop.Service.LogService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class AdminCategoryController extends HttpServlet {
 
     private CategoryService categoryService;
+    private final LogService logService = new LogService();
 
     @Override
     public void init() {
@@ -47,13 +51,32 @@ public class AdminCategoryController extends HttpServlet {
 
         try {
             switch (action) {
-                case "create" -> handleCreate(req);
-                case "update" -> handleUpdate(req);
-                case "toggleActive" -> handleToggleActive(req);
+                case "create" ->{
+                    if (!PermissionUtil.hasPermission(req, "CATEGORY_CREATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleCreate(req);
+                }
+                case "update" ->{
+                    if (!PermissionUtil.hasPermission(req, "CATEGORY_UPDATE")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleUpdate(req);
+                }
+                case "toggleActive" ->{
+                    if (!PermissionUtil.hasPermission(req, "CATEGORY_LOCK")) {
+                        PermissionUtil.showNoPermission(req, resp);
+                        return;
+                    }
+                    handleToggleActive(req);
+                }
                 default -> {}
             }
         } catch (Exception e) {
             e.printStackTrace();
+            req.getSession().setAttribute("categoryError", e.getMessage());
         }
 
         resp.sendRedirect(req.getContextPath() + "/admin/categories");
@@ -71,6 +94,7 @@ public class AdminCategoryController extends HttpServlet {
         c.setIsActive(1);
 
         categoryService.create(c);
+        writeLog(req, "Tạo danh mục", "Quản lý danh mục", null, c);
     }
 
     private void handleUpdate(HttpServletRequest req) throws Exception {
@@ -94,20 +118,29 @@ public class AdminCategoryController extends HttpServlet {
         c.setThumbnail(newThumb != null ? newThumb : oldThumb);
 
         categoryService.update(c);
+        writeLog(req, "Cập nhật danh mục", "Quản lý danh mục", old, c);
     }
 
     private void handleToggleActive(HttpServletRequest req) {
         int id = parseInt(req.getParameter("id"), 0);
         int current = parseInt(req.getParameter("isActive"), 1);
         if (id <= 0) return;
-
+        Category old = categoryService.getCategoryById(id);
         categoryService.toggleActive(id, current);
+        Category newCategory = categoryService.getCategoryById(id);
+        if(old != null && newCategory != null) {
+            writeLog(req, "Đổi trạng thái danh mục", "Quản lý danh mục", old, newCategory);
+        }
+
     }
 
     // ============ helpers ============
     private String saveUploadAndReturnUrl(HttpServletRequest req, Part part, String folder) throws IOException {
         if (part == null || part.getSize() == 0) return null;
 
+        if (!isValidImage(part)) {
+            throw new IllegalArgumentException("Ảnh không hợp lệ hoặc vượt quá 5MB");
+        }
         String original = Paths.get(part.getSubmittedFileName()).getFileName().toString();
         String ext = "";
         int dot = original.lastIndexOf('.');
@@ -125,7 +158,34 @@ public class AdminCategoryController extends HttpServlet {
         return "/" + folder + "/" + savedName;
     }
 
+    private boolean isValidImage(Part part) {
+        long maxSize = 5*1024*1024;
+        if(part.getSize() > maxSize) {
+            return false;
+        }
+        String fileName = part.getSubmittedFileName();
+        if(fileName==null){
+            return false;
+        }
+        fileName = fileName.toLowerCase();
+        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".webp");
+    }
+
     private int parseInt(String s, int def) {
         try { return Integer.parseInt(s); } catch (Exception e) { return def; }
+    }
+    private Integer getCurrentUserId(HttpServletRequest request) {
+        Object obj = request.getSession().getAttribute("currentUser");
+        if (obj instanceof Users) {
+            return ((Users) obj).getId();
+        }
+        return null;
+    }
+
+    private void writeLog(HttpServletRequest request, String label, String location, Object beforeData, Object afterData) {
+        Integer userId = getCurrentUserId(request);
+        if (userId != null) {
+            logService.log(label, userId, location, beforeData, afterData);
+        }
     }
 }

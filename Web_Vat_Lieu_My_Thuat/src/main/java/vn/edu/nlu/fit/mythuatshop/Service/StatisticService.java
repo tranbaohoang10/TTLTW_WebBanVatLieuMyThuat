@@ -1,12 +1,10 @@
 package vn.edu.nlu.fit.mythuatshop.Service;
 
 import vn.edu.nlu.fit.mythuatshop.Dao.StatisticDAO;
-import vn.edu.nlu.fit.mythuatshop.Model.BestSellerChartPoint;
-import vn.edu.nlu.fit.mythuatshop.Model.BestSellerRow;
-import vn.edu.nlu.fit.mythuatshop.Model.NoSaleRow;
-import vn.edu.nlu.fit.mythuatshop.Model.RevenueMonth;
+import vn.edu.nlu.fit.mythuatshop.Model.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,5 +34,55 @@ public class StatisticService {
 
     public List<BestSellerChartPoint> getBestSellerTop5ChartAllTime() {
         return dao.getTop5BestSellingProductsForChart();
+    }
+    public BigDecimal getTotalImportCostThisYear() {
+        return dao.getTotalImportCostOfCurrentYear();
+    }
+
+    public List<ImportCostMonth> getImportCostByMonthThisYear() {
+        return dao.getImportCostByMonthOfCurrentYear();
+    }
+    public ProfitSummary getProfitSummaryThisYear() {
+        ProfitSummary summary = dao.getProfitSummaryOfCurrentYear();
+
+        BigDecimal revenue = summary.getRevenue() != null
+                ? summary.getRevenue()
+                : BigDecimal.ZERO;
+
+        BigDecimal costOfGoodsSold = summary.getCostOfGoodsSold() != null
+                ? summary.getCostOfGoodsSold()
+                : BigDecimal.ZERO;
+
+        BigDecimal profit = revenue.subtract(costOfGoodsSold);
+
+        BigDecimal profitMargin = BigDecimal.ZERO;
+        if (revenue.compareTo(BigDecimal.ZERO) > 0) {
+            profitMargin = profit
+                    .divide(revenue, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+
+        summary.setRevenue(revenue);
+        summary.setCostOfGoodsSold(costOfGoodsSold);
+        summary.setProfit(profit);
+        summary.setProfitMargin(profitMargin);
+
+        return summary;
+    }
+    public List<ProductProfitRow> getProductProfitRowsThisYear() {
+        return dao.getProductProfitRowsOfCurrentYear();
+    }
+    public ProductProfitRow findProductProfitRowByProductId(List<ProductProfitRow> rows, int productId) {
+        if (rows == null || productId <= 0) {
+            return null;
+        }
+
+        for (ProductProfitRow row : rows) {
+            if (row.getProductId() == productId) {
+                return row;
+            }
+        }
+
+        return null;
     }
 }

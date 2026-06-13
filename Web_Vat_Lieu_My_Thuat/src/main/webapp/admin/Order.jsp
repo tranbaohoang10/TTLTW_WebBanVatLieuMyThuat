@@ -26,7 +26,7 @@
 
     #main .left {
         background-color: #17479D;
-        height: 100vh;
+        height: auto;
         width: 17%;
     }
 
@@ -527,6 +527,15 @@
                 <a href="${pageContext.request.contextPath}/admin/products"><i class="fa-solid fa-palette"></i>Quản
                     lý sản phẩm</a>
             </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('SUPPLIER_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/suppliers"><i class="fa-solid fa-truck-field"></i>Nhà cung cấp
+                </a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PURCHASE_RECEIPT_VIEW')}">
+                <a href="${pageContext.request.contextPath}/admin/purchase-receipts">
+                    <i class="fa-solid fa-file-invoice"></i>Phiếu nhập hàng
+                </a>
+            </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('INVENTORY_VIEW')}">
               <a href="${pageContext.request.contextPath}/admin/inventory"><i class="fa-solid fa-warehouse"></i>Quản
                 lý tồn kho</a>
@@ -534,6 +543,11 @@
 
             <c:if test="${role == 'ADMIN' || permissions.contains('USER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/users" ><i class="fa-solid fa-person"></i>Quản lý người dùng</a>
+            </c:if>
+            <c:if test="${role == 'ADMIN' || permissions.contains('PERMISSION_MANAGE')}">
+                <a href="${pageContext.request.contextPath}/admin/permissions" >
+                    <i class="fa-solid fa-user-shield"></i>Quản lý phân quyền
+                </a>
             </c:if>
             <c:if test="${role == 'ADMIN' || permissions.contains('ORDER_VIEW')}">
                 <a href="${pageContext.request.contextPath}/admin/orders" class="active"><i class="fa-solid fa-box-open"></i>Quản
@@ -831,8 +845,19 @@
         const orderId = btn.dataset.id;
         const statusName = btn.dataset.status;
 
-        if (statusName === "Đã hủy" && !confirm("Bạn chắc chắn muốn hủy đơn hàng này?")) {
-            return;
+        let cancelReason = "";
+
+        if (statusName === "Đã hủy") {
+            if (!confirm("Bạn chắc chắn muốn hủy đơn hàng này?")) {
+                return;
+            }
+
+            cancelReason = prompt("Nhập lý do hủy đơn hàng:");
+
+            if (!cancelReason || cancelReason.trim() === "") {
+                alert("Vui lòng nhập lý do hủy đơn.");
+                return;
+            }
         }
 
         btn.disabled = true;
@@ -841,6 +866,9 @@
             const body = new URLSearchParams();
             body.append("orderId", orderId);
             body.append("statusName", statusName);
+            if (statusName === "Đã hủy") {
+                body.append("cancelReason", cancelReason.trim());
+            }
 
             const res = await fetch("${pageContext.request.contextPath}/admin/orders/status", {
                 method: "POST",

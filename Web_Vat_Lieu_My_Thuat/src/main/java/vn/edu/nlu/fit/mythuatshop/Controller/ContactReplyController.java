@@ -5,13 +5,17 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.ContactService;
+import vn.edu.nlu.fit.mythuatshop.Service.LogService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
 @WebServlet(name = "ContactReplyController", urlPatterns = {"/admin/contacts/reply"})
 public class ContactReplyController extends HttpServlet {
     private ContactService contactService = new ContactService();
+    private final LogService logService = new LogService();
 
 
     @Override
@@ -22,6 +26,11 @@ public class ContactReplyController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
+
+        if (!PermissionUtil.hasPermission(req, "CONTACT_REPLY_VIEW")) {
+            PermissionUtil.showNoPermission(req, resp);
+            return;
+        }
 
         String idRaw = req.getParameter("id");
         String subject = req.getParameter("subject");
@@ -50,10 +59,24 @@ public class ContactReplyController extends HttpServlet {
 
         if (ok) {
             req.getSession().setAttribute("toast", "Gửi phản hồi thành công!");
+            writeLog(req, "Trả lời liên hệ", "Quản lý liên hệ", null, "ID liên hệ: " + id + ", Tiêu đề: " + subject);
         } else {
             req.getSession().setAttribute("toast", "Gửi phản hồi thất bại (không tìm thấy liên hệ hoặc email rỗng).");
         }
 
         resp.sendRedirect(req.getContextPath() + "/admin/contacts");
+    }
+    private Integer getCurrentUserId(HttpServletRequest request) {
+        Object obj = request.getSession().getAttribute("currentUser");
+        if (obj instanceof Users) {
+            return ((Users) obj).getId();
+        }
+        return null;
+    }
+    private void writeLog(HttpServletRequest request, String label, String location, Object beforeData, Object afterData) {
+        Integer userId = getCurrentUserId(request);
+        if (userId != null) {
+            logService.log(label, userId, location, beforeData, afterData);
+        }
     }
 }

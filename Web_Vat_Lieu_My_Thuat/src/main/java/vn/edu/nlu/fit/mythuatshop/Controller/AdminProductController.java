@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import vn.edu.nlu.fit.mythuatshop.Model.Excel.ProductExcelImportResult;
 import vn.edu.nlu.fit.mythuatshop.Service.ProductExcelImportService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.InputStream;
 
@@ -109,15 +110,31 @@ public class AdminProductController extends HttpServlet {
         try {
             switch (action) {
                 case "create":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_CREATE")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     createProduct(request);
                     break;
                 case "update":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_UPDATE")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     updateProduct(request);
                     break;
                 case "toggleActive":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_LOCK")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     toggleProductActive(request);
                     break;
                 case "importExcel":
+                    if(!PermissionUtil.hasPermission(request, "PRODUCT_IMPORT")){
+                        PermissionUtil.showNoPermission(request, response);
+                        return;
+                    }
                     importProductsFromExcel(request);
                     break;
                 default:
@@ -125,6 +142,7 @@ public class AdminProductController extends HttpServlet {
             }
         } catch (Exception exception) {
             exception.printStackTrace();
+            request.getSession().setAttribute("productError",  exception.getMessage());
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/products");
@@ -328,6 +346,10 @@ public class AdminProductController extends HttpServlet {
         if (part == null || part.getSize() == 0) {
             return null;
         }
+        if(!isValidImage(part)) {
+            throw new IllegalArgumentException("Ảnh không hợp lệ hoặc vượt quá 5MB");
+        }
+
 
         String originalFileName = Paths.get(part.getSubmittedFileName()).getFileName().toString();
         String extension = "";
@@ -349,6 +371,19 @@ public class AdminProductController extends HttpServlet {
         part.write(savedFile.getAbsolutePath());
 
         return "/" + folder + "/" + savedFileName;
+    }
+
+    private boolean isValidImage(Part part) {
+        long maxSize = 5*1024*1024;
+        if(part.getSize() > maxSize) {
+            return false;
+        }
+        String fileName = part.getSubmittedFileName();
+        if(fileName==null){
+            return false;
+        }
+        fileName = fileName.toLowerCase();
+        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".webp");
     }
 
     private String trimToNull(String value) {

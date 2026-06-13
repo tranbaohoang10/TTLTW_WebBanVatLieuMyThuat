@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
 import vn.edu.nlu.fit.mythuatshop.Service.InventoryService;
+import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
 import java.io.IOException;
 
@@ -22,7 +23,11 @@ public class AdminInventoryController extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-
+        request.setAttribute("lowStockThreshold", inventoryService.getLowStockThreshold());
+        request.setAttribute("lowStockCount", inventoryService.countLowStockProducts());
+        request.setAttribute("outOfStockCount", inventoryService.countOutOfStockProducts());
+        request.setAttribute("lowStockProducts", inventoryService.getLowStockProducts());
+        request.setAttribute("outOfStockProducts", inventoryService.getOutOfStockProducts());
         request.setAttribute("products", inventoryService.getInventoryProducts());
         request.setAttribute("history", inventoryService.getHistory());
 
@@ -31,7 +36,7 @@ public class AdminInventoryController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException,ServletException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
@@ -43,9 +48,17 @@ public class AdminInventoryController extends HttpServlet {
         boolean ok = false;
 
         if ("importStock".equals(action)) {
+            if (!PermissionUtil.hasPermission(request, "INVENTORY_IMPORT")) {
+                PermissionUtil.showNoPermission(request, response);
+                return;
+            }
             int quantity = parseInt(request.getParameter("quantity"), 0);
             ok = inventoryService.importStock(productId, quantity, note, adminId);
         } else if ("adjustStock".equals(action)) {
+            if (!PermissionUtil.hasPermission(request, "INVENTORY_ADJUST")) {
+                PermissionUtil.showNoPermission(request, response);
+                return;
+            }
             int newStock = parseInt(request.getParameter("newStock"), -1);
             ok = inventoryService.adjustStock(productId, newStock, note, adminId);
         }
