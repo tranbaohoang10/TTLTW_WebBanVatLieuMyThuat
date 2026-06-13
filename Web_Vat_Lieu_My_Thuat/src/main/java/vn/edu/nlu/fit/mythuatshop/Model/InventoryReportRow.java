@@ -151,10 +151,10 @@ public class InventoryReportRow {
 
     public String getStockStatus() {
         if (quantityStock <= 0) {
-            return "Hết hàng";
+            return "Đã hết hàng";
         }
-        if (quantityStock <= 5) {
-            return "Sắp hết";
+        if (quantityStock <= 10) {
+            return "Sắp hết hàng";
         }
         return "Còn hàng";
     }

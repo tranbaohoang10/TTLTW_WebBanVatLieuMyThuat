@@ -289,7 +289,6 @@ public class InventoryDao {
     public List<InventoryReportRow> findInventoryReportRows() {
         String sql = """
             SELECT p.ID AS productId,
-                   p.productCode AS productCode,
                    p.name AS productName,
                    c.categoryName AS categoryName,
                    p.brand AS brand,
@@ -324,7 +323,7 @@ public class InventoryDao {
             LEFT JOIN categories c ON c.id = p.categoryID
             LEFT JOIN inventory_transactions it ON it.productID = p.ID
             GROUP BY p.ID,
-                     p.productCode,
+                     p.ID,
                      p.name,
                      c.categoryName,
                      p.brand,

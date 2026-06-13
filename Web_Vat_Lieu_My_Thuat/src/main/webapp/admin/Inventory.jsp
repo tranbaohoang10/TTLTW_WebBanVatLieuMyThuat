@@ -165,6 +165,38 @@
             color: #222;
         }
 
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-report {
+            background: #198754;
+        }
+
+        .btn-open-sheet {
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .btn-open-sheet:hover {
+            background: #0b5ed7;
+        }
+
         .alert-success {
             background: #d4edda;
             color: #155724;
@@ -344,7 +376,26 @@
                 </div>
             </c:if>
             <div class="box">
-                <h1>Quản lý tồn kho</h1>
+                <div class="inventory-header">
+                    <h1>Quản lý tồn kho</h1>
+
+                    <div class="report-actions">
+                        <form method="post"
+                              action="${pageContext.request.contextPath}/admin/inventory"
+                              onsubmit="return confirm('Bạn muốn cập nhật báo cáo tồn kho lên Google Sheet hôm nay?')">
+                            <input type="hidden" name="action" value="updateGoogleSheetReport">
+                            <button type="submit" class="btn-report">
+                                <i class="fa-solid fa-table"></i> Cập nhật Google Sheet
+                            </button>
+                        </form>
+
+                        <a class="btn-open-sheet"
+                           href="${googleSheetUrl}"
+                           target="_blank">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Google Sheet
+                        </a>
+                    </div>
+                </div>
 
                 <table id="inventoryTable" class="display">
                     <thead>
