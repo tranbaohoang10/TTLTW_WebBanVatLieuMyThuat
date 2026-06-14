@@ -213,6 +213,45 @@
       margin-bottom: 15px;
       border-left: 4px solid #dc3545;
     }
+    .action-column {
+        min-width: 150px;
+        width: 150px;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+
+
+    .xem-sanpham,
+    .chinhsua-sanpham,
+    .xoa-sanpham {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: none;
+        border-radius: 7px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .xem-sanpham {
+        color: white;
+        background-color: #2f80ed;
+    }
+
+    .xem-sanpham:hover {
+        background-color: #1f6dcc;
+    }
   </style>
 </head>
 
@@ -400,8 +439,13 @@
                 </c:choose>
               </td>
 
-              <td>
-                <button type="button" class="chinhsua-sanpham btnEditProduct"
+              <td class="action-column">
+                  <div class="action-buttons">
+                  <a
+                      href="${pageContext.request.contextPath}/admin/products/detail?id=${p.id}" class="xem-sanpham"
+                      title="Xem chi tiết sản phẩm"> <i class="fa-solid fa-eye"></i>
+                  </a>
+                  <button type="button" class="chinhsua-sanpham btnEditProduct"
                         data-id="${p.id}"
                         data-name="${p.name}"
                         data-categoryid="${p.categoryId}"
@@ -442,6 +486,7 @@
                     </c:otherwise>
                   </c:choose>
                 </form>
+                  </div>
               </td>
             </tr>
           </c:forEach>
