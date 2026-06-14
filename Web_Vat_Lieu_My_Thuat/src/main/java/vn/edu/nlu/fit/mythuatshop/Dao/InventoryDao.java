@@ -2,6 +2,7 @@ package vn.edu.nlu.fit.mythuatshop.Dao;
 
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
+import vn.edu.nlu.fit.mythuatshop.Model.InventoryReportRow;
 import vn.edu.nlu.fit.mythuatshop.Model.InventoryTransaction;
 import vn.edu.nlu.fit.mythuatshop.Model.Product;
 
@@ -282,6 +283,61 @@ public class InventoryDao {
         return jdbi.withHandle(handle ->
                 handle.createQuery(sql)
                         .mapToBean(Product.class)
+                        .list()
+        );
+    }
+    public List<InventoryReportRow> findInventoryReportRows() {
+        String sql = """
+            SELECT p.ID AS productId,
+                   p.name AS productName,
+                   c.categoryName AS categoryName,
+                   p.brand AS brand,
+                   p.price AS price,
+                   p.discountDefault AS discountDefault,
+                   p.quantityStock AS quantityStock,
+                   p.soldQuantity AS soldQuantity,
+                   p.isActive AS isActive,
+
+                   COALESCE(SUM(CASE
+                       WHEN it.type = 'IMPORT' THEN it.quantity
+                       ELSE 0
+                   END), 0) AS totalImported,
+
+                   COALESCE(SUM(CASE
+                       WHEN it.type = 'SALE' THEN ABS(it.quantity)
+                       ELSE 0
+                   END), 0) AS totalSale,
+
+                   COALESCE(SUM(CASE
+                       WHEN it.type = 'CANCEL' THEN it.quantity
+                       ELSE 0
+                   END), 0) AS totalCancel,
+
+                   COALESCE(SUM(CASE
+                       WHEN it.type = 'ADJUST' THEN it.quantity
+                       ELSE 0
+                   END), 0) AS totalAdjust,
+
+                   MAX(it.createAt) AS lastTransactionAt
+            FROM products p
+            LEFT JOIN categories c ON c.id = p.categoryID
+            LEFT JOIN inventory_transactions it ON it.productID = p.ID
+            GROUP BY p.ID,
+                     p.ID,
+                     p.name,
+                     c.categoryName,
+                     p.brand,
+                     p.price,
+                     p.discountDefault,
+                     p.quantityStock,
+                     p.soldQuantity,
+                     p.isActive
+            ORDER BY p.quantityStock ASC, p.ID DESC
+            """;
+
+        return jdbi.withHandle(handle ->
+                handle.createQuery(sql)
+                        .mapToBean(InventoryReportRow.class)
                         .list()
         );
     }

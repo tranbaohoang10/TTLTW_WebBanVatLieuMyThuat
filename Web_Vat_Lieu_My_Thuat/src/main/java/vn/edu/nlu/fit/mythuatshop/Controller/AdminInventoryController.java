@@ -4,6 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import vn.edu.nlu.fit.mythuatshop.Model.Users;
+import vn.edu.nlu.fit.mythuatshop.Service.InventoryGoogleSheetReportService;
 import vn.edu.nlu.fit.mythuatshop.Service.InventoryService;
 import vn.edu.nlu.fit.mythuatshop.Util.PermissionUtil;
 
@@ -12,10 +13,12 @@ import java.io.IOException;
 @WebServlet(name = "AdminInventoryController", value = "/admin/inventory")
 public class AdminInventoryController extends HttpServlet {
     private InventoryService inventoryService;
+    private InventoryGoogleSheetReportService inventoryGoogleSheetReportService;
 
     @Override
     public void init() {
         inventoryService = new InventoryService();
+        inventoryGoogleSheetReportService = new InventoryGoogleSheetReportService();
     }
 
     @Override
@@ -23,6 +26,9 @@ public class AdminInventoryController extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
+        String action = request.getParameter("action");
+        request.setAttribute("googleSheetUrl", inventoryGoogleSheetReportService.getSpreadsheetUrl());
+
         request.setAttribute("lowStockThreshold", inventoryService.getLowStockThreshold());
         request.setAttribute("lowStockCount", inventoryService.countLowStockProducts());
         request.setAttribute("outOfStockCount", inventoryService.countOutOfStockProducts());
@@ -41,6 +47,27 @@ public class AdminInventoryController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
+        if ("updateGoogleSheetReport".equals(action)) {
+            if (!PermissionUtil.hasPermission(request, "INVENTORY_VIEW")) {
+                PermissionUtil.showNoPermission(request, response);
+                return;
+            }
+            try {
+                inventoryGoogleSheetReportService.updateTodayReport();
+                request.getSession().setAttribute(
+                        "inventoryMessage",
+                        "Cập nhật báo cáo tồn kho lên Google Sheet thành công."
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.getSession().setAttribute(
+                        "inventoryError",
+                        "Cập nhật Google Sheet thất bại. Vui lòng kiểm tra cấu hình Google Sheet."
+                );
+            }
+            response.sendRedirect(request.getContextPath() + "/admin/inventory");
+            return;
+        }
         int productId = parseInt(request.getParameter("productId"), -1);
         String note = request.getParameter("note");
         Integer adminId = getCurrentUserId(request);
