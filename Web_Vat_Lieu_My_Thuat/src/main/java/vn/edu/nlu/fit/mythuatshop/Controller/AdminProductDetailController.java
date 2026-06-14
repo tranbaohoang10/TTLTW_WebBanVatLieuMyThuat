@@ -10,10 +10,7 @@ import vn.edu.nlu.fit.mythuatshop.Service.ProductService;
 
 import java.io.IOException;
 
-@WebServlet(
-        name = "AdminProductDetailController",
-        value = "/admin/products/detail"
-)
+@WebServlet(name = "AdminProductDetailController", value = "/admin/products/detail")
 public class AdminProductDetailController extends HttpServlet {
 
     private ProductService productService;

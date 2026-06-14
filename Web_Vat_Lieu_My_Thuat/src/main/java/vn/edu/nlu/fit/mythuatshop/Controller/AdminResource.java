@@ -37,6 +37,7 @@ public class AdminResource {
         resources.put("/admin/recommendations", "RECOMMENDATION_VIEW");
         resources.put("/admin/recommendations/export", "RECOMMENDATION_EXPORT");
         resources.put("/admin/recommendations/import", "RECOMMENDATION_IMPORT");
+        resources.put("/admin/products/detail", "PRODUCT_VIEW");
     }
 
     public static String getPermissionCode(String path) {
