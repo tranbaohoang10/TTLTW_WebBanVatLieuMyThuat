@@ -63,6 +63,11 @@ public class AuthFilter implements Filter {
             return;
         }
         if (!isPublic && authUser == null) {
+            if (!sessionExpired) {
+                String returnUrl = getReturnUrl(req);
+                req.getSession().setAttribute("redirectAfterLogin", returnUrl);
+                req.getSession().setAttribute("FLASH_ERROR", "Vui lòng đăng nhập để tiếp tục thao tác.");
+            }
             if (sessionExpired) {
                 resp.sendRedirect(ctx + "/login?timeout=1");
             } else {
@@ -71,5 +76,36 @@ public class AuthFilter implements Filter {
             return;
         }
         chain.doFilter(request, response);
+    }
+    private String getReturnUrl(HttpServletRequest req) {
+        if ("GET".equalsIgnoreCase(req.getMethod())) {
+            String ctx = req.getContextPath();
+            String uri = req.getRequestURI();
+            String path = uri.substring(ctx.length());
+
+            if (req.getQueryString() != null) {
+                path += "?" + req.getQueryString();
+            }
+
+            return path;
+        }
+
+        String referer = req.getHeader("referer");
+
+        if (referer != null && !referer.isBlank()) {
+            String baseUrl = req.getRequestURL()
+                    .toString()
+                    .replace(req.getRequestURI(), req.getContextPath());
+
+            if (referer.startsWith(baseUrl)) {
+                String url = referer.substring(baseUrl.length());
+
+                if (!url.startsWith("/login")) {
+                    return url;
+                }
+            }
+        }
+
+        return "/home";
     }
 }

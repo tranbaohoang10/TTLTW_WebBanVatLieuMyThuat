@@ -118,8 +118,19 @@ public class LoginController extends HttpServlet {
         session.setAttribute("cartCount", cart.getTotalQuantity());
 
         String role = user1.getRole();
-        if(role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("staff")) {
-            resp.sendRedirect(req.getContextPath()+"/admin/overview");
+        boolean isAdminOrStaff = role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("staff");
+        String redirectAfterLogin = (String) session.getAttribute("redirectAfterLogin");
+        if (redirectAfterLogin != null && !redirectAfterLogin.isBlank()) {
+            session.removeAttribute("redirectAfterLogin");
+            boolean isAdminUrl = redirectAfterLogin.startsWith("/admin/");
+
+            if (!isAdminUrl || isAdminOrStaff) {
+                resp.sendRedirect(req.getContextPath() + redirectAfterLogin);
+                return;
+            }
+        }
+        if (isAdminOrStaff) {
+            resp.sendRedirect(req.getContextPath() + "/admin/overview");
             return;
         }
         resp.sendRedirect(req.getContextPath()+"/home");
