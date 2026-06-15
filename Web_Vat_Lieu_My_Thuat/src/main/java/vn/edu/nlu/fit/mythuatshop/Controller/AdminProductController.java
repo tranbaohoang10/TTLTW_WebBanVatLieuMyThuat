@@ -288,6 +288,7 @@ public class AdminProductController extends HttpServlet {
         if (after != null) {
             writeLog(request, "Cập nhật sản phẩm", "Quản lý sản phẩm", oldProduct, after);
         }
+        request.getSession().setAttribute("productMessage", "Cập nhật sản phẩm thành công.");
     }
 
     private void toggleProductActive(HttpServletRequest request) {

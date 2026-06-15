@@ -342,6 +342,7 @@ public class ProductDao {
                         .bind("discountDefault", p.getDiscountDefault())
                         .bind("categoryID", p.getCategoryId())
                         .bind("thumbnail", p.getThumbnail())
+                        .bind("quantityStock", p.getQuantityStock())
                         .bind("brand", p.getBrand())
                         .execute()
         );
