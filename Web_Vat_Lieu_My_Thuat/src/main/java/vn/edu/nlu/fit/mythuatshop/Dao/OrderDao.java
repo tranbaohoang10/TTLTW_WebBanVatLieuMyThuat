@@ -378,7 +378,7 @@ public class OrderDao implements DaoInterface<Order> {
             if (shouldRestoreInventory) {
                 List<OrderDetail> details = handle.createQuery("""
                     SELECT productID, quantity, price
-                    FROM Order_Details
+                    FROM order_details
                     WHERE orderID = :oid
                     """)
                         .bind("oid", orderId)

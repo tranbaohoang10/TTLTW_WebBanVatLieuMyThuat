@@ -253,7 +253,7 @@ public class StatisticDAO {
                     WHERE orderDetail.productID = product.ID
                       AND orderTable.orderStatusID = 3
                 ), 0) AS soldQty
-            FROM Products product
+            FROM products product
             ORDER BY soldQty DESC
             LIMIT 5
         """;

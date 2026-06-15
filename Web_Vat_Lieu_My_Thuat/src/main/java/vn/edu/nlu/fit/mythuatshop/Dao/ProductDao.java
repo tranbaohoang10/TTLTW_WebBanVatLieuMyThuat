@@ -366,7 +366,7 @@ public class ProductDao {
                 "p.discountDefault, p.categoryId, c.categoryName, " +
                 "p.thumbnail, p.quantityStock, p.soldQuantity, " +
                 "p.status, p.createAt, p.brand, p.isActive " +
-                "FROM Products p " +
+                "FROM products p " +
                 "LEFT JOIN categories c ON p.categoryId = c.id " +
                 "WHERE p.id = :productId";
 
