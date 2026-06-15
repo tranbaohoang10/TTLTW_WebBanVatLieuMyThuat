@@ -26,7 +26,7 @@ public class InventoryGoogleSheetReportService {
 
     private static final String SPREADSHEET_ID = "15voIjtZRvKfAbp9WV8m-aFGtRiDZZ1X_OplNEPoHneo";
     private static final String SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/15voIjtZRvKfAbp9WV8m-aFGtRiDZZ1X_OplNEPoHneo/edit";
-    private static final String CREDENTIALS_PATH = "D:/google-credentials/mythuatshop-sheet-key.json";
+    private static final String CREDENTIALS_PATH = System.getenv("GOOGLE_CREDENTIALS_PATH");
 
     private static final String TEMPLATE_SHEET = "Template";
     private static final int HEADER_ROW_INDEX = 4;
@@ -62,6 +62,9 @@ public class InventoryGoogleSheetReportService {
     }
 
     private Sheets createSheetsService() throws IOException, GeneralSecurityException {
+        if (CREDENTIALS_PATH == null || CREDENTIALS_PATH.trim().isEmpty()) {
+            throw new IOException("Chưa cấu hình biến môi trường GOOGLE_CREDENTIALS_PATH trên server");
+        }
         GoogleCredentials credentials;
 
         try (FileInputStream inputStream = new FileInputStream(CREDENTIALS_PATH)) {
